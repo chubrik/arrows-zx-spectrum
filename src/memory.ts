@@ -1,3 +1,3 @@
-onActive(() => {
-    showText("This is Memory");
-});
+import { draw } from "./memory/draw";
+
+onActive(draw);

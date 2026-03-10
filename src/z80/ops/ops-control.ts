@@ -1,5 +1,5 @@
-import { set1 } from "../data";
-import { Reg } from "../types";
+import { set1 } from "../../common/data";
+import { Reg } from "../../common/types";
 
 export function DAA() { /* TODO */ }
 export function CPL() { /* TODO */ }

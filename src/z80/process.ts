@@ -1,5 +1,6 @@
+import { get1, get16, set16 } from "../common/data";
+import { Reg } from "../common/types";
 import { copyCpu, cpu_cp, interrupt, next8, refresh, setCpuCp } from "./cpu";
-import { get1, get16, set16 } from "./data";
 import { CCF, CPL, DAA, HALT, NOP, SCF } from "./ops/ops-control";
 import { EX_AF } from "./ops/ops-ex";
 import { DJNZ, JR, JR_c, JR_nc, JR_nz, JR_z } from "./ops/ops-jump";
@@ -7,7 +8,6 @@ import { LD_nn_SS, LD_SS_nn, LD_SS_NN } from "./ops/ops-ld-16bit";
 import { LD_A_bc, LD_A_de, LD_A_nn, LD_bc_A, LD_de_A, LD_nn_A, LD_Rhl_N, LD_Rhl_Rhl } from "./ops/ops-ld-8bit";
 import { ADC_A_Rhl, ADD_A_Rhl, CP_Rhl, DEC_Rhl, INC_Rhl, OR_Rhl, SBC_Rhl, SUB_Rhl, XOR_Rhl } from "./ops/ops-math-8bit";
 import { RLA, RLCA, RRA, RRCA } from "./ops/ops-shift";
-import { Reg } from "./types";
 
 export function process(): void {
     copyCpu();

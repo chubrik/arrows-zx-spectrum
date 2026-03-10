@@ -1,11 +1,8 @@
+import { get16Core, getMemPos } from "../common/data";
+import { Reg } from "../common/types";
+import { poses } from "../common/utils";
 import { cpu_mode, next8 } from "./cpu";
-import { get16Core, getMemPos } from "./data";
-import { Mode, Reg } from "./types";
-
-export const RAM_MIN_ADDR = 0x4000;
-export const RAM_MAX_ADDR = 0xFFFF;
-
-export const poses: Position[] = [];
+import { Mode } from "./types";
 
 /** B, C, D, E, H, L, (HL/IX+d/IY+d), A */
 export const Rhl: (() => Position)[] = [

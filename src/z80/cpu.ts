@@ -1,6 +1,7 @@
-import { get8, getMem8, set8 } from "./data";
-import { Mode, Reg } from "./types";
-import { poses } from "./utils";
+import { get8, getMem8, set8 } from "../common/data";
+import { Reg } from "../common/types";
+import { poses } from "../common/utils";
+import { Mode } from "./types";
 
 export let cpu_cp = 0;
 export let cpu_mode = Mode.Main;

@@ -1,7 +1,8 @@
+import { get16, get8Core, getMem8, set8Core, setMem8 } from "../../common/data";
+import { Reg } from "../../common/types";
+import { poses } from "../../common/utils";
 import { next16, next8 } from "../cpu";
-import { get16, get8Core, getMem8, set8Core, setMem8 } from "../data";
-import { Reg } from "../types";
-import { poses, Rhl } from "../utils";
+import { Rhl } from "../utils";
 
 /** 
  * LD r,r'

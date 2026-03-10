@@ -50,10 +50,16 @@ export function setMem8(addr: number, data: number) {
 
 export function getMemPos(addr: number): Position {
     const mem0Pos = poses[Reg.Mem0];
-    let x = mem0Pos.x + (addr & 0x1F) * 8;
-    let y = mem0Pos.y + (addr >> 11);
-    if (addr & 0x8000) x += 272;
-    if (addr & 0x4000) y += 16;
+
+    const xShift = ((addr & 0xC000) >> 14) * 272;
+    const x = mem0Pos.x + (addr & 0x1F) * 8 + xShift;
+    const y = mem0Pos.y + ((addr & 0x3FFF) >> 5);
+    
+    // let x = mem0Pos.x + (addr & 0x1F) * 8;
+    // let y = mem0Pos.y + ((addr & 0x7FFF) >> 5);
+    // if (addr & 0x8000) x += 272;
+    // if (addr & 0x4000) y += 16;
+
     return { x, y };
 }
 
@@ -84,7 +90,7 @@ export function set8Core(pos: Position, data: number) {
     for (let i = 7; i >= 0; i--) {
         const bit = data & 1;
         const arrowType = arrowTypes[bit];
-        world.setArrow(pos.x + i, pos.y, arrowType, 0, false);
+        world.setArrow(pos.x + i, pos.y, arrowType, 1, false);
         data >>= 1;
     }
 }
@@ -101,13 +107,13 @@ export function set1Core(pos: Position, bit: boolean) {
 }
 
 function getArrowTypes(pos: Position): number[] {
-    const xMod = (pos.x % 16) >= 8;
-    const yMod = (pos.y % 8) >= 4;
+    const xMod = (pos.x & 0xF) >= 8;
+    const yMod = (pos.y & 0xF) >= 8;
     return xMod === yMod ? arrowTypes1 : arrowTypes2;
 }
 
-const arrowTypes1 = [1, 18];
-const arrowTypes2 = [10, 25];
+const arrowTypes1 = [10, 25];
+const arrowTypes2 = [1, 18];
 
 // export function get8Core(pos: Position): number {
 //     const arrow = world.getArrow(pos.x, pos.y);

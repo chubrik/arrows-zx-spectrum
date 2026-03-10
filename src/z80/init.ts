@@ -1,5 +1,5 @@
-import { Reg } from "./types";
-import { poses } from "./utils";
+import { Reg } from "../common/types";
+import { poses } from "../common/utils";
 
 export function init() {
     const initPos = getPosition();

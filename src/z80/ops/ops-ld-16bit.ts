@@ -1,7 +1,8 @@
+import { get16Core, getMem16, set16Core, setMem16 } from "../../common/data";
+import { Reg } from "../../common/types";
+import { poses } from "../../common/utils";
 import { next16 } from "../cpu";
-import { get16Core, getMem16, set16Core, setMem16 } from "../data";
-import { Reg } from "../types";
-import { poses, SS } from "../utils";
+import { SS } from "../utils";
 
 /** LD (nn),dd | LD (nn),HL | LD (nn),IX | LD (nn),IY */
 export function LD_nn_SS(b543: number) {
