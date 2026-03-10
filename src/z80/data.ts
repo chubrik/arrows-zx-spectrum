@@ -1,5 +1,5 @@
 import { Reg } from "./types";
-import { config, poses } from "./utils";
+import { poses, RAM_MAX_ADDR, RAM_MIN_ADDR } from "./utils";
 
 export function get16(highReg: Reg, lowReg: Reg): number {
     return get16Core(poses[highReg], poses[lowReg]);
@@ -42,7 +42,7 @@ export function getMem8(addr: number): number {
 }
 
 export function setMem8(addr: number, data: number) {
-    if (addr >= config.ramMinAddr && addr <= config.ramMaxAddr) {
+    if (addr >= RAM_MIN_ADDR && addr <= RAM_MAX_ADDR) {
         const memPos = getMemPos(addr);
         set8Core(memPos, data);
     }

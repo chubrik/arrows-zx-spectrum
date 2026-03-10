@@ -1,4 +1,4 @@
-import { copyCpu, cpu, interrupt, next8, refresh } from "./cpu";
+import { copyCpu, cpu_cp, interrupt, next8, refresh, setCpuCp } from "./cpu";
 import { get1, get16, set16 } from "./data";
 import { CCF, CPL, DAA, HALT, NOP, SCF } from "./ops/ops-control";
 import { EX_AF } from "./ops/ops-ex";
@@ -19,13 +19,13 @@ export function process(): void {
     }
 
     const cp = get16(Reg.PCh, Reg.PCl);
-    cpu.cp = cp;
+    setCpuCp(cp);
     const op = next8();
     refresh();
     interpret(op);
 
-    if (cpu.cp !== cp)
-        set16(Reg.PCh, Reg.PCl, cpu.cp);
+    if (cpu_cp !== cp)
+        set16(Reg.PCh, Reg.PCl, cpu_cp);
 
     interrupt();
 }

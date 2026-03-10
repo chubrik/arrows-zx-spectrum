@@ -10,16 +10,16 @@ export function init() {
     const memX = chunkX + 48;
     const memY = chunkY - 512;
 
-    poses[Reg.F] = getPos(cpuX + 0, cpuY + 0);
-    poses[Reg.A] = getPos(cpuX + 0, cpuY + 1);
-    poses[Reg.B] = getPos(cpuX + 0, cpuY + 2);
-    poses[Reg.C] = getPos(cpuX + 0, cpuY + 3);
-    poses[Reg.D] = getPos(cpuX + 0, cpuY + 4);
-    poses[Reg.E] = getPos(cpuX + 0, cpuY + 5);
-    poses[Reg.H] = getPos(cpuX + 0, cpuY + 6);
-    poses[Reg.L] = getPos(cpuX + 0, cpuY + 7);
+    poses[Reg.F] = getPos(cpuX, cpuY);
+    poses[Reg.A] = getPos(cpuX, cpuY + 1);
+    poses[Reg.B] = getPos(cpuX, cpuY + 2);
+    poses[Reg.C] = getPos(cpuX, cpuY + 3);
+    poses[Reg.D] = getPos(cpuX, cpuY + 4);
+    poses[Reg.E] = getPos(cpuX, cpuY + 5);
+    poses[Reg.H] = getPos(cpuX, cpuY + 6);
+    poses[Reg.L] = getPos(cpuX, cpuY + 7);
 
-    poses[Reg.Fa] = getPos(cpuX + 8, cpuY + 0);
+    poses[Reg.Fa] = getPos(cpuX + 8, cpuY);
     poses[Reg.Aa] = getPos(cpuX + 8, cpuY + 1);
     poses[Reg.Ba] = getPos(cpuX + 8, cpuY + 2);
     poses[Reg.Ca] = getPos(cpuX + 8, cpuY + 3);
@@ -28,14 +28,14 @@ export function init() {
     poses[Reg.Ha] = getPos(cpuX + 8, cpuY + 6);
     poses[Reg.La] = getPos(cpuX + 8, cpuY + 7);
 
-    poses[Reg.IXh] = getPos(cpuX + 0, cpuY + 8);
-    poses[Reg.IXl] = getPos(cpuX + 0, cpuY + 9);
-    poses[Reg.IYh] = getPos(cpuX + 0, cpuY + 10);
-    poses[Reg.IYl] = getPos(cpuX + 0, cpuY + 11);
-    poses[Reg.SPh] = getPos(cpuX + 0, cpuY + 12);
-    poses[Reg.SPl] = getPos(cpuX + 0, cpuY + 13);
-    poses[Reg.PCh] = getPos(cpuX + 0, cpuY + 14);
-    poses[Reg.PCl] = getPos(cpuX + 0, cpuY + 15);
+    poses[Reg.IXh] = getPos(cpuX, cpuY + 8);
+    poses[Reg.IXl] = getPos(cpuX, cpuY + 9);
+    poses[Reg.IYh] = getPos(cpuX, cpuY + 10);
+    poses[Reg.IYl] = getPos(cpuX, cpuY + 11);
+    poses[Reg.SPh] = getPos(cpuX, cpuY + 12);
+    poses[Reg.SPl] = getPos(cpuX, cpuY + 13);
+    poses[Reg.PCh] = getPos(cpuX, cpuY + 14);
+    poses[Reg.PCl] = getPos(cpuX, cpuY + 15);
 
     poses[Reg.I] = getPos(cpuX + 8, cpuY + 8);
     poses[Reg.R] = getPos(cpuX + 8, cpuY + 9);
