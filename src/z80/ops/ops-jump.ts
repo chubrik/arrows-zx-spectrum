@@ -1,0 +1,9 @@
+export function JP_nn() { /* TODO */ }
+export function JP_cc_nn() { /* TODO */ }
+export function JR() { /* TODO */ }
+export function JR_c() { /* TODO */ }
+export function JR_nc() { /* TODO */ }
+export function JR_z() { /* TODO */ }
+export function JR_nz() { /* TODO */ }
+export function JP_hl() { /* TODO */ }
+export function DJNZ() { /* TODO */ }
