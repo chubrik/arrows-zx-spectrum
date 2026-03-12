@@ -9,6 +9,7 @@
     "allowImportingTsExtensions": true
   },
   "include": [
+    "build/**/*.ts",
     "src/**/*.ts"
   ],
   "exclude": [

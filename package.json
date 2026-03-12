@@ -4,12 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "esbuild src/*.ts --bundle --format=esm --outdir=dist",
-    "build:min": "node build.mjs",
-    "build:watch": "esbuild src/*.ts --bundle --format=esm --outdir=dist --watch",
-    "typecheck": "tsc -p tsconfig.json",
-    "typecheck:watch": "tsc -w -p tsconfig.json",
-    "rom": "node --experimental-strip-types src/commands/rom.ts"
+    "build": "node --experimental-strip-types build/build.ts",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@types/node": "^25.4.0",
