@@ -4,13 +4,15 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json",
-    "typecheck:watch": "tsc -w -p tsconfig.json",
     "build": "esbuild src/*.ts --bundle --format=esm --outdir=dist",
     "build:min": "node build.mjs",
-    "build:watch": "esbuild src/*.ts --bundle --format=esm --outdir=dist --watch"
+    "build:watch": "esbuild src/*.ts --bundle --format=esm --outdir=dist --watch",
+    "typecheck": "tsc -p tsconfig.json",
+    "typecheck:watch": "tsc -w -p tsconfig.json",
+    "rom": "node --experimental-strip-types src/commands/rom.ts"
   },
   "devDependencies": {
+    "@types/node": "^25.4.0",
     "esbuild": "^0.27.3",
     "terser": "^5.46.0",
     "typescript": "^5.8.2"

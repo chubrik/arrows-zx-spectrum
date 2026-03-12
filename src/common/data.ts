@@ -52,14 +52,15 @@ export function getMemPos(addr: number): Position {
     const mem0Pos = poses[Reg.Mem0];
 
     const xShift = ((addr & 0xC000) >> 14) * 272;
-    const x = mem0Pos.x + (addr & 0x1F) * 8 + xShift;
-    const y = mem0Pos.y + ((addr & 0x3FFF) >> 5);
-    
-    // let x = mem0Pos.x + (addr & 0x1F) * 8;
-    // let y = mem0Pos.y + ((addr & 0x7FFF) >> 5);
-    // if (addr & 0x8000) x += 272;
-    // if (addr & 0x4000) y += 16;
 
+    // 8x8 blocks:
+    const x = mem0Pos.x + (addr & 0xF8) + xShift;
+    const y = mem0Pos.y + ((addr & 0x3F00) >> 5) + (addr & 0x7);
+
+    // // Line by line:
+    // const x = mem0Pos.x + (addr & 0x1F) * 8 + xShift;
+    // const y = mem0Pos.y + ((addr & 0x3FFF) >> 5);
+    
     return { x, y };
 }
 
@@ -103,7 +104,7 @@ export function get1Core(pos: Position): boolean {
 export function set1Core(pos: Position, bit: boolean) {
     const arrowTypes = getArrowTypes(pos);
     const arrowType = arrowTypes[bit ? 1 : 0];
-    world.setArrow(pos.x, pos.y, arrowType, 0, false);
+    world.setArrow(pos.x, pos.y, arrowType, 1, false);
 }
 
 function getArrowTypes(pos: Position): number[] {
