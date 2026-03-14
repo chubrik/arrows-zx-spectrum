@@ -1,8 +1,6 @@
 export const RAM_MIN_ADDR = 0x4000;
 export const RAM_MAX_ADDR = 0xFFFF;
 
-export const poses: Position[] = [];
-
 export function check(condition: boolean, message: string = 'Check failed') {
   if (!condition)
     throw new Error(message);

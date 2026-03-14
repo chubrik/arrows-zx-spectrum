@@ -43,9 +43,9 @@ export async function minifyJs(code: string): Promise<string> {
   return final;
 }
 
-export function writeToPath(path: string, data: string | NodeJS.ArrayBufferView) {
+export function writeToPath(path: string, content: string | NodeJS.ArrayBufferView) {
   mkdirSync(dirname(path), { recursive: true });
-  writeFileSync(path, data);
+  writeFileSync(path, content);
 }
 
 const terserOpts: MinifyOptions = {

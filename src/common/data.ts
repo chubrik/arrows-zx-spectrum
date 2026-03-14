@@ -1,138 +1,119 @@
-import { Reg } from "./types";
-import { poses, RAM_MAX_ADDR, RAM_MIN_ADDR } from "./utils";
+import { RAM_MAX_ADDR, RAM_MIN_ADDR } from './utils';
 
-export function get16(highReg: Reg, lowReg: Reg): number {
-    return get16Core(poses[highReg], poses[lowReg]);
-}
+let memoryX: number;
+let memoryY: number;
 
-export function set16(highReg: Reg, lowReg: Reg, data: number) {
-    set16Core(poses[highReg], poses[lowReg], data);
-}
-
-export function get8(reg: Reg): number {
-    return get8Core(poses[reg]);
-}
-
-export function set8(reg: Reg, data: number) {
-    set8Core(poses[reg], data);
-}
-
-export function get1(reg: Reg): boolean {
-    return get1Core(poses[reg]);
-}
-
-export function set1(reg: Reg, bit: boolean) {
-    set1Core(poses[reg], bit);
+export function initMemory(chunkX: number, chunkY: number) {
+  memoryX = chunkX + 16;
+  memoryY = chunkY + 16;
 }
 
 export function getMem16(addr: number): number {
-    const lowData = getMem8(addr);
-    const highData = getMem8((addr + 1) & 0xFFFF);
-    return (highData << 8) | lowData;
+  const valueLow = getMem8(addr);
+  const valueHigh = getMem8((addr + 1) & 0xFFFF);
+  return (valueHigh << 8) | valueLow;
 }
 
-export function setMem16(addr: number, data: number) {
-    setMem8(addr, data & 0xFF);
-    setMem8((addr + 1) & 0xFFFF, data >> 8);
+export function setMem16(addr: number, value: number) {
+  setMem8(addr, value & 0xFF);
+  setMem8((addr + 1) & 0xFFFF, value >> 8);
 }
 
 export function getMem8(addr: number): number {
-    const memPos = getMemPos(addr);
-    return get8Core(memPos);
+  const memPos = getMemPos(addr);
+  return get8(memPos);
 }
 
-export function setMem8(addr: number, data: number) {
-    if (addr >= RAM_MIN_ADDR && addr <= RAM_MAX_ADDR) {
-        const memPos = getMemPos(addr);
-        set8Core(memPos, data);
-    }
+export function setMem8(addr: number, value: number) {
+  if (addr >= RAM_MIN_ADDR && addr <= RAM_MAX_ADDR) {
+    const memPos = getMemPos(addr);
+    set8(memPos, value);
+  }
 }
 
 export function getMemPos(addr: number): Position {
-    const mem0Pos = poses[Reg.Mem0];
+  const xShift = ((addr & 0xC000) >> 14) * 272;
 
-    const xShift = ((addr & 0xC000) >> 14) * 272;
+  // 8x8 blocks:
+  const x = memoryX + (addr & 0xF8) + xShift;
+  const y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
 
-    // 8x8 blocks:
-    const x = mem0Pos.x + (addr & 0xF8) + xShift;
-    const y = mem0Pos.y + ((addr & 0x3F00) >> 5) + (addr & 0x7);
+  // Line by line:
+  // const x = memoryX + (addr & 0x1F) * 8 + xShift;
+  // const y = memoryY + ((addr & 0x3FFF) >> 5);
 
-    // // Line by line:
-    // const x = mem0Pos.x + (addr & 0x1F) * 8 + xShift;
-    // const y = mem0Pos.y + ((addr & 0x3FFF) >> 5);
-    
-    return { x, y };
+  return { x, y };
 }
 
-export function get16Core(highPos: Position, lowPos: Position): number {
-    const highData = get8Core(highPos);
-    const lowData = get8Core(lowPos);
-    return (highData << 8) | lowData;
+export function get16(posHigh: Position, posLow: Position): number {
+  const valueLow = get8(posLow);
+  const valueHigh = get8(posHigh);
+  return (valueHigh << 8) | valueLow;
 }
 
-export function set16Core(highPos: Position, lowPos: Position, data: number) {
-    set8Core(highPos, data >> 8);
-    set8Core(lowPos, data & 0xFF);
+export function set16(posHigh: Position, posLow: Position, value: number) {
+  set8(posLow, value & 0xFF);
+  set8(posHigh, value >> 8);
 }
 
-export function get8Core(pos: Position): number {
-    let data = 0;
-    for (let i = 7; i >= 0; i--) {
-        data <<= 1;
-        const arrow = world.getArrow(pos.x + i, pos.y);
-        if (arrow && arrow.type >= 16)
-            data |= 1;
-    }
-    return data;
+export function get8(pos: Position): number {
+  let value = 0;
+  for (let i = 7; i >= 0; i--) {
+    value <<= 1;
+    const arrow = world.getArrow(pos.x + i, pos.y);
+    if (arrow && arrow.type >= 16)
+      value |= 1;
+  }
+  return value;
 }
 
-export function set8Core(pos: Position, data: number) {
-    const arrowTypes = getArrowTypes(pos);
-    for (let i = 7; i >= 0; i--) {
-        const bit = data & 1;
-        const arrowType = arrowTypes[bit];
-        world.setArrow(pos.x + i, pos.y, arrowType, 1, false);
-        data >>= 1;
-    }
+export function set8(pos: Position, value: number) {
+  const arrowTypes = getArrowTypes(pos);
+  for (let i = 7; i >= 0; i--) {
+    const bit = value & 1;
+    const arrowType = arrowTypes[bit];
+    world.setArrow(pos.x + i, pos.y, arrowType, 1, false);
+    value >>= 1;
+  }
 }
 
-export function get1Core(pos: Position): boolean {
-    const arrow = world.getArrow(pos.x, pos.y);
-    return !!arrow && arrow.type >= 16;
+export function get1(pos: Position): boolean {
+  const arrow = world.getArrow(pos.x, pos.y);
+  return !!arrow && arrow.type >= 16;
 }
 
-export function set1Core(pos: Position, bit: boolean) {
-    const arrowTypes = getArrowTypes(pos);
-    const arrowType = arrowTypes[bit ? 1 : 0];
-    world.setArrow(pos.x, pos.y, arrowType, 1, false);
+export function set1(pos: Position, bit: boolean) {
+  const arrowTypes = getArrowTypes(pos);
+  const arrowType = arrowTypes[bit ? 1 : 0];
+  world.setArrow(pos.x, pos.y, arrowType, 1, false);
 }
 
 function getArrowTypes(pos: Position): number[] {
-    const xMod = (pos.x & 0xF) >= 8;
-    const yMod = (pos.y & 0xF) >= 8;
-    return xMod === yMod ? arrowTypes1 : arrowTypes2;
+  const xMod = (pos.x & 0xF) >= 8;
+  const yMod = (pos.y & 0xF) >= 8;
+  return xMod === yMod ? arrowTypes1 : arrowTypes2;
 }
 
 const arrowTypes1 = [10, 25];
 const arrowTypes2 = [1, 18];
 
-// export function get8Core(pos: Position): number {
-//     const arrow = world.getArrow(pos.x, pos.y);
-//     if (!arrow) return 0;
-//     let type = arrow.type;
-//     if (type > 30) type--;
-//     const typeData = (type - 1) << 3;
-//     const rotationData = arrow.rotation << 1;
-//     const flipData = arrow.flip ? 1 : 0;
-//     const data = typeData | rotationData | flipData;
-//     return data;
+// export function get8(pos: Position): number {
+//   const arrow = world.getArrow(pos.x, pos.y);
+//   if (!arrow) return 0;
+//   let type = arrow.type;
+//   if (type > 30) type--;
+//   const typePart = (type - 1) << 3;
+//   const rotationPart = arrow.rotation << 1;
+//   const flipPart = arrow.flip ? 1 : 0;
+//   const value = typePart | rotationPart | flipPart;
+//   return value;
 // }
 
-// export function set8Core(pos: Position, data: number) {
-//     let type = 1 + (data >> 3);
-//     if (data === 0) type = 0;
-//     if (type > 30) type++;
-//     const rotation = (data % 8) >> 1;
-//     const flip = (data % 2) !== 0;
-//     world.setArrow(pos.x, pos.y, type, rotation, flip);
+// export function set8(pos: Position, value: number) {
+//   let type = 1 + (value >> 3);
+//   if (value === 0) type = 0;
+//   if (type > 30) type++;
+//   const rotation = (value % 8) >> 1;
+//   const flip = (value % 2) !== 0;
+//   world.setArrow(pos.x, pos.y, type, rotation, flip);
 // }

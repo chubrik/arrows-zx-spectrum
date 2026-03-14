@@ -1,5 +1,4 @@
-import { set1 } from "../../common/data";
-import { Reg } from "../../common/types";
+import { setRegHlt } from "../utils";
 
 export function DAA() { /* TODO */ }
 export function CPL() { /* TODO */ }
@@ -9,7 +8,7 @@ export function NEG() { /* TODO */ }
 export function NOP() { /* TODO */ }
 
 export function HALT() {
-    set1(Reg.Hlt, true);
+  setRegHlt(true);
 }
 
 export function DI() { /* TODO */ }
