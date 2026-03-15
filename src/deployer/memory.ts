@@ -1,6 +1,6 @@
-import { getMemPos, set8 } from '../common/data';
+import { getMemPos, set8 } from '../common/utils';
 
-export function draw(rom: number[]) {
+export function deployMemory(rom: number[]) {
   for (let addr = 0; addr <= 0xFFFF; addr++) {
     const memPos = getMemPos(addr);
     const value = addr < rom.length ? rom[addr] : 0;

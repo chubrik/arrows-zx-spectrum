@@ -1,4 +1,4 @@
-import { getMem8, setMem8 } from '../../common/data';
+import { getMem8, setMem8 } from '../../common/utils';
 import { RhlSelect } from '../types';
 import { getRegA, getRegBC, getRegDE, getRegI, getRegR, getRegRhl, nextPC16, nextPC8, setRegA, setRegI, setRegR, setRegRhl } from '../utils';
 

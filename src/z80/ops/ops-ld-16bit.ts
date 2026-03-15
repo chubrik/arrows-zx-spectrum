@@ -1,4 +1,4 @@
-import { getMem16, setMem16 } from '../../common/data';
+import { getMem16, setMem16 } from '../../common/utils';
 import { QQSelect, SSSelect } from '../types';
 import { getRegHL, getRegSS, nextPC16, setRegSP, setRegSS } from '../utils';
 

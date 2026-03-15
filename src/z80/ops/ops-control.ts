@@ -1,4 +1,4 @@
-import { setRegHlt } from "../utils";
+import { setRegHlt } from '../utils';
 
 /** HALT */
 export function HALT() {

@@ -1,4 +1,4 @@
-import { RhlSelect } from "../types";
+import { RhlSelect } from '../types';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
 export function BIT_b_Rhl(bit: number, select: RhlSelect) {

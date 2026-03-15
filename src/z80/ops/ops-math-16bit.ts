@@ -1,4 +1,4 @@
-import { SSSelect } from "../types";
+import { SSSelect } from '../types';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
 export function ADD_HL_SS(src: SSSelect) {

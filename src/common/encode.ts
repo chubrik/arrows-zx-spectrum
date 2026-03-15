@@ -1,4 +1,4 @@
-import { check } from './data.ts';
+import { check } from './utils.ts';
 
 const bits = 20;
 const mask = (1 << bits) - 1;

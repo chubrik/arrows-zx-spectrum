@@ -2,12 +2,12 @@ import { createHash } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
 import { basename } from 'path';
 import { asciiToUnicode, bytesToUnicode } from '../src/common/encode.ts';
-import { check } from '../src/common/data.ts';
+import { check } from '../src/common/utils.ts';
 import { buildPath, buildTs, DIST_DIR, minifyJs, SRC_DIR, writeToPath } from './utils.ts';
 
 await buildAndPack(`${SRC_DIR}/ula.ts`);
 await buildAndPack(`${SRC_DIR}/z80.ts`);
-await buildAndPackMemory(`${SRC_DIR}/memory.ts`);
+await buildAndPackDeployer(`${SRC_DIR}/deployer.ts`);
 console.log('');
 
 //
@@ -38,7 +38,7 @@ async function buildAndPack(path: string) {
     `packed: ${packed.length} bytes (${[...packed].length} chars)`);
 }
 
-async function buildAndPackMemory(path: string) {
+async function buildAndPackDeployer(path: string) {
   const fileName = basename(path, '.ts');
   const toReplace = `unicodeToBytes('')`;
 

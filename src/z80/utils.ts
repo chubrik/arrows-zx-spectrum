@@ -1,4 +1,4 @@
-import { get1, get16, get8, getMem8, getMemPos, set1, set16, set8 } from '../common/data';
+import { get1, get16, get8, getMem8, getMemPos, set1, set16, set8 } from '../common/utils';
 import { HLMode, QQSelect, RhlSelect, SSSelect } from './types';
 
 let F: Position;

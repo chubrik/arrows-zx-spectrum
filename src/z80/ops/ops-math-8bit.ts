@@ -1,4 +1,4 @@
-import { RhlSelect } from "../types";
+import { RhlSelect } from '../types';
 
 /** ADD A,r | ADD A,(HL) | ADD A,(IX+d) | ADD A,(IY+d) */
 export function ADD_A_Rhl(src: RhlSelect) {

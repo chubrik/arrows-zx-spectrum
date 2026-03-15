@@ -1,4 +1,4 @@
-import { initMemory } from './common/data';
+import { initMemory } from './common/utils';
 import { executeMain } from './z80/execute';
 import { commitRegs, copyCPU, fetchRegs, initCpu, interrupt } from './z80/utils';
 

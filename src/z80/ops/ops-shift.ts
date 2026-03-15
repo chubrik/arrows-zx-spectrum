@@ -1,4 +1,4 @@
-import { RhlSelect } from "../types";
+import { RhlSelect } from '../types';
 
 /** RLCA */
 export function RLCA() {
