@@ -12,15 +12,7 @@ import { ADC_A_N, ADC_A_Rhl, ADD_A_N, ADD_A_Rhl, AND_N, AND_Rhl, CP_N, CP_Rhl, D
 import { CCF, CPL, DAA, NOP, SCF } from './ops/ops-math-etc';
 import { RLA, RLCA, RRA, RRCA } from './ops/ops-shift';
 import { HLMode, SSSelect } from './types';
-import { commitRegs, copyCPU, fetchRegs, getRegHlt, interrupt, nextPC8, refresh, setHLMode } from './utils';
-
-export function process() {
-  copyCPU();
-  fetchRegs();
-  executeMain();
-  commitRegs();
-  interrupt();
-}
+import { getRegHlt, nextPC8, refresh, setHLMode } from './utils';
 
 /** Main Instructions | IX Instructions (DD) | IY Instructions (FD) */
 export function executeMain() {

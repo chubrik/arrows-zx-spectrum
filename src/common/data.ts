@@ -1,5 +1,5 @@
-import { RAM_MAX_ADDR, RAM_MIN_ADDR } from './utils';
-
+const RAM_MIN_ADDR = 0x4000;
+const RAM_MAX_ADDR = 0xFFFF;
 let memoryX: number;
 let memoryY: number;
 
@@ -89,8 +89,8 @@ export function set1(pos: Position, bit: boolean) {
 }
 
 function getArrowTypes(pos: Position): number[] {
-  const xMod = (pos.x & 0xF) >= 8;
-  const yMod = (pos.y & 0xF) >= 8;
+  const xMod = pos.x & 0x8;
+  const yMod = pos.y & 0x8;
   return xMod === yMod ? arrowTypes1 : arrowTypes2;
 }
 
@@ -113,7 +113,12 @@ const arrowTypes2 = [1, 18];
 //   let type = 1 + (value >> 3);
 //   if (value === 0) type = 0;
 //   if (type > 30) type++;
-//   const rotation = (value % 8) >> 1;
-//   const flip = (value % 2) !== 0;
+//   const rotation = (value & 0x7) >> 1;
+//   const flip = (value & 0x1) !== 0;
 //   world.setArrow(pos.x, pos.y, type, rotation, flip);
 // }
+
+export function check(condition: boolean, message: string = 'Check failed') {
+  if (!condition)
+    throw new Error(message);
+}

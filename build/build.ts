@@ -1,7 +1,8 @@
 import { createHash } from 'crypto';
 import { existsSync, readFileSync } from 'fs';
 import { basename } from 'path';
-import { asciiToUnicode, bytesToUnicode, check } from '../src/common/utils.ts';
+import { asciiToUnicode, bytesToUnicode } from '../src/common/encode.ts';
+import { check } from '../src/common/data.ts';
 import { buildPath, buildTs, DIST_DIR, minifyJs, SRC_DIR, writeToPath } from './utils.ts';
 
 await buildAndPack(`${SRC_DIR}/ula.ts`);
@@ -22,7 +23,7 @@ async function buildAndPack(path: string) {
 
   // Build just decode function (has export → clean ESM, no CJS shims)
   const decoderFuncName = 'unicodeToAscii';
-  const decoderTsCode = `export{${decoderFuncName}}from'./common/utils.ts';`;
+  const decoderTsCode = `export{${decoderFuncName}}from'./common/encode.ts';`;
   const decoderBuilt = await buildTs(decoderTsCode);
   const decoderStripped = decoderBuilt.replace(/^export\s*\{[^}]*\}\s*;?\s*$/gm, '').trim();
 

@@ -32,7 +32,7 @@ let Hlt: Position;
 let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
 
-export function initRegisters(chunkX: number, chunkY: number) {
+export function initCpu(chunkX: number, chunkY: number) {
   const cpuX = chunkX + 16;
   const cpuY = chunkY - 16;
 
