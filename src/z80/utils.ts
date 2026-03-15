@@ -30,6 +30,7 @@ let R: Position;
 let Hlt: Position;
 
 let hlMode = HLMode.HL;
+export function setHLMode(mode: HLMode) { hlMode = mode; }
 
 export function initRegisters(chunkX: number, chunkY: number) {
   const cpuX = chunkX + 16;
@@ -136,6 +137,17 @@ export function nextPC8(): number {
 
 export function refresh() {
   RCurrent = (RCurrent & 0x80) | ((RCurrent + 1) & 0x7F)
+}
+
+export function copyCPU() {
+  /* TODO */
+  // const topLeft = { x: 0, y: 0 };
+  // const bottomRight = { x: topLeft.x + 15, y: topLeft.y + 15 };
+  // world.copyRegion(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y, topLeft.x - 32, topLeft.y);
+}
+
+export function interrupt() {
+  /* TODO */
 }
 
 /** H/IXh/IYh */

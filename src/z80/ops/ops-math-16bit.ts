@@ -1,15 +1,26 @@
-export function ADD_HL_ss() { /* TODO */ }
-export function ADD_IX_pp() { /* TODO */ }
-export function ADD_IY_rr() { /* TODO */ }
+import { SSSelect } from "../types";
 
-export function ADC_HL_ss() { /* TODO */ }
+/** ADD HL,ss | ADD IX,pp | ADD IY,rr */
+export function ADD_HL_SS(src: SSSelect) {
+  /* TODO */
+}
 
-export function INC_ss() { /* TODO */ }
-export function INC_IX() { /* TODO */ }
-export function INC_IY() { /* TODO */ }
+/** ADC HL,ss */
+export function ADC_HL_SS(src: SSSelect) {
+  /* TODO */
+}
 
-export function SBC_HL_ss() { /* TODO */ }
+/** SBC HL,ss */
+export function SBC_HL_SS(src: SSSelect) {
+  /* TODO */
+}
 
-export function DEC_ss() { /* TODO */ }
-export function DEC_IX() { /* TODO */ }
-export function DEC_IY() { /* TODO */ }
+/** INC ss | INC IX | INC IY */
+export function INC_SS(select: SSSelect) {
+  /* TODO */
+}
+
+/** DEC ss | DEC IX | DEC IY */
+export function DEC_SS(select: SSSelect) {
+  /* TODO */
+}

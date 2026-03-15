@@ -1,8 +1,39 @@
-export function LDI() { /* TODO */ }
-export function LDIR() { /* TODO */ }
-export function LDD() { /* TODO */ }
-export function LDDR() { /* TODO */ }
-export function CPI() { /* TODO */ }
-export function CPIR() { /* TODO */ }
-export function CPD() { /* TODO */ }
-export function CPDR() { /* TODO */ }
+/** LDI */
+export function LDI() {
+  /* TODO */
+}
+
+/** LDIR */
+export function LDIR() {
+  /* TODO */
+}
+
+/** LDD */
+export function LDD() {
+  /* TODO */
+}
+
+/** LDDR */
+export function LDDR() {
+  /* TODO */
+}
+
+/** CPI */
+export function CPI() {
+  /* TODO */
+}
+
+/** CPIR */
+export function CPIR() {
+  /* TODO */
+}
+
+/** CPD */
+export function CPD() {
+  /* TODO */
+}
+
+/** CPDR */
+export function CPDR() {
+  /* TODO */
+}

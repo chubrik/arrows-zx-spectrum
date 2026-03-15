@@ -1,5 +1,5 @@
 import { getMem16, setMem16 } from '../../common/data';
-import { SSSelect } from '../types';
+import { QQSelect, SSSelect } from '../types';
 import { getRegHL, getRegSS, nextPC16, setRegSP, setRegSS } from '../utils';
 
 /** LD (nn),dd | LD (nn),HL | LD (nn),IX | LD (nn),IY */
@@ -26,4 +26,14 @@ export function LD_SS_NN(dest: SSSelect) {
 export function LD_SP_HL() {
   const value = getRegHL();
   setRegSP(value);
+}
+
+/** PUSH qq | PUSH IX | PUSH IY */
+export function PUSH_QQ(select: QQSelect) {
+  /* TODO */
+}
+
+/** POP qq | POP IX | POP IY */
+export function POP_QQ(select: QQSelect) {
+  /* TODO */
 }

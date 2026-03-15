@@ -1,18 +1,31 @@
 import { setRegHlt } from "../utils";
 
-export function DAA() { /* TODO */ }
-export function CPL() { /* TODO */ }
-export function CCF() { /* TODO */ }
-export function SCF() { /* TODO */ }
-export function NEG() { /* TODO */ }
-export function NOP() { /* TODO */ }
-
+/** HALT */
 export function HALT() {
   setRegHlt(true);
 }
 
-export function DI() { /* TODO */ }
-export function EI() { /* TODO */ }
-export function IM0() { /* TODO */ }
-export function IM1() { /* TODO */ }
-export function IM2() { /* TODO */ }
+/** DI */
+export function DI() {
+  /* TODO */
+}
+
+/** EI */
+export function EI() {
+  /* TODO */
+}
+
+/** IM 0 */
+export function IM_0() {
+  /* TODO */
+}
+
+/** IM 1 */
+export function IM_1() {
+  /* TODO */
+}
+
+/** IM 2 */
+export function IM_2() {
+  /* TODO */
+}
