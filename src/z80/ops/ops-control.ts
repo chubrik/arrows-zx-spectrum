@@ -1,8 +1,8 @@
-import { setRegHlt } from '../utils';
+import { setFlagHlt } from '../utils';
 
 /** HALT */
 export function HALT() {
-  setRegHlt(true);
+  setFlagHlt(true);
 }
 
 /** DI */

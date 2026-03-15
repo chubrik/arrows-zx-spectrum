@@ -28,8 +28,9 @@ let PCl: Position;
 let I: Position;
 let R: Position;
 let Hlt: Position;
+let bitDests: (Position | null)[];
 
-let hlMode = HLMode.HL;
+export let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
 
 export function initCpu(chunkX: number, chunkY: number) {
@@ -67,6 +68,8 @@ export function initCpu(chunkX: number, chunkY: number) {
   R = createPos(cpuX + 8, cpuY + 9);
 
   Hlt = createPos(cpuX + 8, cpuY + 10);
+
+  bitDests = [B, C, D, E, H, L, null, A];
 }
 
 export function getRegA(): number { return get8(A); }
@@ -85,8 +88,8 @@ export function setRegHL(value: number) { set16(getH(), getL(), value); }
 export function getRegSP(): number { return get16(SPh, SPl); }
 export function setRegSP(value: number) { set16(SPh, SPl, value); }
 
-export function getRegHlt(): boolean { return get1(Hlt); }
-export function setRegHlt(value: boolean) { set1(Hlt, value); }
+export function getFlagHlt(): boolean { return get1(Hlt); }
+export function setFlagHlt(value: boolean) { set1(Hlt, value); }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
 export function getRegRhl(select: RhlSelect): number { return get8(Rhl[select]()); }
@@ -123,16 +126,24 @@ export function setRegR(value: number) { RCurrent = value; }
 export function getRegPC(): number { return PCCurrent; }
 export function setRegPC(value: number) { PCCurrent = value; }
 
-export function nextPC16(): number {
-  const valueLow = nextPC8();
-  const valueHigh = nextPC8();
+export function next16(): number {
+  const valueLow = next8();
+  const valueHigh = next8();
   return (valueHigh << 8) | valueLow;
 }
 
-export function nextPC8(): number {
+export function next8(): number {
   const value = getMem8(PCCurrent);
   PCCurrent = (PCCurrent + 1) & 0xFFFF;
   return value;
+}
+
+export function splitOp(op: number): { b76: number, b543: number, b210: number } {
+  return {
+    b76: op >> 6,
+    b543: (op >> 3) & 0x7,
+    b210: op & 0x7,
+  };
 }
 
 export function refresh() {
@@ -150,18 +161,14 @@ export function interrupt() {
   /* TODO */
 }
 
-/** H/IXh/IYh */
-function getH() {
-  if (hlMode === HLMode.IX) return IXh;
-  if (hlMode === HLMode.IY) return IYh;
-  return H;
+/** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
+export function getRhlPos(select: RhlSelect): Position {
+  return Rhl[select]();
 }
 
-/** L/IXl/IYl */
-function getL() {
-  if (hlMode === HLMode.IX) return IXl;
-  if (hlMode === HLMode.IY) return IYl;
-  return L;
+/** B, C, D, E, H, L, null, A */
+export function getBitDest(select: RhlSelect): Position | null {
+  return bitDests[select];
 }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
@@ -173,17 +180,25 @@ const Rhl: (() => Position)[] = [
   getH, // H/IXh/IYh
   getL, // L/IXl/IYl
   () => { // (HL/IX+d/IY+d)
-    let addr = get16(getH(), getL()); // HL/IX/IY
-
-    if (hlMode !== HLMode.HL) {
-      let d = nextPC8();
-      if (d >= 128) d -= 256;
-      addr = (addr + d) & 0xFFFF;
+    if (hlMode === HLMode.HL) {
+      const addr = get16(H, L);
+      return getMemPos(addr);
     }
-    return getMemPos(addr);
+    else {
+      let rawD = next8();
+      return getIXIYdMemPos(rawD);
+    }
   },
   () => A,
 ];
+
+/** (IX+d/IY+d) */
+export function getIXIYdMemPos(rawD: number): Position {
+  let addr = get16(getH(), getL()) // IX/IY
+  const d = rawD >= 128 ? rawD - 256 : rawD; // -128..+127
+  addr = (addr + d) & 0xFFFF;
+  return getMemPos(addr);
+}
 
 /** BC, DE, HL/IX/IY, AF */
 const QQ: (() => Position)[] = [
@@ -208,6 +223,20 @@ const SS: (() => Position)[] = [
   () => SPh,
   () => SPl,
 ];
+
+/** H/IXh/IYh */
+function getH() {
+  if (hlMode === HLMode.IX) return IXh;
+  if (hlMode === HLMode.IY) return IYh;
+  return H;
+}
+
+/** L/IXl/IYl */
+function getL() {
+  if (hlMode === HLMode.IX) return IXl;
+  if (hlMode === HLMode.IY) return IYl;
+  return L;
+}
 
 function createPos(x: number, y: number): Position {
   return { x, y };

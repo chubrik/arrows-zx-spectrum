@@ -1,43 +1,31 @@
-import { RhlSelect } from '../types';
+import { getRegA, setRegA } from '../utils';
 
 /** RLCA */
 export function RLCA() {
-  /* TODO */
-}
-
-/** RLC r | RLC (HL) | RLC (IX+d) | RLC (IY+d) */
-export function RLC_Rhl(select: RhlSelect) {
-  /* TODO */
-}
-
-/** RLA */
-export function RLA() {
-  /* TODO */
-}
-
-/** RL r | RL (HL) | RL (IX+d) | RL (IY+d) */
-export function RL_Rhl(select: RhlSelect) {
-  /* TODO */
+  const value = getRegA();
+  const result = RLC_Rhl(value);
+  setRegA(result);
 }
 
 /** RRCA */
 export function RRCA() {
-  /* TODO */
+  const value = getRegA();
+  const result = RRC_Rhl(value);
+  setRegA(result);
 }
 
-/** RRC r | RRC (HL) | RRC (IX+d) | RRC (IY+d) */
-export function RRC_Rhl(select: RhlSelect) {
-  /* TODO */
+/** RLA */
+export function RLA() {
+  const value = getRegA();
+  const result = RL_Rhl(value);
+  setRegA(result);
 }
 
 /** RRA */
 export function RRA() {
-  /* TODO */
-}
-
-/** RR r | RR (HL) | RR (IX+d) | RR (IY+d) */
-export function RR_Rhl(select: RhlSelect) {
-  /* TODO */
+  const value = getRegA();
+  const result = RR_Rhl(value);
+  setRegA(result);
 }
 
 /** RLD */
@@ -50,22 +38,42 @@ export function RRD() {
   /* TODO */
 }
 
-/** SLA r | SLA (HL) | SLA (IX+d) | SLA (IY+d) */
-export function SLA_Rhl(select: RhlSelect) {
-  /* TODO */
+/** RLC r | RLC (HL) | RLC (IX+d) | RLC (IY+d) */
+export function RLC_Rhl(value: number): number {
+  return 0; /* TODO */
 }
 
-/** SLL r | SLL (HL) | SLL (IX+d) | SLL (IY+d) */
-export function SLL_Rhl(select: RhlSelect) {
-  /* TODO */
+/** RRC r | RRC (HL) | RRC (IX+d) | RRC (IY+d) */
+export function RRC_Rhl(value: number): number {
+  return 0; /* TODO */
+}
+
+/** RL r | RL (HL) | RL (IX+d) | RL (IY+d) */
+export function RL_Rhl(value: number): number {
+  return 0; /* TODO */
+}
+
+/** RR r | RR (HL) | RR (IX+d) | RR (IY+d) */
+export function RR_Rhl(value: number): number {
+  return 0; /* TODO */
+}
+
+/** SLA r | SLA (HL) | SLA (IX+d) | SLA (IY+d) */
+export function SLA_Rhl(value: number): number {
+  return 0; /* TODO */
 }
 
 /** SRA r | SRA (HL) | SRA (IX+d) | SRA (IY+d) */
-export function SRA_Rhl(select: RhlSelect) {
-  /* TODO */
+export function SRA_Rhl(value: number): number {
+  return 0; /* TODO */
+}
+
+/** SLL r | SLL (HL) | SLL (IX+d) | SLL (IY+d) */
+export function SLL_Rhl(value: number): number {
+  return 0; /* TODO */
 }
 
 /** SRL r | SRL (HL) | SRL (IX+d) | SRL (IY+d) */
-export function SRL_Rhl(select: RhlSelect) {
-  /* TODO */
+export function SRL_Rhl(value: number): number {
+  return 0; /* TODO */
 }

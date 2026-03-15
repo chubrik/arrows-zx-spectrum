@@ -1,6 +1,6 @@
 import { getMem8, setMem8 } from '../../common/utils';
 import { RhlSelect } from '../types';
-import { getRegA, getRegBC, getRegDE, getRegI, getRegR, getRegRhl, nextPC16, nextPC8, setRegA, setRegI, setRegR, setRegRhl } from '../utils';
+import { getRegA, getRegBC, getRegDE, getRegI, getRegR, getRegRhl, next16, next8, setRegA, setRegI, setRegR, setRegRhl } from '../utils';
 
 /** 
  * LD r,r'
@@ -17,7 +17,7 @@ export function LD_Rhl_Rhl(dest: RhlSelect, src: RhlSelect) {
  * LD (HL),n | LD (IX+d),n | LD (IY+d),n
  */
 export function LD_Rhl_N(dest: RhlSelect) {
-  const n = nextPC8();
+  const n = next8();
   setRegRhl(dest, n);
 }
 
@@ -59,7 +59,7 @@ export function LD_A_de() {
 
 /** LD A,(nn) */
 export function LD_A_nn() {
-  const srcAddr = nextPC16();
+  const srcAddr = next16();
   LD_A_mem(srcAddr);
 }
 
@@ -77,7 +77,7 @@ export function LD_de_A() {
 
 /** LD (nn),A */
 export function LD_nn_A() {
-  const destAddr = nextPC16();
+  const destAddr = next16();
   LD_mem_A(destAddr);
 }
 
