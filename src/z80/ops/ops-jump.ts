@@ -1,44 +1,49 @@
-/** JP nn */
-export function JP_NN() {
-  /* TODO */
-}
+import { CCSelect } from '../types';
+import { checkCC, getB, getHL, incPC, next16, next8, setB, setPC } from '../utils';
 
 /** JP cc,nn */
-export function JP_cc_NN(select: number) {
-  /* TODO */
+export function JP_cc_NN(cc: CCSelect) {
+  if (checkCC(cc))
+    JP_NN();
+  else
+    incPC(2);
+}
+
+/** JP nn */
+export function JP_NN() {
+  const addr = next16();
+  setPC(addr);
+}
+
+/** JR NZ,e | JR Z,e | JR NC,e | JR C,e */
+export function JR_cc_e(cc: CCSelect) {
+  if (checkCC(cc))
+    JR_e();
+  else
+    incPC(1);
+}
+
+/** DJNZ e */
+export function DJNZ_e() {
+  const count = getB();
+  const countAfter = (count - 1) & 0xFF;
+  setB(countAfter);
+
+  if (countAfter)
+    JR_e();
+  else
+    incPC(1);
 }
 
 /** JR e */
 export function JR_e() {
-  /* TODO */
-}
-
-/** JR C,e */
-export function JR_C_e() {
-  /* TODO */
-}
-
-/** JR NC,e */
-export function JR_NC_e() {
-  /* TODO */
-}
-
-/** JR Z,e */
-export function JR_Z_e() {
-  /* TODO */
-}
-
-/** JR NZ,e */
-export function JR_NZ_e() {
-  /* TODO */
+  const rawE = next8();
+  const e = rawE >= 128 ? rawE - 256 : rawE;
+  incPC(e); // -126...+129 relative to operation start
 }
 
 /** JP (HL) | JP (IX) | JP (IY) */
 export function JP_hl() {
-  /* TODO */
-}
-
-/** DJNZ E */
-export function DJNZ_E() {
-  /* TODO */
+  const addr = getHL();
+  setPC(addr);
 }

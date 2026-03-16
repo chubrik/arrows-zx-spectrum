@@ -1,31 +1,24 @@
-import { setHalted } from '../utils';
+import { incPC, setHalt, setIFF1, setIFF2, setIM } from '../utils';
 
 /** HALT */
 export function HALT() {
-  setHalted(true);
+  setHalt(1);
+  incPC(-1);
 }
 
 /** DI */
 export function DI() {
-  /* TODO */
+  setIFF1(0);
+  setIFF2(0);
 }
 
 /** EI */
 export function EI() {
-  /* TODO */
+  setIFF1(1);
+  setIFF2(1);
 }
 
-/** IM 0 */
-export function IM_0() {
-  /* TODO */
-}
-
-/** IM 1 */
-export function IM_1() {
-  /* TODO */
-}
-
-/** IM 2 */
-export function IM_2() {
-  /* TODO */
+/** IM 0 | IM 1 | IM 2 */
+export function IM(im: 0 | 1 | 2) {
+  setIM(im);
 }

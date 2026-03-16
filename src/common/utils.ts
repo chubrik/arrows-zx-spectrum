@@ -59,10 +59,9 @@ export function set16(posHigh: Position, posLow: Position, value: number) {
 export function get8(pos: Position): number {
   let value = 0;
   for (let i = 7; i >= 0; i--) {
-    value <<= 1;
     const arrow = world.getArrow(pos.x + i, pos.y);
     if (arrow && arrow.type >= 16)
-      value |= 1;
+      value |= 1 << i;
   }
   return value;
 }
@@ -70,21 +69,20 @@ export function get8(pos: Position): number {
 export function set8(pos: Position, value: number) {
   const arrowTypes = getArrowTypes(pos);
   for (let i = 7; i >= 0; i--) {
-    const bit = value & 1;
+    const bit = (value >> i) & 1;
     const arrowType = arrowTypes[bit];
     world.setArrow(pos.x + i, pos.y, arrowType, 1, false);
-    value >>= 1;
   }
 }
 
-export function get1(pos: Position): boolean {
+export function get1(pos: Position): 0 | 1 {
   const arrow = world.getArrow(pos.x, pos.y);
-  return !!arrow && arrow.type >= 16;
+  return arrow && arrow.type >= 16 ? 1 : 0;
 }
 
-export function set1(pos: Position, bit: boolean) {
+export function set1(pos: Position, bit: 0 | 1) {
   const arrowTypes = getArrowTypes(pos);
-  const arrowType = arrowTypes[bit ? 1 : 0];
+  const arrowType = arrowTypes[bit];
   world.setArrow(pos.x, pos.y, arrowType, 1, false);
 }
 

@@ -31,3 +31,15 @@ export const enum SSSelect {
   HL = 4, // HL/IX/IY
   SP = 6,
 }
+
+/** NZ, Z, NC, C, PO, PE, P, M */
+export const enum CCSelect {
+  NZ,
+  Z,
+  NC,
+  C,
+  PO, // Parity Odd  (NO)
+  PE, // Parity Even (O)
+  P,  // Plus        (NS)
+  M,  // Minus       (S)
+}

@@ -1,6 +1,6 @@
 import { getMem16, setMem16 } from '../../common/utils';
 import { QQSelect, SSSelect } from '../types';
-import { getHL, getSS, next16, setSP, setSS } from '../utils';
+import { getHL, getQQ, getSS, next16, pop16, push16, setQQ, setSP, setSS } from '../utils';
 
 /** LD (nn),dd | LD (nn),HL | LD (nn),IX | LD (nn),IY */
 export function LD_nn_SS(src: SSSelect) {
@@ -30,10 +30,12 @@ export function LD_SP_HL() {
 
 /** PUSH qq | PUSH IX | PUSH IY */
 export function PUSH_QQ(select: QQSelect) {
-  /* TODO */
+  const value = getQQ(select);
+  push16(value);
 }
 
 /** POP qq | POP IX | POP IY */
 export function POP_QQ(select: QQSelect) {
-  /* TODO */
+  const value = pop16();
+  setQQ(select, value);
 }

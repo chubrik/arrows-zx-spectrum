@@ -4,7 +4,7 @@ import { CALL_cc_NN, CALL_NN, RET, RET_cc, RST_p } from './ops/ops-call';
 import { DI, EI, HALT } from './ops/ops-control';
 import { EX_AF_AF, EX_DE_HL, EX_sp_HL, EXX } from './ops/ops-ex';
 import { IN_A_n, OUT_n_A } from './ops/ops-io';
-import { DJNZ_E, JP_cc_NN, JP_hl, JP_NN, JR_C_e, JR_e, JR_NC_e, JR_NZ_e, JR_Z_e } from './ops/ops-jump';
+import { DJNZ_e, JP_cc_NN, JP_hl, JP_NN, JR_cc_e, JR_e } from './ops/ops-jump';
 import { LD_nn_SS, LD_SP_HL, LD_SS_nn, LD_SS_NN, POP_QQ, PUSH_QQ } from './ops/ops-ld-16bit';
 import { LD_A_bc, LD_A_de, LD_A_nn, LD_bc_A, LD_de_A, LD_nn_A, LD_Rhl_N, LD_Rhl_Rhl } from './ops/ops-ld-8bit';
 import { ADD_HL_SS, DEC_SS, INC_SS } from './ops/ops-math-16bit';
@@ -12,12 +12,12 @@ import { ADC_A_N, ADC_A_Rhl, ADD_A_N, ADD_A_Rhl, AND_N, AND_Rhl, CP_N, CP_Rhl, D
 import { CCF, CPL, DAA, NOP, SCF } from './ops/ops-math-etc';
 import { RLA, RLCA, RRA, RRCA } from './ops/ops-shift';
 import { HLMode, SSSelect } from './types';
-import { getHalted, next8, refresh, setHLMode, splitOp } from './utils';
+import { next8, refresh, setHLMode, splitOp } from './utils';
 
 /** Main Instructions | IX Instructions (DD) | IY Instructions (FD) */
 export function executeMain() {
   refresh();
-  if (getHalted()) return;
+  // if (getHalt()) return; (optional)
   const op = next8();
   const { b76, b543, b210 } = splitOp(op);
 
@@ -25,12 +25,9 @@ export function executeMain() {
     if (b210 === 0) {
       if (b543 === 0) NOP();
       else if (b543 === 1) EX_AF_AF();
-      else if (b543 === 2) DJNZ_E();
+      else if (b543 === 2) DJNZ_e();
       else if (b543 === 3) JR_e();
-      else if (b543 === 4) JR_NZ_e();
-      else if (b543 === 5) JR_Z_e();
-      else if (b543 === 6) JR_NC_e();
-      else JR_C_e();
+      else JR_cc_e(b543 - 4);
     }
     else if (b210 === 1) {
       if (b543 & 1) ADD_HL_SS(b543 - 1);
@@ -143,7 +140,7 @@ export function executeMain() {
       else CP_N();
     }
     else {
-      RST_p(b543 * 8);
+      RST_p(b543);
     }
   }
 }

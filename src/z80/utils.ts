@@ -1,22 +1,22 @@
-import { get1, get16, get8, getMem8, getMemPos, set1, set16, set8 } from '../common/utils';
-import { HLMode, QQSelect, RhlSelect, SSSelect } from './types';
+import { get1, get16, get8, getMem16, getMem8, getMemPos, set1, set16, set8, setMem16 } from '../common/utils';
+import { CCSelect, HLMode, QQSelect, RhlSelect, SSSelect } from './types';
 
-let posF: Position;
-let posA: Position;
-let posB: Position;
-let posC: Position;
-let posD: Position;
-let posE: Position;
-let posH: Position;
-let posL: Position;
-let posFa: Position;
-let posAa: Position;
-let posBa: Position;
-let posCa: Position;
-let posDa: Position;
-let posEa: Position;
-let posHa: Position;
-let posLa: Position;
+export let posF: Position;
+export let posA: Position;
+export let posB: Position;
+export let posC: Position;
+export let posD: Position;
+export let posE: Position;
+export let posH: Position;
+export let posL: Position;
+export let posFa: Position;
+export let posAa: Position;
+export let posBa: Position;
+export let posCa: Position;
+export let posDa: Position;
+export let posEa: Position;
+export let posHa: Position;
+export let posLa: Position;
 let posIXh: Position;
 let posIXl: Position;
 let posIYh: Position;
@@ -27,7 +27,11 @@ let posPCh: Position;
 let posPCl: Position;
 let posI: Position;
 let posR: Position;
-let posHalted: Position;
+let posHalt: Position;
+let posIFF1: Position;
+let posIFF2: Position;
+let posIM1: Position;
+let posIM2: Position;
 let posBitDest: (Position | null)[];
 
 export let hlMode = HLMode.HL;
@@ -63,12 +67,18 @@ export function initCpu(chunkX: number, chunkY: number) {
   posPCl = createPos(cpuX, cpuY + 15);
   posI = createPos(cpuX + 8, cpuY + 8);
   posR = createPos(cpuX + 8, cpuY + 9);
-  posHalted = createPos(cpuX + 8, cpuY + 10);
+  posHalt = createPos(cpuX + 8, cpuY + 10);
+  posIFF1 = createPos(cpuX + 8, cpuY + 11);
+  posIFF2 = createPos(cpuX + 8, cpuY + 12);
+  posIM1 = createPos(cpuX + 8, cpuY + 13);
+  posIM2 = createPos(cpuX + 8, cpuY + 14);
   posBitDest = [posB, posC, posD, posE, posH, posL, null, posA];
 }
 
 export function getA(): number { return get8(posA); }
 export function setA(value: number) { set8(posA, value); }
+export function getB(): number { return get8(posB); }
+export function setB(value: number) { set8(posB, value); }
 export function getI(): number { return get8(posI); }
 export function setI(value: number) { set8(posI, value); }
 
@@ -84,9 +94,6 @@ export function getHL(): number { return get16(getPosH(), getPosL()); }
 /** HL/IX/IY */
 export function setHL(value: number) { set16(getPosH(), getPosL(), value); }
 
-export function getHalted(): boolean { return get1(posHalted); }
-export function setHalted(value: boolean) { set1(posHalted, value); }
-
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
 export function getRhl(select: RhlSelect): number { return get8(posRhl[select]()); }
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
@@ -101,6 +108,30 @@ export function setQQ(select: QQSelect, value: number) { set16(posQQ[select](), 
 export function getSS(select: SSSelect): number { return get16(posSS[select](), posSS[select + 1]()); }
 /** BC, DE, HL/IX/IY, SP */
 export function setSS(select: SSSelect, value: number) { set16(posSS[select](), posSS[select + 1](), value); }
+
+export function push16(value: number) {
+  const sp = getSP();
+  const spAfter = (sp - 2) & 0xFFFF;
+  setSP(spAfter);
+  setMem16(spAfter, value);
+}
+
+export function pop16(): number {
+  const sp = getSP();
+  const value = getMem16(sp);
+  const spAfter = (sp + 2) & 0xFFFF;
+  setSP(spAfter);
+  return value;
+}
+
+export function getHalt(): 0 | 1 { return get1(posHalt); }
+export function setHalt(value: 0 | 1) { set1(posHalt, value); }
+export function getIFF1(): 0 | 1 { return get1(posIFF1); }
+export function setIFF1(value: 0 | 1) { set1(posIFF1, value); }
+export function getIFF2(): 0 | 1 { return get1(posIFF2); }
+export function setIFF2(value: 0 | 1) { set1(posIFF2, value); }
+export function getIM(): 0 | 1 | 2 { return get1(posIM2) ? 2 : get1(posIM1) ? 1 : 0; }
+export function setIM(value: 0 | 1 | 2) { set1(posIM1, value === 1 ? 1 : 0); set1(posIM2, value === 2 ? 1 : 0); }
 
 let startR: number;
 let currentR: number;
@@ -121,6 +152,7 @@ export function getR(): number { return currentR; }
 export function setR(value: number) { currentR = value; }
 export function getPC(): number { return currentPC; }
 export function setPC(value: number) { currentPC = value; }
+export function incPC(add: number) { currentPC = (currentPC + add) & 0xFFFF; }
 
 export function next16(): number {
   const valueLow = next8();
@@ -191,7 +223,7 @@ const posRhl: (() => Position)[] = [
 /** (IX+d/IY+d) */
 export function getMemPosIXIYd(rawD: number): Position {
   let addr = getHL() // IX/IY
-  const d = rawD >= 128 ? rawD - 256 : rawD; // -128..+127
+  const d = rawD >= 128 ? rawD - 256 : rawD; // -128...+127
   addr = (addr + d) & 0xFFFF;
   return getMemPos(addr);
 }
@@ -219,6 +251,14 @@ const posSS: (() => Position)[] = [
   () => posSPh,
   () => posSPl,
 ];
+
+const ccMask = [0x40, 0x01, 0x04, 0x80];
+
+/** NZ, Z, NC, C, PO, PE, P, M */
+export function checkCC(cc: CCSelect): any {
+  const bit = get8(posF) & ccMask[cc >> 1];
+  return cc & 1 ? bit : !bit;
+}
 
 /** H/IXh/IYh */
 function getPosH() {

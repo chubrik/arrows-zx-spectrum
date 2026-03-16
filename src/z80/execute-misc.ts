@@ -1,6 +1,6 @@
 import { CPD, CPDR, CPI, CPIR, LDD, LDDR, LDI, LDIR } from './ops/ops-block';
 import { RETI, RETN } from './ops/ops-call';
-import { IM_0, IM_1, IM_2 } from './ops/ops-control';
+import { IM } from './ops/ops-control';
 import { IN_R_c, IND, INDR, INI, INIR, OTDR, OTIR, OUT_c_R, OUTD, OUTI } from './ops/ops-io';
 import { LD_nn_SS, LD_SS_nn } from './ops/ops-ld-16bit';
 import { LD_A_I, LD_A_R, LD_I_A, LD_R_A } from './ops/ops-ld-8bit';
@@ -44,9 +44,9 @@ export function executeMisc() {
       if (op === 0x44) NEG();
       else if (op === 0x45) RETN();
       else if (op === 0x4D) RETI();
-      else if (op === 0x46) IM_0();
-      else if (op === 0x56) IM_1();
-      else if (op === 0x5E) IM_2();
+      else if (op === 0x46) IM(0);
+      else if (op === 0x56) IM(1);
+      else if (op === 0x5E) IM(2);
     }
   }
   else {
