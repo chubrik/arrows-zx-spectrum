@@ -1,31 +1,31 @@
-import { getRegA, setRegA } from '../utils';
+import { getA, setA } from '../utils';
 
 /** RLCA */
 export function RLCA() {
-  const value = getRegA();
+  const value = getA();
   const result = RLC_Rhl(value);
-  setRegA(result);
+  setA(result);
 }
 
 /** RRCA */
 export function RRCA() {
-  const value = getRegA();
+  const value = getA();
   const result = RRC_Rhl(value);
-  setRegA(result);
+  setA(result);
 }
 
 /** RLA */
 export function RLA() {
-  const value = getRegA();
+  const value = getA();
   const result = RL_Rhl(value);
-  setRegA(result);
+  setA(result);
 }
 
 /** RRA */
 export function RRA() {
-  const value = getRegA();
+  const value = getA();
   const result = RR_Rhl(value);
-  setRegA(result);
+  setA(result);
 }
 
 /** RLD */

@@ -2,7 +2,7 @@ import { get8, set8 } from '../common/utils';
 import { BIT_b_Rhl, RES_b_Rhl, SET_b_Rhl } from './ops/ops-bit';
 import { RL_Rhl, RLC_Rhl, RR_Rhl, RRC_Rhl, SLA_Rhl, SLL_Rhl, SRA_Rhl, SRL_Rhl } from './ops/ops-shift';
 import { HLMode } from './types';
-import { getBitDest, getIXIYdMemPos, getRhlPos, hlMode, next8, refresh, splitOp } from './utils';
+import { getMemPosIXIYd, getPosBitDest, getPosRhl, hlMode, next8, refresh, splitOp } from './utils';
 
 /** Bit Instructions (CB) | IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
 export function executeBit() {
@@ -13,14 +13,14 @@ export function executeBit() {
     refresh();
     const op = next8();
     ({ b76, b543, b210 } = splitOp(op));
-    srcPos = destPos = getRhlPos(b210);
+    srcPos = destPos = getPosRhl(b210);
   }
   else {
     const rawD = next8();
     const op = next8();
     ({ b76, b543, b210 } = splitOp(op));
-    srcPos = getIXIYdMemPos(rawD);
-    destPos = getBitDest(b210) || srcPos;
+    srcPos = getMemPosIXIYd(rawD);
+    destPos = getPosBitDest(b210) || srcPos;
   }
 
   const value = get8(srcPos);

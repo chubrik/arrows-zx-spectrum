@@ -33,8 +33,8 @@ async function buildAndPack(path: string) {
   writeToPath(`${DIST_DIR}/pack/${fileName}.pack.js`, packed);
 
   console.log(
-    `${path}: ${built.length} bytes, ` +
-    `minified: ${[...minified].length} bytes, ` +
+    `${path}: ${built.length} bytes → ` +
+    `minified: ${[...minified].length} bytes → ` +
     `packed: ${packed.length} bytes (${[...packed].length} chars)`);
 }
 
@@ -61,8 +61,8 @@ async function buildAndPackDeployer(path: string) {
   writeToPath(`${DIST_DIR}/pack/${fileName}.pack.js`, pack);
 
   console.log(
-    `${path}: ${built.length} bytes, ` +
-    `minified: ${minified.length} bytes, ` +
+    `${path}: ${built.length} bytes → ` +
+    `minified: ${minified.length} bytes → ` +
     `packed: ${pack.length} bytes (${[...pack].length} chars)`);
 }
 

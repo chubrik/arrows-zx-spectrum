@@ -1,11 +1,11 @@
 import { getMem16, setMem16 } from '../../common/utils';
 import { QQSelect, SSSelect } from '../types';
-import { getRegHL, getRegSS, next16, setRegSP, setRegSS } from '../utils';
+import { getHL, getSS, next16, setSP, setSS } from '../utils';
 
 /** LD (nn),dd | LD (nn),HL | LD (nn),IX | LD (nn),IY */
 export function LD_nn_SS(src: SSSelect) {
   const destAddr = next16();
-  const value = getRegSS(src);
+  const value = getSS(src);
   setMem16(destAddr, value);
 }
 
@@ -13,19 +13,19 @@ export function LD_nn_SS(src: SSSelect) {
 export function LD_SS_nn(dest: SSSelect) {
   const srcAddr = next16();
   const value = getMem16(srcAddr);
-  setRegSS(dest, value);
+  setSS(dest, value);
 }
 
 /** LD dd,nn | LD IX,nn | LD IY,nn */
 export function LD_SS_NN(dest: SSSelect) {
   const nn = next16();
-  setRegSS(dest, nn);
+  setSS(dest, nn);
 }
 
 /** LD SP,HL | LD SP,IX | LD SP,IY */
 export function LD_SP_HL() {
-  const value = getRegHL();
-  setRegSP(value);
+  const value = getHL();
+  setSP(value);
 }
 
 /** PUSH qq | PUSH IX | PUSH IY */

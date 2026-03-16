@@ -1,34 +1,34 @@
 import { get1, get16, get8, getMem8, getMemPos, set1, set16, set8 } from '../common/utils';
 import { HLMode, QQSelect, RhlSelect, SSSelect } from './types';
 
-let F: Position;
-let A: Position;
-let B: Position;
-let C: Position;
-let D: Position;
-let E: Position;
-let H: Position;
-let L: Position;
-let Fa: Position;
-let Aa: Position;
-let Ba: Position;
-let Ca: Position;
-let Da: Position;
-let Ea: Position;
-let Ha: Position;
-let La: Position;
-let IXh: Position;
-let IXl: Position;
-let IYh: Position;
-let IYl: Position;
-let SPh: Position;
-let SPl: Position;
-let PCh: Position;
-let PCl: Position;
-let I: Position;
-let R: Position;
-let Hlt: Position;
-let bitDests: (Position | null)[];
+let posF: Position;
+let posA: Position;
+let posB: Position;
+let posC: Position;
+let posD: Position;
+let posE: Position;
+let posH: Position;
+let posL: Position;
+let posFa: Position;
+let posAa: Position;
+let posBa: Position;
+let posCa: Position;
+let posDa: Position;
+let posEa: Position;
+let posHa: Position;
+let posLa: Position;
+let posIXh: Position;
+let posIXl: Position;
+let posIYh: Position;
+let posIYl: Position;
+let posSPh: Position;
+let posSPl: Position;
+let posPCh: Position;
+let posPCl: Position;
+let posI: Position;
+let posR: Position;
+let posHalted: Position;
+let posBitDest: (Position | null)[];
 
 export let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
@@ -37,94 +37,90 @@ export function initCpu(chunkX: number, chunkY: number) {
   const cpuX = chunkX + 16;
   const cpuY = chunkY - 16;
 
-  F = createPos(cpuX, cpuY);
-  A = createPos(cpuX, cpuY + 1);
-  B = createPos(cpuX, cpuY + 2);
-  C = createPos(cpuX, cpuY + 3);
-  D = createPos(cpuX, cpuY + 4);
-  E = createPos(cpuX, cpuY + 5);
-  H = createPos(cpuX, cpuY + 6);
-  L = createPos(cpuX, cpuY + 7);
-
-  Fa = createPos(cpuX + 8, cpuY);
-  Aa = createPos(cpuX + 8, cpuY + 1);
-  Ba = createPos(cpuX + 8, cpuY + 2);
-  Ca = createPos(cpuX + 8, cpuY + 3);
-  Da = createPos(cpuX + 8, cpuY + 4);
-  Ea = createPos(cpuX + 8, cpuY + 5);
-  Ha = createPos(cpuX + 8, cpuY + 6);
-  La = createPos(cpuX + 8, cpuY + 7);
-
-  IXh = createPos(cpuX, cpuY + 8);
-  IXl = createPos(cpuX, cpuY + 9);
-  IYh = createPos(cpuX, cpuY + 10);
-  IYl = createPos(cpuX, cpuY + 11);
-  SPh = createPos(cpuX, cpuY + 12);
-  SPl = createPos(cpuX, cpuY + 13);
-  PCh = createPos(cpuX, cpuY + 14);
-  PCl = createPos(cpuX, cpuY + 15);
-
-  I = createPos(cpuX + 8, cpuY + 8);
-  R = createPos(cpuX + 8, cpuY + 9);
-
-  Hlt = createPos(cpuX + 8, cpuY + 10);
-
-  bitDests = [B, C, D, E, H, L, null, A];
+  posF = createPos(cpuX, cpuY);
+  posA = createPos(cpuX, cpuY + 1);
+  posB = createPos(cpuX, cpuY + 2);
+  posC = createPos(cpuX, cpuY + 3);
+  posD = createPos(cpuX, cpuY + 4);
+  posE = createPos(cpuX, cpuY + 5);
+  posH = createPos(cpuX, cpuY + 6);
+  posL = createPos(cpuX, cpuY + 7);
+  posFa = createPos(cpuX + 8, cpuY);
+  posAa = createPos(cpuX + 8, cpuY + 1);
+  posBa = createPos(cpuX + 8, cpuY + 2);
+  posCa = createPos(cpuX + 8, cpuY + 3);
+  posDa = createPos(cpuX + 8, cpuY + 4);
+  posEa = createPos(cpuX + 8, cpuY + 5);
+  posHa = createPos(cpuX + 8, cpuY + 6);
+  posLa = createPos(cpuX + 8, cpuY + 7);
+  posIXh = createPos(cpuX, cpuY + 8);
+  posIXl = createPos(cpuX, cpuY + 9);
+  posIYh = createPos(cpuX, cpuY + 10);
+  posIYl = createPos(cpuX, cpuY + 11);
+  posSPh = createPos(cpuX, cpuY + 12);
+  posSPl = createPos(cpuX, cpuY + 13);
+  posPCh = createPos(cpuX, cpuY + 14);
+  posPCl = createPos(cpuX, cpuY + 15);
+  posI = createPos(cpuX + 8, cpuY + 8);
+  posR = createPos(cpuX + 8, cpuY + 9);
+  posHalted = createPos(cpuX + 8, cpuY + 10);
+  posBitDest = [posB, posC, posD, posE, posH, posL, null, posA];
 }
 
-export function getRegA(): number { return get8(A); }
-export function setRegA(value: number) { set8(A, value); }
-export function getRegI(): number { return get8(I); }
-export function setRegI(value: number) { set8(I, value); }
+export function getA(): number { return get8(posA); }
+export function setA(value: number) { set8(posA, value); }
+export function getI(): number { return get8(posI); }
+export function setI(value: number) { set8(posI, value); }
 
-export function getRegBC(): number { return get16(B, C); }
-export function setRegBC(value: number) { set16(B, C, value); }
-export function getRegDE(): number { return get16(D, E); }
-export function setRegDE(value: number) { set16(D, E, value); }
-/** HL/IX/IY */
-export function getRegHL(): number { return get16(getH(), getL()); }
-/** HL/IX/IY */
-export function setRegHL(value: number) { set16(getH(), getL(), value); }
-export function getRegSP(): number { return get16(SPh, SPl); }
-export function setRegSP(value: number) { set16(SPh, SPl, value); }
+export function getBC(): number { return get16(posB, posC); }
+export function setBC(value: number) { set16(posB, posC, value); }
+export function getDE(): number { return get16(posD, posE); }
+export function setDE(value: number) { set16(posD, posE, value); }
+export function getSP(): number { return get16(posSPh, posSPl); }
+export function setSP(value: number) { set16(posSPh, posSPl, value); }
 
-export function getFlagHlt(): boolean { return get1(Hlt); }
-export function setFlagHlt(value: boolean) { set1(Hlt, value); }
+/** HL/IX/IY */
+export function getHL(): number { return get16(getPosH(), getPosL()); }
+/** HL/IX/IY */
+export function setHL(value: number) { set16(getPosH(), getPosL(), value); }
+
+export function getHalted(): boolean { return get1(posHalted); }
+export function setHalted(value: boolean) { set1(posHalted, value); }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-export function getRegRhl(select: RhlSelect): number { return get8(Rhl[select]()); }
+export function getRhl(select: RhlSelect): number { return get8(posRhl[select]()); }
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-export function setRegRhl(select: RhlSelect, value: number) { set8(Rhl[select](), value); }
+export function setRhl(select: RhlSelect, value: number) { set8(posRhl[select](), value); }
 
 /** BC, DE, HL/IX/IY, AF */
-export function getRegQQ(select: QQSelect): number { return get16(QQ[select](), QQ[select + 1]()); }
+export function getQQ(select: QQSelect): number { return get16(posQQ[select](), posQQ[select + 1]()); }
 /** BC, DE, HL/IX/IY, AF */
-export function setRegQQ(select: QQSelect, value: number) { set16(QQ[select](), QQ[select + 1](), value); }
+export function setQQ(select: QQSelect, value: number) { set16(posQQ[select](), posQQ[select + 1](), value); }
 
 /** BC, DE, HL/IX/IY, SP */
-export function getRegSS(select: SSSelect): number { return get16(SS[select](), SS[select + 1]()); }
+export function getSS(select: SSSelect): number { return get16(posSS[select](), posSS[select + 1]()); }
 /** BC, DE, HL/IX/IY, SP */
-export function setRegSS(select: SSSelect, value: number) { set16(SS[select](), SS[select + 1](), value); }
+export function setSS(select: SSSelect, value: number) { set16(posSS[select](), posSS[select + 1](), value); }
 
-let RStart: number;
-let RCurrent: number;
-let PCStart: number;
-let PCCurrent: number;
+let startR: number;
+let currentR: number;
+let startPC: number;
+let currentPC: number;
 
 export function fetchRegs() {
-  RStart = RCurrent = get8(R);
-  PCStart = PCCurrent = get16(PCh, PCl);
+  startR = currentR = get8(posR);
+  startPC = currentPC = get16(posPCh, posPCl);
 }
 
 export function commitRegs() {
-  if (RCurrent !== RStart) set8(R, RCurrent);
-  if (PCCurrent !== PCStart) set16(PCh, PCl, PCCurrent);
+  if (currentR !== startR) set8(posR, currentR);
+  if (currentPC !== startPC) set16(posPCh, posPCl, currentPC);
 }
 
-export function getRegR(): number { return RCurrent; }
-export function setRegR(value: number) { RCurrent = value; }
-export function getRegPC(): number { return PCCurrent; }
-export function setRegPC(value: number) { PCCurrent = value; }
+export function getR(): number { return currentR; }
+export function setR(value: number) { currentR = value; }
+export function getPC(): number { return currentPC; }
+export function setPC(value: number) { currentPC = value; }
 
 export function next16(): number {
   const valueLow = next8();
@@ -133,8 +129,8 @@ export function next16(): number {
 }
 
 export function next8(): number {
-  const value = getMem8(PCCurrent);
-  PCCurrent = (PCCurrent + 1) & 0xFFFF;
+  const value = getMem8(currentPC);
+  currentPC = (currentPC + 1) & 0xFFFF;
   return value;
 }
 
@@ -147,7 +143,7 @@ export function splitOp(op: number): { b76: number, b543: number, b210: number }
 }
 
 export function refresh() {
-  RCurrent = (RCurrent & 0x80) | ((RCurrent + 1) & 0x7F)
+  currentR = (currentR & 0x80) | ((currentR + 1) & 0x7F)
 }
 
 export function copyCPU() {
@@ -162,80 +158,80 @@ export function interrupt() {
 }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-export function getRhlPos(select: RhlSelect): Position {
-  return Rhl[select]();
+export function getPosRhl(select: RhlSelect): Position {
+  return posRhl[select]();
 }
 
 /** B, C, D, E, H, L, null, A */
-export function getBitDest(select: RhlSelect): Position | null {
-  return bitDests[select];
+export function getPosBitDest(select: RhlSelect): Position | null {
+  return posBitDest[select];
 }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-const Rhl: (() => Position)[] = [
-  () => B,
-  () => C,
-  () => D,
-  () => E,
-  getH, // H/IXh/IYh
-  getL, // L/IXl/IYl
+const posRhl: (() => Position)[] = [
+  () => posB,
+  () => posC,
+  () => posD,
+  () => posE,
+  getPosH, // H/IXh/IYh
+  getPosL, // L/IXl/IYl
   () => { // (HL/IX+d/IY+d)
     if (hlMode === HLMode.HL) {
-      const addr = get16(H, L);
+      const addr = get16(posH, posL);
       return getMemPos(addr);
     }
     else {
       let rawD = next8();
-      return getIXIYdMemPos(rawD);
+      return getMemPosIXIYd(rawD);
     }
   },
-  () => A,
+  () => posA,
 ];
 
 /** (IX+d/IY+d) */
-export function getIXIYdMemPos(rawD: number): Position {
-  let addr = get16(getH(), getL()) // IX/IY
+export function getMemPosIXIYd(rawD: number): Position {
+  let addr = getHL() // IX/IY
   const d = rawD >= 128 ? rawD - 256 : rawD; // -128..+127
   addr = (addr + d) & 0xFFFF;
   return getMemPos(addr);
 }
 
 /** BC, DE, HL/IX/IY, AF */
-const QQ: (() => Position)[] = [
-  () => B,
-  () => C,
-  () => D,
-  () => E,
-  getH, // H/IXh/IYh
-  getL, // L/IXl/IYl
-  () => A,
-  () => F,
+const posQQ: (() => Position)[] = [
+  () => posB,
+  () => posC,
+  () => posD,
+  () => posE,
+  getPosH, // H/IXh/IYh
+  getPosL, // L/IXl/IYl
+  () => posA,
+  () => posF,
 ];
 
 /** BC, DE, HL/IX/IY, SP */
-const SS: (() => Position)[] = [
-  () => B,
-  () => C,
-  () => D,
-  () => E,
-  getH, // H/IXh/IYh
-  getL, // L/IXl/IYl
-  () => SPh,
-  () => SPl,
+const posSS: (() => Position)[] = [
+  () => posB,
+  () => posC,
+  () => posD,
+  () => posE,
+  getPosH, // H/IXh/IYh
+  getPosL, // L/IXl/IYl
+  () => posSPh,
+  () => posSPl,
 ];
 
 /** H/IXh/IYh */
-function getH() {
-  if (hlMode === HLMode.IX) return IXh;
-  if (hlMode === HLMode.IY) return IYh;
-  return H;
+function getPosH() {
+  if (hlMode === HLMode.IX) return posIXh;
+  if (hlMode === HLMode.IY) return posIYh;
+  return posH;
 }
 
 /** L/IXl/IYl */
-function getL() {
-  if (hlMode === HLMode.IX) return IXl;
-  if (hlMode === HLMode.IY) return IYl;
-  return L;
+function getPosL() {
+  if (hlMode === HLMode.IX) return posIXl;
+  if (hlMode === HLMode.IY) return posIYl;
+  return posL;
 }
 
 function createPos(x: number, y: number): Position {
