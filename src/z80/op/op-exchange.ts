@@ -44,10 +44,10 @@ export function EXX() {
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
 export function EX_sp_HL() {
   const addr = getSP();
-  const hlValue = getHL();
-  const memValue = getMem16(addr);
-  setHL(memValue);
-  setMem16(addr, hlValue);
+  const hl = getHL();
+  const mem = getMem16(addr);
+  setHL(mem);
+  setMem16(addr, hl);
 }
 
 /** EX DE,HL */

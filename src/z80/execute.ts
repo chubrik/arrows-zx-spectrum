@@ -8,7 +8,7 @@ import { DJNZ_e, JP_cc_NN, JP_hl, JP_NN, JR_cc_e, JR_e } from './op/op-jump';
 import { LD_nn_SS, LD_SP_HL, LD_SS_nn, LD_SS_NN, POP_QQ, PUSH_QQ } from './op/op-load-16bit';
 import { LD_A_bc, LD_A_de, LD_A_nn, LD_bc_A, LD_de_A, LD_nn_A, LD_Rhl_N, LD_Rhl_Rhl } from './op/op-load-8bit';
 import { ADD_HL_SS, DEC_SS, INC_SS } from './op/op-math-16bit';
-import { ADC_A_N, ADC_A_Rhl, ADD_A_N, ADD_A_Rhl, AND_N, AND_Rhl, CP_N, CP_Rhl, DEC_Rhl, INC_Rhl, OR_N, OR_Rhl, SBC_N, SBC_Rhl, SUB_N, SUB_Rhl, XOR_N, XOR_Rhl } from './op/op-math-8bit';
+import { ADC_A_N, ADC_A_Rhl, ADD_A_N, ADD_A_Rhl, AND_N, AND_Rhl, CP_N, CP_Rhl, DEC_Rhl, INC_Rhl, OR_N, OR_Rhl, SBC_A_N, SBC_A_Rhl, SUB_N, SUB_Rhl, XOR_N, XOR_Rhl } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { RLA, RLCA, RRA, RRCA } from './op/op-shift';
 import { HLMode, SSSelect } from './types';
@@ -75,7 +75,7 @@ export function executeMain() {
     if (b543 === 0) ADD_A_Rhl(b210);
     else if (b543 === 1) ADC_A_Rhl(b210);
     else if (b543 === 2) SUB_Rhl(b210);
-    else if (b543 === 3) SBC_Rhl(b210);
+    else if (b543 === 3) SBC_A_Rhl(b210);
     else if (b543 === 4) AND_Rhl(b210);
     else if (b543 === 5) XOR_Rhl(b210);
     else if (b543 === 6) OR_Rhl(b210);
@@ -133,7 +133,7 @@ export function executeMain() {
       if (b543 === 0) ADD_A_N();
       else if (b543 === 1) ADC_A_N();
       else if (b543 === 2) SUB_N();
-      else if (b543 === 3) SBC_N();
+      else if (b543 === 3) SBC_A_N();
       else if (b543 === 4) AND_N();
       else if (b543 === 5) XOR_N();
       else if (b543 === 6) OR_N();

@@ -47,46 +47,46 @@ export function LD_R_A() {
 
 /** LD A,(BC) */
 export function LD_A_bc() {
-  const srcAddr = getBC();
-  LD_A_addr(srcAddr);
+  const addr = getBC();
+  ld_A_addr(addr);
 }
 
 /** LD A,(DE) */
 export function LD_A_de() {
-  const srcAddr = getDE();
-  LD_A_addr(srcAddr);
+  const addr = getDE();
+  ld_A_addr(addr);
 }
 
 /** LD A,(nn) */
 export function LD_A_nn() {
-  const srcAddr = next16();
-  LD_A_addr(srcAddr);
+  const addr = next16();
+  ld_A_addr(addr);
 }
 
 /** LD (BC),A */
 export function LD_bc_A() {
-  const destAddr = getBC();
-  LD_addr_A(destAddr);
+  const addr = getBC();
+  ld_addr_A(addr);
 }
 
 /** LD (DE),A */
 export function LD_de_A() {
-  const destAddr = getDE();
-  LD_addr_A(destAddr);
+  const addr = getDE();
+  ld_addr_A(addr);
 }
 
 /** LD (nn),A */
 export function LD_nn_A() {
-  const destAddr = next16();
-  LD_addr_A(destAddr);
+  const addr = next16();
+  ld_addr_A(addr);
 }
 
-function LD_A_addr(srcAddr: number) {
-  const value = getMem8(srcAddr);
+function ld_A_addr(addr: number) {
+  const value = getMem8(addr);
   setA(value);
 }
 
-function LD_addr_A(destAddr: number) {
+function ld_addr_A(addr: number) {
   const value = getA();
-  setMem8(destAddr, value);
+  setMem8(addr, value);
 }

@@ -1,10 +1,12 @@
+import { RegSelect } from '../types';
+
 /** IN A,(n) */
 export function IN_A_n() {
   /* TODO */
 }
 
 /** IN r,(C) */
-export function IN_R_c(select: number) {
+export function IN_Reg_c(select: RegSelect) {
   /* TODO */
 }
 
@@ -34,7 +36,7 @@ export function OUT_n_A() {
 }
 
 /** OUT (C),r */
-export function OUT_c_R(select: number) {
+export function OUT_c_Reg(select: RegSelect) {
   /* TODO */
 }
 

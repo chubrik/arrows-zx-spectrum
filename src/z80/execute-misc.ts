@@ -1,7 +1,7 @@
 import { CPD, CPDR, CPI, CPIR, LDD, LDDR, LDI, LDIR } from './op/op-block';
 import { RETI, RETN } from './op/op-call';
 import { IM } from './op/op-control';
-import { IN_R_c, IND, INDR, INI, INIR, OTDR, OTIR, OUT_c_R, OUTD, OUTI } from './op/op-io';
+import { IN_Reg_c, IND, INDR, INI, INIR, OTDR, OTIR, OUT_c_Reg, OUTD, OUTI } from './op/op-io';
 import { LD_nn_SS, LD_SS_nn } from './op/op-load-16bit';
 import { LD_A_I, LD_A_R, LD_I_A, LD_R_A } from './op/op-load-8bit';
 import { ADC_HL_SS, SBC_HL_SS } from './op/op-math-16bit';
@@ -18,11 +18,11 @@ export function executeMisc() {
   if (b76 === 1) {
     if (b210 === 0) {
       if (b543 === 6) { /* TODO */ }
-      else IN_R_c(b543);
+      else IN_Reg_c(b543);
     }
     else if (b210 === 1) {
       if (b543 === 6) { /* TODO */ }
-      else OUT_c_R(b543);
+      else OUT_c_Reg(b543);
     }
     else if (b210 === 2) {
       if (b543 & 1) ADC_HL_SS(b543 - 1);

@@ -1,10 +1,10 @@
 import { get8, set8 } from '../../common/utils';
 import { RhlSelect } from '../types';
-import { f53, fC, fH, flagsSZ53, fN, fPV, fS, fZ, getA, getFC, getPosRhl, getRhl, next8, flagP, setA, setF } from '../utils';
+import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, flagP, flagsSZ53, getA, getFC, getPosRhl, getRhl, maskF53, next8, setA, setF } from '../utils';
 
 /** ADD A,r | ADD A,(HL) | ADD A,(IX+d) | ADD A,(IY+d) */
-export function ADD_A_Rhl(src: RhlSelect) {
-  const operand = getRhl(src);
+export function ADD_A_Rhl(select: RhlSelect) {
+  const operand = getRhl(select);
   add(operand, 0);
 }
 
@@ -15,22 +15,22 @@ export function ADD_A_N() {
 }
 
 /** ADC A,r | ADC A,(HL) | ADC A,(IX+d) | ADC A,(IY+d) */
-export function ADC_A_Rhl(src: RhlSelect) {
-  const operand = getRhl(src);
-  const c = getFC();
-  add(operand, c);
+export function ADC_A_Rhl(select: RhlSelect) {
+  const operand = getRhl(select);
+  const carry = getFC();
+  add(operand, carry);
 }
 
 /** ADC A,n */
 export function ADC_A_N() {
   const operand = next8();
-  const c = getFC();
-  add(operand, c);
+  const carry = getFC();
+  add(operand, carry);
 }
 
 /** SUB r | SUB (HL) | SUB (IX+d) | SUB (IY+d) */
-export function SUB_Rhl(src: RhlSelect) {
-  const operand = getRhl(src);
+export function SUB_Rhl(select: RhlSelect) {
+  const operand = getRhl(select);
   sub(operand, 0);
 }
 
@@ -41,37 +41,37 @@ export function SUB_N() {
 }
 
 /** SBC A,r | SBC A,(HL) | SBC A,(IX+d) | SBC A,(IY+d) */
-export function SBC_Rhl(src: RhlSelect) {
-  const operand = getRhl(src);
-  const c = getFC();
-  sub(operand, c);
+export function SBC_A_Rhl(select: RhlSelect) {
+  const operand = getRhl(select);
+  const carry = getFC();
+  sub(operand, carry);
 }
 
 /** SBC A,n */
-export function SBC_N() {
+export function SBC_A_N() {
   const operand = next8();
-  const c = getFC();
-  sub(operand, c);
+  const carry = getFC();
+  sub(operand, carry);
 }
 
 /** AND r | AND (HL) | AND (IX+d) | AND (IY+d) */
-export function AND_Rhl(src: RhlSelect) {
+export function AND_Rhl(select: RhlSelect) {
   const a = getA();
-  const operand = getRhl(src);
-  logic(a & operand, fH);
+  const operand = getRhl(select);
+  logic(a & operand, bitFH);
 }
 
 /** AND n */
 export function AND_N() {
   const a = getA();
   const operand = next8();
-  logic(a & operand, fH);
+  logic(a & operand, bitFH);
 }
 
 /** OR r | OR (HL) | OR (IX+d) | OR (IY+d) */
-export function OR_Rhl(src: RhlSelect) {
+export function OR_Rhl(select: RhlSelect) {
   const a = getA();
-  const operand = getRhl(src);
+  const operand = getRhl(select);
   logic(a | operand, 0);
 }
 
@@ -83,9 +83,9 @@ export function OR_N() {
 }
 
 /** XOR r | XOR (HL) | XOR (IX+d) | XOR (IY+d) */
-export function XOR_Rhl(src: RhlSelect) {
+export function XOR_Rhl(select: RhlSelect) {
   const a = getA();
-  const operand = getRhl(src);
+  const operand = getRhl(select);
   logic(a ^ operand, 0);
 }
 
@@ -97,8 +97,8 @@ export function XOR_N() {
 }
 
 /** CP r | CP (HL) | CP (IX+d) | CP (IY+d) */
-export function CP_Rhl(src: RhlSelect) {
-  const operand = getRhl(src);
+export function CP_Rhl(select: RhlSelect) {
+  const operand = getRhl(select);
   cp(operand);
 }
 
@@ -109,33 +109,33 @@ export function CP_N() {
 }
 
 /** INC r | INC (HL) | INC (IX+d) | INC (IY+d) */
-export function INC_Rhl(src: RhlSelect) {
-  const pos = getPosRhl(src);
+export function INC_Rhl(select: RhlSelect) {
+  const pos = getPosRhl(select);
   const value = get8(pos);
   const result = (value + 1) & 0xFF;
   set8(pos, result);
 
   setF(
     flagsSZ53(result)
-    | (!(result & 0x0F) ? fH : 0)
-    | (value === 0x7F ? fPV : 0)
+    | (!(result & 0x0F) ? bitFH : 0)
+    | (value === 0x7F ? bitFPV : 0)
     | getFC()
   );
 }
 
 /** DEC r | DEC (HL) | DEC (IX+d) | DEC (IY+d) */
-export function DEC_Rhl(src: RhlSelect) {
-  const pos = getPosRhl(src);
+export function DEC_Rhl(select: RhlSelect) {
+  const pos = getPosRhl(select);
   const value = get8(pos);
   const result = (value - 1) & 0xFF;
   set8(pos, result);
 
   setF(
     flagsSZ53(result)
-    | (!(value & 0x0F) ? fH : 0)
-    | (value === 0x80 ? fPV : 0)
+    | (!(value & 0x0F) ? bitFH : 0)
+    | (value === 0x80 ? bitFPV : 0)
     | getFC()
-    | fN
+    | bitFN
   );
 }
 
@@ -147,9 +147,9 @@ function add(operand: number, carry: number) {
 
   setF(
     flagsSZ53(result)
-    | ((a ^ operand ^ result) & fH)
+    | ((a ^ operand ^ result) & bitFH)
     | (((a ^ ~operand) & (a ^ result) & 0x80) >> 5)
-    | ((sum >> 8) & fC)
+    | ((sum >> 8) & bitFC)
   );
 }
 
@@ -161,10 +161,10 @@ function sub(operand: number, carry: number) {
 
   setF(
     flagsSZ53(result)
-    | ((a ^ operand ^ result) & fH)
+    | ((a ^ operand ^ result) & bitFH)
     | (((a ^ operand) & (a ^ result) & 0x80) >> 5)
-    | ((diff >> 8) & fC)
-    | fN
+    | ((diff >> 8) & bitFC)
+    | bitFN
   );
 }
 
@@ -174,15 +174,15 @@ function cp(operand: number) {
   const result = diff & 0xFF;
 
   setF(
-    (result & fS) | (result ? 0 : fZ) | (operand & f53)
-    | ((a ^ operand ^ result) & fH)
+    (result & bitFS) | (result ? 0 : bitFZ) | (operand & maskF53)
+    | ((a ^ operand ^ result) & bitFH)
     | (((a ^ operand) & (a ^ result) & 0x80) >> 5)
-    | ((diff >> 8) & fC)
-    | fN
+    | ((diff >> 8) & bitFC)
+    | bitFN
   );
 }
 
-function logic(result: number, h: number) {
+function logic(result: number, fH: number) {
   setA(result);
-  setF(flagsSZ53(result) | flagP(result) | h);
+  setF(flagsSZ53(result) | flagP(result) | fH);
 }

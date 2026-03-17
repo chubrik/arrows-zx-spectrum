@@ -1,4 +1,4 @@
-import { f53, fC, fH, flagsSZ53, fN, fPV, fSZPV, getA, getF, flagP, setA, setF } from '../utils';
+import { bitFC, bitFH, bitFN, bitFPV, flagP, flagsSZ53, getA, getF, maskF53, maskFSZPV, setA, setF } from '../utils';
 
 /** DAA */
 export function DAA() {
@@ -6,10 +6,10 @@ export function DAA() {
   let f = getF();
   const origA = a;
   let correction = 0;
-  if ((f & fH) || (a & 0x0F) > 9) correction |= 0x06;
-  if ((f & fC) || a > 0x99) { correction |= 0x60; f |= fC; }
-  a = (f & fN ? a - correction : a + correction) & 0xFF;
-  f = (f & (fN | fC)) | flagsSZ53(a) | flagP(a) | ((origA ^ correction ^ a) & fH);
+  if ((f & bitFH) || (a & 0x0F) > 9) correction |= 0x06;
+  if ((f & bitFC) || a > 0x99) { correction |= 0x60; f |= bitFC; }
+  a = (f & bitFN ? a - correction : a + correction) & 0xFF;
+  f = (f & (bitFN | bitFC)) | flagsSZ53(a) | flagP(a) | ((origA ^ correction ^ a) & bitFH);
   setA(a);
   setF(f);
 }
@@ -19,21 +19,21 @@ export function CPL() {
   const a = getA() ^ 0xFF;
   const f = getF();
   setA(a);
-  setF((f & (fSZPV | fC)) | (a & f53) | fH | fN);
+  setF((f & (maskFSZPV | bitFC)) | (a & maskF53) | bitFH | bitFN);
 }
 
 /** CCF */
 export function CCF() {
   const a = getA();
   const f = getF();
-  setF((f & fSZPV) | (a & f53) | ((f & fC) << 4) | (~f & fC));
+  setF((f & maskFSZPV) | (a & maskF53) | ((f & bitFC) << 4) | (~f & bitFC));
 }
 
 /** SCF */
 export function SCF() {
   const a = getA();
   const f = getF();
-  setF((f & fSZPV) | (a & f53) | fC);
+  setF((f & maskFSZPV) | (a & maskF53) | bitFC);
 }
 
 /** NEG */
@@ -44,9 +44,9 @@ export function NEG() {
 
   setF(
     flagsSZ53(result)
-    | (a === 0x80 ? fPV : 0)
-    | ((0 ^ a ^ result) & fH)
-    | (a ? fC : 0)
-    | fN
+    | (a === 0x80 ? bitFPV : 0)
+    | ((0 ^ a ^ result) & bitFH)
+    | (a ? bitFC : 0)
+    | bitFN
   );
 }

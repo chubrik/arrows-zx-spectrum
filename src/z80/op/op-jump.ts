@@ -2,8 +2,8 @@ import { CCSelect } from '../types';
 import { checkCC, getB, getHL, incPC, next16, next8, setB, setPC } from '../utils';
 
 /** JP cc,nn */
-export function JP_cc_NN(cc: CCSelect) {
-  if (checkCC(cc))
+export function JP_cc_NN(select: CCSelect) {
+  if (checkCC(select))
     JP_NN();
   else
     incPC(2);
@@ -16,8 +16,8 @@ export function JP_NN() {
 }
 
 /** JR NZ,e | JR Z,e | JR NC,e | JR C,e */
-export function JR_cc_e(cc: CCSelect) {
-  if (checkCC(cc))
+export function JR_cc_e(select: CCSelect) {
+  if (checkCC(select))
     JR_e();
   else
     incPC(1);
@@ -25,11 +25,11 @@ export function JR_cc_e(cc: CCSelect) {
 
 /** DJNZ e */
 export function DJNZ_e() {
-  const count = getB();
-  const countAfter = (count - 1) & 0xFF;
-  setB(countAfter);
+  const oldCount = getB();
+  const count = (oldCount - 1) & 0xFF;
+  setB(count);
 
-  if (countAfter)
+  if (count)
     JR_e();
   else
     incPC(1);

@@ -1,5 +1,5 @@
 import { get1, get16, get8, getMem16, getMem8, getMemPos, set1, set16, set8, setMem16 } from '../common/utils';
-import { CCSelect, HLMode, QQSelect, RhlSelect, SSSelect } from './types';
+import { CCSelect, HLMode, QQSelect, RegSelect, RhlSelect, SSSelect } from './types';
 
 export let posF: Position;
 export let posA: Position;
@@ -32,20 +32,20 @@ let posIFF1: Position;
 let posIFF2: Position;
 let posIM1: Position;
 let posIM2: Position;
-let posBitDest: (Position | null)[];
+let posReg: (Position | null)[];
 
-export const fS = 0x80; // Sign
-export const fZ = 0x40; // Zero
-export const fH = 0x10; // Half-carry
-export const fPV = 0x04; // Parity/Overflow
-export const fN = 0x02; // Subtract
-export const fC = 0x01; // Carry
+export const bitFS = 0x80; // Sign
+export const bitFZ = 0x40; // Zero
+export const bitFH = 0x10; // Half-carry
+export const bitFPV = 0x04; // Parity/Overflow
+export const bitFN = 0x02; // Subtract
+export const bitFC = 0x01; // Carry
 
-const f5 = 0x20; // Undocumented bit 5
-const f3 = 0x08; // Undocumented bit 3
-export const fSZPV = fS | fZ | fPV;
-export const f53 = f5 | f3;
-export const fS53 = fS | f53;
+const bitF5 = 0x20; // Undocumented bit 5
+const bitF3 = 0x08; // Undocumented bit 3
+export const maskFSZPV = bitFS | bitFZ | bitFPV;
+export const maskF53 = bitF5 | bitF3;
+export const maskFS53 = bitFS | maskF53;
 
 export let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
@@ -85,12 +85,12 @@ export function initCpu(chunkX: number, chunkY: number) {
   posIFF2 = createPos(cpuX + 8, cpuY + 12);
   posIM1 = createPos(cpuX + 8, cpuY + 13);
   posIM2 = createPos(cpuX + 8, cpuY + 14);
-  posBitDest = [posB, posC, posD, posE, posH, posL, null, posA];
+  posReg = [posB, posC, posD, posE, posH, posL, null, posA];
 }
 
 export function getF(): number { return get8(posF); }
 export function setF(value: number) { set8(posF, value); }
-export function getFC(): number { return get8(posF) & fC; }
+export function getFC(): number { return get8(posF) & bitFC; }
 export function getA(): number { return get8(posA); }
 export function setA(value: number) { set8(posA, value); }
 export function getB(): number { return get8(posB); }
@@ -126,17 +126,17 @@ export function getSS(select: SSSelect): number { return get16(posSS[select](), 
 export function setSS(select: SSSelect, value: number) { set16(posSS[select](), posSS[select + 1](), value); }
 
 export function push16(value: number) {
-  const sp = getSP();
-  const spAfter = (sp - 2) & 0xFFFF;
-  setSP(spAfter);
-  setMem16(spAfter, value);
+  const oldSP = getSP();
+  const sp = (oldSP - 2) & 0xFFFF;
+  setSP(sp);
+  setMem16(sp, value);
 }
 
 export function pop16(): number {
-  const sp = getSP();
-  const value = getMem16(sp);
-  const spAfter = (sp + 2) & 0xFFFF;
-  setSP(spAfter);
+  const oldSP = getSP();
+  const value = getMem16(oldSP);
+  const sp = (oldSP + 2) & 0xFFFF;
+  setSP(sp);
   return value;
 }
 
@@ -211,8 +211,8 @@ export function getPosRhl(select: RhlSelect): Position {
 }
 
 /** B, C, D, E, H, L, null, A */
-export function getPosBitDest(select: RhlSelect): Position | null {
-  return posBitDest[select];
+export function getPosReg(select: RegSelect): Position | null {
+  return posReg[select];
 }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
@@ -268,12 +268,12 @@ const posSS: (() => Position)[] = [
   () => posSPl,
 ];
 
-const ccMask = [fZ, fC, fPV, fS];
+const ccMask = [bitFZ, bitFC, bitFPV, bitFS];
 
 /** NZ, Z, NC, C, PO, PE, P, M */
 export function checkCC(cc: CCSelect): any {
-  const bit = get8(posF) & ccMask[cc >> 1];
-  return cc & 1 ? bit : !bit;
+  const isSet = get8(posF) & ccMask[cc >> 1];
+  return cc & 1 ? isSet : !isSet;
 }
 
 /** H/IXh/IYh */
@@ -292,7 +292,7 @@ function getPosL() {
 
 /** S, Z, F5, F3 from 8-bit result */
 export function flagsSZ53(value: number): number {
-  return (value & fS53) | (value ? 0 : fZ);
+  return (value & maskFS53) | (value ? 0 : bitFZ);
 }
 
 /** P: 0x04 if parity is even */
@@ -300,7 +300,7 @@ export function flagP(value: number): number {
   value ^= value >> 4;
   value ^= value << 2;
   value ^= value >> 1;
-  return ~value & fPV;
+  return ~value & bitFPV;
 }
 
 function createPos(x: number, y: number): Position {

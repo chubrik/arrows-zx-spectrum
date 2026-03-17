@@ -4,6 +4,17 @@ export const enum HLMode {
   IY,
 }
 
+export const enum RegSelect {
+  B,
+  C,
+  D,
+  E,
+  H,  // H only
+  L,  // L only
+  None,
+  A,
+}
+
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
 export const enum RhlSelect {
   B,
