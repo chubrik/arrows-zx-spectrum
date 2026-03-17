@@ -1,12 +1,12 @@
-import { CPD, CPDR, CPI, CPIR, LDD, LDDR, LDI, LDIR } from './ops/ops-block';
-import { RETI, RETN } from './ops/ops-call';
-import { IM } from './ops/ops-control';
-import { IN_R_c, IND, INDR, INI, INIR, OTDR, OTIR, OUT_c_R, OUTD, OUTI } from './ops/ops-io';
-import { LD_nn_SS, LD_SS_nn } from './ops/ops-ld-16bit';
-import { LD_A_I, LD_A_R, LD_I_A, LD_R_A } from './ops/ops-ld-8bit';
-import { ADC_HL_SS, SBC_HL_SS } from './ops/ops-math-16bit';
-import { NEG } from './ops/ops-math-etc';
-import { RLD, RRD } from './ops/ops-shift';
+import { CPD, CPDR, CPI, CPIR, LDD, LDDR, LDI, LDIR } from './op/op-block';
+import { RETI, RETN } from './op/op-call';
+import { IM } from './op/op-control';
+import { IN_R_c, IND, INDR, INI, INIR, OTDR, OTIR, OUT_c_R, OUTD, OUTI } from './op/op-io';
+import { LD_nn_SS, LD_SS_nn } from './op/op-load-16bit';
+import { LD_A_I, LD_A_R, LD_I_A, LD_R_A } from './op/op-load-8bit';
+import { ADC_HL_SS, SBC_HL_SS } from './op/op-math-16bit';
+import { NEG } from './op/op-math-etc';
+import { RLD, RRD } from './op/op-shift';
 import { next8, refresh, splitOp } from './utils';
 
 /** Misc. Instructions (ED) */

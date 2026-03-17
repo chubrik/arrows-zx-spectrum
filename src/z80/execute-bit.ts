@@ -1,6 +1,6 @@
 import { get8, set8 } from '../common/utils';
-import { BIT_b_Rhl, RES_b_Rhl, SET_b_Rhl } from './ops/ops-bit';
-import { RL_Rhl, RLC_Rhl, RR_Rhl, RRC_Rhl, SLA_Rhl, SLL_Rhl, SRA_Rhl, SRL_Rhl } from './ops/ops-shift';
+import { BIT_b_Rhl, RES_b_Rhl, SET_b_Rhl } from './op/op-bit';
+import { RL_Rhl, RLC_Rhl, RR_Rhl, RRC_Rhl, SLA_Rhl, SLL_Rhl, SRA_Rhl, SRL_Rhl } from './op/op-shift';
 import { HLMode } from './types';
 import { getMemPosIXIYd, getPosBitDest, getPosRhl, hlMode, next8, refresh, splitOp } from './utils';
 
