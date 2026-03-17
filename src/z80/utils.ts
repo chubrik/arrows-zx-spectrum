@@ -34,6 +34,19 @@ let posIM1: Position;
 let posIM2: Position;
 let posBitDest: (Position | null)[];
 
+export const fS = 0x80; // Sign
+export const fZ = 0x40; // Zero
+export const fH = 0x10; // Half-carry
+export const fPV = 0x04; // Parity/Overflow
+export const fN = 0x02; // Subtract
+export const fC = 0x01; // Carry
+
+const f5 = 0x20; // Undocumented bit 5
+const f3 = 0x08; // Undocumented bit 3
+export const fSZPV = fS | fZ | fPV;
+export const f53 = f5 | f3;
+export const fS53 = fS | f53;
+
 export let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
 
@@ -75,6 +88,9 @@ export function initCpu(chunkX: number, chunkY: number) {
   posBitDest = [posB, posC, posD, posE, posH, posL, null, posA];
 }
 
+export function getF(): number { return get8(posF); }
+export function setF(value: number) { set8(posF, value); }
+export function getFC(): number { return get8(posF) & fC; }
 export function getA(): number { return get8(posA); }
 export function setA(value: number) { set8(posA, value); }
 export function getB(): number { return get8(posB); }
@@ -252,7 +268,7 @@ const posSS: (() => Position)[] = [
   () => posSPl,
 ];
 
-const ccMask = [0x40, 0x01, 0x04, 0x80];
+const ccMask = [fZ, fC, fPV, fS];
 
 /** NZ, Z, NC, C, PO, PE, P, M */
 export function checkCC(cc: CCSelect): any {
@@ -272,6 +288,19 @@ function getPosL() {
   if (hlMode === HLMode.IX) return posIXl;
   if (hlMode === HLMode.IY) return posIYl;
   return posL;
+}
+
+/** S, Z, F5, F3 from 8-bit result */
+export function flagsSZ53(value: number): number {
+  return (value & fS53) | (value ? 0 : fZ);
+}
+
+/** P: 0x04 if parity is even */
+export function flagP(value: number): number {
+  value ^= value >> 4;
+  value ^= value << 2;
+  value ^= value >> 1;
+  return ~value & fPV;
 }
 
 function createPos(x: number, y: number): Position {

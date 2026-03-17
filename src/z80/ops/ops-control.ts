@@ -1,5 +1,10 @@
 import { incPC, setHalt, setIFF1, setIFF2, setIM } from '../utils';
 
+/** NOP */
+export function NOP() {
+  // Do nothing
+}
+
 /** HALT */
 export function HALT() {
   setHalt(1);
