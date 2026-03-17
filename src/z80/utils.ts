@@ -290,6 +290,11 @@ function getPosL() {
   return posL;
 }
 
+/** S, Z, F5, F3, P from 8-bit result */
+export function flagsSZ53P(value: number): number {
+  return flagsSZ53(value) | flagP(value);
+}
+
 /** S, Z, F5, F3 from 8-bit result */
 export function flagsSZ53(value: number): number {
   return (value & maskFS53) | (value ? 0 : bitFZ);

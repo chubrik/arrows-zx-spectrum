@@ -1,4 +1,4 @@
-import { bitFC, bitFH, bitFN, bitFPV, flagP, flagsSZ53, getA, getF, maskF53, maskFSZPV, setA, setF } from '../utils';
+import { bitFC, bitFH, bitFN, bitFPV, flagsSZ53, flagsSZ53P, getA, getF, maskF53, maskFSZPV, setA, setF } from '../utils';
 
 /** DAA */
 export function DAA() {
@@ -9,7 +9,7 @@ export function DAA() {
   if ((f & bitFH) || (a & 0x0F) > 9) correction |= 0x06;
   if ((f & bitFC) || a > 0x99) { correction |= 0x60; f |= bitFC; }
   a = (f & bitFN ? a - correction : a + correction) & 0xFF;
-  f = (f & (bitFN | bitFC)) | flagsSZ53(a) | flagP(a) | ((origA ^ correction ^ a) & bitFH);
+  f = (f & (bitFN | bitFC)) | flagsSZ53P(a) | ((origA ^ correction ^ a) & bitFH);
   setA(a);
   setF(f);
 }

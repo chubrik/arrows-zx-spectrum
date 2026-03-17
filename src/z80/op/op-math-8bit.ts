@@ -1,6 +1,6 @@
 import { get8, set8 } from '../../common/utils';
 import { RhlSelect } from '../types';
-import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, flagP, flagsSZ53, getA, getFC, getPosRhl, getRhl, maskF53, next8, setA, setF } from '../utils';
+import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, flagsSZ53, flagsSZ53P, getA, getFC, getPosRhl, getRhl, maskF53, next8, setA, setF } from '../utils';
 
 /** ADD A,r | ADD A,(HL) | ADD A,(IX+d) | ADD A,(IY+d) */
 export function ADD_A_Rhl(select: RhlSelect) {
@@ -184,5 +184,5 @@ function cp(operand: number) {
 
 function logic(result: number, fH: number) {
   setA(result);
-  setF(flagsSZ53(result) | flagP(result) | fH);
+  setF(flagsSZ53P(result) | fH);
 }

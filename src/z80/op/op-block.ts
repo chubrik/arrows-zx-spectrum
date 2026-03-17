@@ -1,5 +1,5 @@
 import { getMem8, setMem8 } from '../../common/utils';
-import { incPC, getA, getBC, getDE, getHL, setBC, setDE, setHL } from '../utils';
+import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, getA, getBC, getDE, getF, getFC, getHL, incPC, maskF53, setBC, setDE, setF, setHL } from '../utils';
 
 /** LDIR */
 export function LDIR() {
@@ -24,17 +24,25 @@ export function LDD(): any {
 }
 
 function ldx(update: (value: number) => number): any {
-  const count = getBC();
-  const countAfter = (count - 1) & 0xFFFF;
+  const oldCount = getBC();
+  const count = (oldCount - 1) & 0xFFFF;
   const destAddr = getDE();
   const srcAddr = getHL();
   const value = getMem8(srcAddr);
   setMem8(destAddr, value);
-  setBC(countAfter);
+  setBC(count);
   setDE(update(destAddr) & 0xFFFF);
   setHL(update(srcAddr) & 0xFFFF);
-  return countAfter;
-  /* TODO flags */
+
+  // F5/F3: bit 1 and bit 3 from n = A + value
+  const n = (getA() + value) & 0xFF;
+
+  setF(
+    (getF() & (bitFS | bitFZ | bitFC))
+    | (count ? bitFPV : 0)
+    | (((n << 4) | n) & maskF53));
+
+  return count;
 }
 
 /** CPIR */
@@ -60,13 +68,27 @@ export function CPD(): any {
 }
 
 function cpx(update: (value: number) => number): any {
-  const count = getBC();
-  const countAfter = (count - 1) & 0xFFFF;
+  const oldCount = getBC();
+  const count = (oldCount - 1) & 0xFFFF;
   const addr = getHL();
   const value = getMem8(addr);
-  const notEqual = value !== getA();
-  setBC(countAfter);
+  const a = getA();
+  const diff = (a - value) & 0xFF;
+  setBC(count);
   setHL(update(addr) & 0xFFFF);
-  return notEqual || countAfter;
-  /* TODO flags */
+
+  // F5/F3: bit 1 and bit 3 from n = result - H
+  const halfCarry = (a ^ value ^ diff) & bitFH;
+  const n = (diff - (halfCarry ? 1 : 0)) & 0xFF;
+
+  setF(
+    (diff & bitFS)
+    | (diff ? 0 : bitFZ)
+    | halfCarry
+    | (count ? bitFPV : 0)
+    | bitFN
+    | (((n << 4) | n) & maskF53)
+    | getFC());
+
+  return count && diff;
 }
