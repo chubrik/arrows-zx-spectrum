@@ -1,92 +1,11 @@
-import { get1, get16, get8, getMem16, getMem8, getMemPos, set1, set16, set8, setMem16 } from '../common/utils';
-import { CCSelect, HLMode, QQSelect, RegSelect, RhlSelect, SSSelect } from './types';
-
-export let posF: Position;
-export let posA: Position;
-export let posB: Position;
-export let posC: Position;
-export let posD: Position;
-export let posE: Position;
-export let posH: Position;
-export let posL: Position;
-export let posFa: Position;
-export let posAa: Position;
-export let posBa: Position;
-export let posCa: Position;
-export let posDa: Position;
-export let posEa: Position;
-export let posHa: Position;
-export let posLa: Position;
-let posIXh: Position;
-let posIXl: Position;
-let posIYh: Position;
-let posIYl: Position;
-let posSPh: Position;
-let posSPl: Position;
-let posPCh: Position;
-let posPCl: Position;
-let posI: Position;
-let posR: Position;
-let posHalt: Position;
-let posIFF1: Position;
-let posIFF2: Position;
-let posIM1: Position;
-let posIM2: Position;
-let posReg: (Position | null)[];
-
-export const bitFS = 0x80; // Sign
-export const bitFZ = 0x40; // Zero
-export const bitFH = 0x10; // Half-carry
-export const bitFPV = 0x04; // Parity/Overflow
-export const bitFN = 0x02; // Subtract
-export const bitFC = 0x01; // Carry
-
-const bitF5 = 0x20; // Undocumented bit 5
-const bitF3 = 0x08; // Undocumented bit 3
-export const maskFSZPV = bitFS | bitFZ | bitFPV;
-export const maskF53 = bitF5 | bitF3;
-export const maskFS53 = bitFS | maskF53;
+import { getMemPos, readMem16, readMem8, writeMem16 } from '../common/memory';
+import { get1, get16, get8, set1, set16, set8 } from '../common/utils';
+import { bitFC } from './flags';
+import { posA, posB, posC, posD, posE, posF, posH, posHalt, posI, posIFF1, posIFF2, posIM1, posIM2, posIXh, posIXl, posIYh, posIYl, posL, posPCh, posPCl, posR, posReg, posSPh, posSPl } from './positions';
+import { HLMode, QQSelect, RegSelect, RhlSelect, SSSelect } from './types';
 
 export let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
-
-export function initCpu(chunkX: number, chunkY: number) {
-  const cpuX = chunkX + 16;
-  const cpuY = chunkY - 16;
-
-  posF = createPos(cpuX, cpuY);
-  posA = createPos(cpuX, cpuY + 1);
-  posB = createPos(cpuX, cpuY + 2);
-  posC = createPos(cpuX, cpuY + 3);
-  posD = createPos(cpuX, cpuY + 4);
-  posE = createPos(cpuX, cpuY + 5);
-  posH = createPos(cpuX, cpuY + 6);
-  posL = createPos(cpuX, cpuY + 7);
-  posFa = createPos(cpuX + 8, cpuY);
-  posAa = createPos(cpuX + 8, cpuY + 1);
-  posBa = createPos(cpuX + 8, cpuY + 2);
-  posCa = createPos(cpuX + 8, cpuY + 3);
-  posDa = createPos(cpuX + 8, cpuY + 4);
-  posEa = createPos(cpuX + 8, cpuY + 5);
-  posHa = createPos(cpuX + 8, cpuY + 6);
-  posLa = createPos(cpuX + 8, cpuY + 7);
-  posIXh = createPos(cpuX, cpuY + 8);
-  posIXl = createPos(cpuX, cpuY + 9);
-  posIYh = createPos(cpuX, cpuY + 10);
-  posIYl = createPos(cpuX, cpuY + 11);
-  posSPh = createPos(cpuX, cpuY + 12);
-  posSPl = createPos(cpuX, cpuY + 13);
-  posPCh = createPos(cpuX, cpuY + 14);
-  posPCl = createPos(cpuX, cpuY + 15);
-  posI = createPos(cpuX + 8, cpuY + 8);
-  posR = createPos(cpuX + 8, cpuY + 9);
-  posHalt = createPos(cpuX + 8, cpuY + 10);
-  posIFF1 = createPos(cpuX + 8, cpuY + 11);
-  posIFF2 = createPos(cpuX + 8, cpuY + 12);
-  posIM1 = createPos(cpuX + 8, cpuY + 13);
-  posIM2 = createPos(cpuX + 8, cpuY + 14);
-  posReg = [posB, posC, posD, posE, posH, posL, null, posA];
-}
 
 export function getF(): number { return get8(posF); }
 export function setF(value: number) { set8(posF, value); }
@@ -129,12 +48,12 @@ export function push16(value: number) {
   const oldSP = getSP();
   const sp = (oldSP - 2) & 0xFFFF;
   setSP(sp);
-  setMem16(sp, value);
+  writeMem16(sp, value);
 }
 
 export function pop16(): number {
   const oldSP = getSP();
-  const value = getMem16(oldSP);
+  const value = readMem16(oldSP);
   const sp = (oldSP + 2) & 0xFFFF;
   setSP(sp);
   return value;
@@ -177,7 +96,7 @@ export function next16(): number {
 }
 
 export function next8(): number {
-  const value = getMem8(currentPC);
+  const value = readMem8(currentPC);
   currentPC = (currentPC + 1) & 0xFFFF;
   return value;
 }
@@ -268,14 +187,6 @@ const posSS: (() => Position)[] = [
   () => posSPl,
 ];
 
-const ccMask = [bitFZ, bitFC, bitFPV, bitFS];
-
-/** NZ, Z, NC, C, PO, PE, P, M */
-export function checkCC(cc: CCSelect): any {
-  const isSet = get8(posF) & ccMask[cc >> 1];
-  return cc & 1 ? isSet : !isSet;
-}
-
 /** H/IXh/IYh */
 function getPosH() {
   if (hlMode === HLMode.IX) return posIXh;
@@ -290,24 +201,3 @@ function getPosL() {
   return posL;
 }
 
-/** S, Z, F5, F3, P from 8-bit result */
-export function flagsSZ53P(value: number): number {
-  return flagsSZ53(value) | flagP(value);
-}
-
-/** S, Z, F5, F3 from 8-bit result */
-export function flagsSZ53(value: number): number {
-  return (value & maskFS53) | (value ? 0 : bitFZ);
-}
-
-/** P: 0x04 if parity is even */
-export function flagP(value: number): number {
-  value ^= value >> 4;
-  value ^= value << 2;
-  value ^= value >> 1;
-  return ~value & bitFPV;
-}
-
-function createPos(x: number, y: number): Position {
-  return { x, y };
-}

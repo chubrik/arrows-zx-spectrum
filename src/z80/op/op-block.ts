@@ -1,5 +1,6 @@
-import { getMem8, setMem8 } from '../../common/utils';
-import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, getA, getBC, getDE, getF, getFC, getHL, incPC, maskF53, setBC, setDE, setF, setHL } from '../utils';
+import { readMem8, writeMem8 } from '../../common/memory';
+import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, maskF53 } from '../flags';
+import { getA, getBC, getDE, getF, getFC, getHL, incPC, setBC, setDE, setF, setHL } from '../utils';
 
 /** LDIR */
 export function LDIR() {
@@ -28,8 +29,8 @@ function ldx(update: (value: number) => number): any {
   const count = (oldCount - 1) & 0xFFFF;
   const destAddr = getDE();
   const srcAddr = getHL();
-  const value = getMem8(srcAddr);
-  setMem8(destAddr, value);
+  const value = readMem8(srcAddr);
+  writeMem8(destAddr, value);
   setBC(count);
   setDE(update(destAddr) & 0xFFFF);
   setHL(update(srcAddr) & 0xFFFF);
@@ -71,7 +72,7 @@ function cpx(update: (value: number) => number): any {
   const oldCount = getBC();
   const count = (oldCount - 1) & 0xFFFF;
   const addr = getHL();
-  const value = getMem8(addr);
+  const value = readMem8(addr);
   const a = getA();
   const diff = (a - value) & 0xFF;
   setBC(count);

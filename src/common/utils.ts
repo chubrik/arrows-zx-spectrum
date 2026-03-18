@@ -1,48 +1,6 @@
-const RAM_MIN_ADDR = 0x4000;
-const RAM_MAX_ADDR = 0xFFFF;
-let memoryX: number;
-let memoryY: number;
-
-export function initMemory(chunkX: number, chunkY: number) {
-  memoryX = chunkX + 16;
-  memoryY = chunkY + 16;
-}
-
-export function getMem16(addr: number): number {
-  const valueLow = getMem8(addr);
-  const valueHigh = getMem8((addr + 1) & 0xFFFF);
-  return (valueHigh << 8) | valueLow;
-}
-
-export function setMem16(addr: number, value: number) {
-  setMem8(addr, value & 0xFF);
-  setMem8((addr + 1) & 0xFFFF, value >> 8);
-}
-
-export function getMem8(addr: number): number {
-  const memPos = getMemPos(addr);
-  return get8(memPos);
-}
-
-export function setMem8(addr: number, value: number) {
-  if (addr >= RAM_MIN_ADDR && addr <= RAM_MAX_ADDR) {
-    const memPos = getMemPos(addr);
-    set8(memPos, value);
-  }
-}
-
-export function getMemPos(addr: number): Position {
-  const xShift = ((addr & 0xC000) >> 14) * 272;
-
-  // 8x8 blocks:
-  const x = memoryX + (addr & 0xF8) + xShift;
-  const y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
-
-  // Line by line:
-  // const x = memoryX + (addr & 0x1F) * 8 + xShift;
-  // const y = memoryY + ((addr & 0x3FFF) >> 5);
-
-  return { x, y };
+export function check(condition: boolean, message: string = 'Check failed') {
+  if (!condition)
+    throw new Error(message);
 }
 
 export function get16(posHigh: Position, posLow: Position): number {
@@ -94,29 +52,3 @@ function getArrowTypes(pos: Position): number[] {
 
 const arrowTypes1 = [10, 25];
 const arrowTypes2 = [1, 18];
-
-// export function get8(pos: Position): number {
-//   const arrow = world.getArrow(pos.x, pos.y);
-//   if (!arrow) return 0;
-//   let type = arrow.type;
-//   if (type > 30) type--;
-//   const typePart = (type - 1) << 3;
-//   const rotationPart = arrow.rotation << 1;
-//   const flipPart = arrow.flip ? 1 : 0;
-//   const value = typePart | rotationPart | flipPart;
-//   return value;
-// }
-
-// export function set8(pos: Position, value: number) {
-//   let type = 1 + (value >> 3);
-//   if (value === 0) type = 0;
-//   if (type > 30) type++;
-//   const rotation = (value & 0x7) >> 1;
-//   const flip = (value & 0x1) !== 0;
-//   world.setArrow(pos.x, pos.y, type, rotation, flip);
-// }
-
-export function check(condition: boolean, message: string = 'Check failed') {
-  if (!condition)
-    throw new Error(message);
-}

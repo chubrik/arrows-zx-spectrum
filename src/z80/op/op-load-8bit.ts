@@ -1,4 +1,4 @@
-import { getMem8, setMem8 } from '../../common/utils';
+import { readMem8, writeMem8 } from '../../common/memory';
 import { RhlSelect } from '../types';
 import { getA, getBC, getDE, getI, getR, getRhl, next16, next8, setA, setI, setR, setRhl } from '../utils';
 
@@ -82,11 +82,11 @@ export function LD_nn_A() {
 }
 
 function ld_A_addr(addr: number) {
-  const value = getMem8(addr);
+  const value = readMem8(addr);
   setA(value);
 }
 
 function ld_addr_A(addr: number) {
   const value = getA();
-  setMem8(addr, value);
+  writeMem8(addr, value);
 }

@@ -1,5 +1,6 @@
+import { bitFC, bitFH, bitFN, bitFZ, flagsSZ53, maskF53, maskFSZPV } from '../flags';
 import { SSSelect } from '../types';
-import { bitFC, bitFH, bitFN, bitFZ, flagsSZ53, getF, getFC, getHL, getSS, maskF53, maskFSZPV, setF, setHL, setSS } from '../utils';
+import { getF, getFC, getHL, getSS, setF, setHL, setSS } from '../utils';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
 export function ADD_HL_SS(select: SSSelect) {

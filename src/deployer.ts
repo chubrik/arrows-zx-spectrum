@@ -1,6 +1,5 @@
 import { unicodeToBytes } from './common/encode';
-import { initMemory } from './common/utils';
-import { deployMemory } from './deployer/memory';
+import { deployMemory, initMemory } from './common/memory';
 
 const pos = getPosition();
 const chunkX = pos.x & ~0xF;

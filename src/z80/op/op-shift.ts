@@ -1,5 +1,6 @@
-import { getMem8, setMem8 } from '../../common/utils';
-import { bitFC, flagsSZ53P, getA, getF, getFC, getHL, maskF53, maskFSZPV, setA, setF } from '../utils';
+import { readMem8, writeMem8 } from '../../common/memory';
+import { bitFC, flagsSZ53P, maskF53, maskFSZPV } from '../flags';
+import { getA, getF, getFC, getHL, setA, setF } from '../utils';
 
 /** RLCA */
 export function RLCA() {
@@ -47,11 +48,11 @@ function setFRotA(result: number, carry: number) {
 export function RLD() {
   const a = getA();
   const addr = getHL();
-  const mem = getMem8(addr);
+  const mem = readMem8(addr);
   const resultA = (a & 0xF0) | (mem >> 4);
   const resultMem = ((mem << 4) | (a & 0x0F)) & 0xFF;
   setA(resultA);
-  setMem8(addr, resultMem);
+  writeMem8(addr, resultMem);
   setF(flagsSZ53P(resultA) | getFC());
 }
 
@@ -59,11 +60,11 @@ export function RLD() {
 export function RRD() {
   const a = getA();
   const addr = getHL();
-  const mem = getMem8(addr);
+  const mem = readMem8(addr);
   const resultA = (a & 0xF0) | (mem & 0x0F);
   const resultMem = ((a << 4) | (mem >> 4)) & 0xFF;
   setA(resultA);
-  setMem8(addr, resultMem);
+  writeMem8(addr, resultMem);
   setF(flagsSZ53P(resultA) | getFC());
 }
 

@@ -1,5 +1,6 @@
+import { checkCC } from '../flags';
 import { CCSelect } from '../types';
-import { checkCC, getB, getHL, incPC, next16, next8, setB, setPC } from '../utils';
+import { getB, getHL, incPC, next16, next8, setB, setPC } from '../utils';
 
 /** JP cc,nn */
 export function JP_cc_NN(select: CCSelect) {

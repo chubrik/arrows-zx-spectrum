@@ -1,5 +1,7 @@
-import { get8, getMem16, set8, setMem16 } from '../../common/utils';
-import { getHL, getSP, posA, posAa, posB, posBa, posC, posCa, posD, posDa, posE, posEa, posF, posFa, posH, posHa, posL, posLa, setHL } from '../utils';
+import { readMem16, writeMem16 } from '../../common/memory';
+import { get8, set8 } from '../../common/utils';
+import { posA, posAa, posB, posBa, posC, posCa, posD, posDa, posE, posEa, posF, posFa, posH, posHa, posL, posLa } from '../positions';
+import { getHL, getSP, setHL } from '../utils';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
@@ -45,9 +47,9 @@ export function EXX() {
 export function EX_sp_HL() {
   const addr = getSP();
   const hl = getHL();
-  const mem = getMem16(addr);
+  const mem = readMem16(addr);
   setHL(mem);
-  setMem16(addr, hl);
+  writeMem16(addr, hl);
 }
 
 /** EX DE,HL */

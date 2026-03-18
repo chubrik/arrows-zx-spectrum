@@ -1,4 +1,5 @@
-import { bitFC, bitFH, bitFN, bitFPV, flagsSZ53, flagsSZ53P, getA, getF, maskF53, maskFSZPV, setA, setF } from '../utils';
+import { bitFC, bitFH, bitFN, bitFPV, flagsSZ53, flagsSZ53P, maskF53, maskFSZPV } from '../flags';
+import { getA, getF, setA, setF } from '../utils';
 
 /** DAA */
 export function DAA() {

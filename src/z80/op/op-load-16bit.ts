@@ -1,4 +1,4 @@
-import { getMem16, setMem16 } from '../../common/utils';
+import { readMem16, writeMem16 } from '../../common/memory';
 import { QQSelect, SSSelect } from '../types';
 import { getHL, getQQ, getSS, next16, pop16, push16, setQQ, setSP, setSS } from '../utils';
 
@@ -6,13 +6,13 @@ import { getHL, getQQ, getSS, next16, pop16, push16, setQQ, setSP, setSS } from 
 export function LD_nn_SS(src: SSSelect) {
   const destAddr = next16();
   const value = getSS(src);
-  setMem16(destAddr, value);
+  writeMem16(destAddr, value);
 }
 
 /** LD dd,(nn) | LD HL,(nn) | LD IX,(nn) | LD IY,(nn) */
 export function LD_SS_nn(dest: SSSelect) {
   const srcAddr = next16();
-  const value = getMem16(srcAddr);
+  const value = readMem16(srcAddr);
   setSS(dest, value);
 }
 

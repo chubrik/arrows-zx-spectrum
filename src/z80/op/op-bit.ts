@@ -1,4 +1,5 @@
-import { bitFH, bitFPV, bitFS, bitFZ, getFC, maskF53, setF } from '../utils';
+import { bitFH, bitFPV, bitFS, bitFZ, maskF53 } from '../flags';
+import { getFC, setF } from '../utils';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
 export function BIT_b_val(bit: number, value: number) {

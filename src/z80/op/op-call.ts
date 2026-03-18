@@ -1,5 +1,6 @@
+import { checkCC } from '../flags';
 import { CCSelect } from '../types';
-import { checkCC, getIFF2, getPC, incPC, next16, pop16, push16, setIFF1, setPC } from '../utils';
+import { getIFF2, getPC, incPC, next16, pop16, push16, setIFF1, setPC } from '../utils';
 
 /** CALL cc,nn */
 export function CALL_cc_NN(select: CCSelect) {

@@ -1,6 +1,7 @@
 import { get8, set8 } from '../../common/utils';
+import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, flagsSZ53, flagsSZ53P, maskF53 } from '../flags';
 import { RhlSelect } from '../types';
-import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, flagsSZ53, flagsSZ53P, getA, getFC, getPosRhl, getRhl, maskF53, next8, setA, setF } from '../utils';
+import { getA, getFC, getPosRhl, getRhl, next8, setA, setF } from '../utils';
 
 /** ADD A,r | ADD A,(HL) | ADD A,(IX+d) | ADD A,(IY+d) */
 export function ADD_A_Rhl(select: RhlSelect) {
