@@ -14,6 +14,8 @@ export function getA(): number { return get8(posA); }
 export function setA(value: number) { set8(posA, value); }
 export function getB(): number { return get8(posB); }
 export function setB(value: number) { set8(posB, value); }
+export function getC(): number { return get8(posC); }
+export function setC(value: number) { set8(posC, value); }
 export function getI(): number { return get8(posI); }
 export function setI(value: number) { set8(posI, value); }
 

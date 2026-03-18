@@ -22,22 +22,17 @@ export function RET_cc(select: CCSelect) {
     RET();
 }
 
+/** RETI | RETN */
+export function RETI_RETN() {
+  const iff2 = getIFF2();
+  setIFF1(iff2);
+  RET();
+}
+
 /** RET */
 export function RET() {
   const addr = pop16();
   setPC(addr);
-}
-
-/** RETI */
-export function RETI() {
-  /* TODO */
-}
-
-/** RETN */
-export function RETN() {
-  const iff2 = getIFF2();
-  setIFF1(iff2);
-  RET();
 }
 
 /** RST p */

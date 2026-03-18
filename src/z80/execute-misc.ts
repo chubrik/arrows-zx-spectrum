@@ -1,5 +1,5 @@
 import { CPD, CPDR, CPI, CPIR, LDD, LDDR, LDI, LDIR } from './op/op-block';
-import { RETI, RETN } from './op/op-call';
+import { RETI_RETN } from './op/op-call';
 import { IM } from './op/op-control';
 import { IN_Reg_c, IND, INDR, INI, INIR, OTDR, OTIR, OUT_c_Reg, OUTD, OUTI } from './op/op-io';
 import { LD_nn_SS, LD_SS_nn } from './op/op-load-16bit';
@@ -17,12 +17,10 @@ export function executeMisc() {
 
   if (b76 === 1) {
     if (b210 === 0) {
-      if (b543 === 6) { /* TODO */ }
-      else IN_Reg_c(b543);
+      IN_Reg_c(b543);
     }
     else if (b210 === 1) {
-      if (b543 === 6) { /* TODO */ }
-      else OUT_c_Reg(b543);
+      OUT_c_Reg(b543);
     }
     else if (b210 === 2) {
       if (b543 & 1) ADC_HL_SS(b543 - 1);
@@ -31,6 +29,10 @@ export function executeMisc() {
     else if (b210 === 3) {
       if (b543 & 1) LD_SS_nn(b543 - 1);
       else LD_nn_SS(b543);
+    }
+    else if (b210 === 5) {
+      // https://github.com/franckverrot/EmulationResources/blob/master/consoles/sms-gg/Z80%20Undocumented%20Features.txt#L141
+      RETI_RETN();
     }
     else if (b210 === 7) {
       if (b543 === 0) LD_I_A();
@@ -42,8 +44,6 @@ export function executeMisc() {
     }
     else {
       if (op === 0x44) NEG();
-      else if (op === 0x45) RETN();
-      else if (op === 0x4D) RETI();
       else if (op === 0x46) IM(0);
       else if (op === 0x56) IM(1);
       else if (op === 0x5E) IM(2);

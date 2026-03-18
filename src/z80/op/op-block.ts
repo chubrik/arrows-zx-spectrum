@@ -2,29 +2,47 @@ import { readMem8, writeMem8 } from '../../common/memory';
 import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, maskF53 } from '../flags';
 import { getA, getBC, getDE, getF, getFC, getHL, incPC, setBC, setDE, setF, setHL } from '../utils';
 
-/** LDIR */
-export function LDIR() {
-  const repeat = LDI();
-  if (repeat) incPC(-2);
+/** LDI */
+export function LDI() {
+  ldx(+1);
 }
 
-/** LDI */
-export function LDI(): any {
-  return ldx(value => value + 1);
+/** LDIR */
+export function LDIR() {
+  ldx(+1, true);
+}
+
+/** LDD */
+export function LDD() {
+  ldx(-1);
 }
 
 /** LDDR */
 export function LDDR() {
-  const repeat = LDD();
-  if (repeat) incPC(-2);
+  ldx(-1, true);
 }
 
-/** LDD */
-export function LDD(): any {
-  return ldx(value => value - 1);
+/** CPI */
+export function CPI() {
+  cpx(+1);
 }
 
-function ldx(update: (value: number) => number): any {
+/** CPIR */
+export function CPIR() {
+  cpx(+1, true);
+}
+
+/** CPD */
+export function CPD() {
+  cpx(-1);
+}
+
+/** CPDR */
+export function CPDR() {
+  cpx(-1, true);
+}
+
+function ldx(increment: 1 | -1, repeat: boolean = false) {
   const oldCount = getBC();
   const count = (oldCount - 1) & 0xFFFF;
   const destAddr = getDE();
@@ -32,8 +50,8 @@ function ldx(update: (value: number) => number): any {
   const value = readMem8(srcAddr);
   writeMem8(destAddr, value);
   setBC(count);
-  setDE(update(destAddr) & 0xFFFF);
-  setHL(update(srcAddr) & 0xFFFF);
+  setDE((destAddr + increment) & 0xFFFF);
+  setHL((srcAddr + increment) & 0xFFFF);
 
   // F5/F3: bit 1 and bit 3 from n = A + value
   const n = (getA() + value) & 0xFF;
@@ -43,32 +61,11 @@ function ldx(update: (value: number) => number): any {
     | (count ? bitFPV : 0)
     | (((n << 4) | n) & maskF53));
 
-  return count;
+  if (repeat && count)
+    incPC(-2);
 }
 
-/** CPIR */
-export function CPIR() {
-  const repeat = CPI();
-  if (repeat) incPC(-2);
-}
-
-/** CPI */
-export function CPI(): any {
-  return cpx(value => value + 1);
-}
-
-/** CPDR */
-export function CPDR() {
-  const repeat = CPD();
-  if (repeat) incPC(-2);
-}
-
-/** CPD */
-export function CPD(): any {
-  return cpx(value => value - 1);
-}
-
-function cpx(update: (value: number) => number): any {
+function cpx(increment: 1 | -1, repeat: boolean = false) {
   const oldCount = getBC();
   const count = (oldCount - 1) & 0xFFFF;
   const addr = getHL();
@@ -76,7 +73,7 @@ function cpx(update: (value: number) => number): any {
   const a = getA();
   const diff = (a - value) & 0xFF;
   setBC(count);
-  setHL(update(addr) & 0xFFFF);
+  setHL((addr + increment) & 0xFFFF);
 
   // F5/F3: bit 1 and bit 3 from n = result - H
   const halfCarry = (a ^ value ^ diff) & bitFH;
@@ -91,5 +88,6 @@ function cpx(update: (value: number) => number): any {
     | (((n << 4) | n) & maskF53)
     | getFC());
 
-  return count && diff;
+  if (repeat && count && diff)
+    incPC(-2);
 }
