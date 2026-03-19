@@ -24,51 +24,67 @@ export let posPCh: Position;
 export let posPCl: Position;
 export let posI: Position;
 export let posR: Position;
-export let posHalt: Position;
-export let posIFF1: Position;
-export let posIFF2: Position;
 export let posIM1: Position;
 export let posIM2: Position;
+export let posIFF1: Position;
+export let posIFF2: Position;
+export let posHalt: Position;
 export let posINT: Position;
-export let posReg: (Position | null)[];
 
-export function initCpu(chunkX: number, chunkY: number) {
-  const cpuX = chunkX + 16;
-  const cpuY = chunkY - 16;
+export function initCpuStartPosition(chunkX: number, chunkY: number): Position {
+  return posF = createPos(chunkX + 16, chunkY - 16);
+}
 
-  posF = createPos(cpuX, cpuY);
-  posA = createPos(cpuX, cpuY + 1);
-  posB = createPos(cpuX, cpuY + 2);
-  posC = createPos(cpuX, cpuY + 3);
-  posD = createPos(cpuX, cpuY + 4);
-  posE = createPos(cpuX, cpuY + 5);
-  posH = createPos(cpuX, cpuY + 6);
-  posL = createPos(cpuX, cpuY + 7);
-  posFa = createPos(cpuX + 8, cpuY);
-  posAa = createPos(cpuX + 8, cpuY + 1);
-  posBa = createPos(cpuX + 8, cpuY + 2);
-  posCa = createPos(cpuX + 8, cpuY + 3);
-  posDa = createPos(cpuX + 8, cpuY + 4);
-  posEa = createPos(cpuX + 8, cpuY + 5);
-  posHa = createPos(cpuX + 8, cpuY + 6);
-  posLa = createPos(cpuX + 8, cpuY + 7);
-  posIXh = createPos(cpuX, cpuY + 8);
-  posIXl = createPos(cpuX, cpuY + 9);
-  posIYh = createPos(cpuX, cpuY + 10);
-  posIYl = createPos(cpuX, cpuY + 11);
-  posSPh = createPos(cpuX, cpuY + 12);
-  posSPl = createPos(cpuX, cpuY + 13);
-  posPCh = createPos(cpuX, cpuY + 14);
-  posPCl = createPos(cpuX, cpuY + 15);
-  posI = createPos(cpuX + 8, cpuY + 8);
-  posR = createPos(cpuX + 8, cpuY + 9);
-  posHalt = createPos(cpuX + 8, cpuY + 10);
-  posIFF1 = createPos(cpuX + 8, cpuY + 11);
-  posIFF2 = createPos(cpuX + 8, cpuY + 12);
-  posIM1 = createPos(cpuX + 8, cpuY + 13);
-  posIM2 = createPos(cpuX + 8, cpuY + 14);
-  posINT = createPos(cpuX + 8, cpuY + 15);
-  posReg = [posB, posC, posD, posE, posH, posL, null, posA];
+export function initCpuPositions(chunkX: number, chunkY: number) {
+  let { x, y } = initCpuStartPosition(chunkX, chunkY);
+
+  posF = createPos(x, y);
+  posA = createPos(x, ++y);
+  posB = createPos(x, ++y);
+  posC = createPos(x, ++y);
+  posD = createPos(x, ++y);
+  posE = createPos(x, ++y);
+  posH = createPos(x, ++y);
+  posL = createPos(x, ++y);
+  posIXh = createPos(x, ++y);
+  posIXl = createPos(x, ++y);
+
+  posSPh = createPos(x, y += 2);
+  posSPl = createPos(x, ++y);
+  posPCh = createPos(x, ++y);
+  posPCl = createPos(x, ++y);
+
+  posFa = createPos(x += 8, y = posF.y);
+  posAa = createPos(x, ++y);
+  posBa = createPos(x, ++y);
+  posCa = createPos(x, ++y);
+  posDa = createPos(x, ++y);
+  posEa = createPos(x, ++y);
+  posHa = createPos(x, ++y);
+  posLa = createPos(x, ++y);
+  posIYh = createPos(x, ++y);
+  posIYl = createPos(x, ++y);
+
+  posI = createPos(x, y += 2);
+  posR = createPos(x, ++y);
+
+  posIM1 = createPos(x, y += 2);
+  posIM2 = createPos(++x, y);
+  posIFF1 = createPos(x += 2, y);
+  posIFF2 = createPos(++x, y);
+  posHalt = createPos(x += 2, y);
+  posINT = createPos(++x, y);
+}
+
+export function resetCpu() {
+  const { x, y } = posF;
+  world.copyRegion(x + 32, y, x + 47, y + 15, x, y);
+  world.copyRegion(x, y, x + 15, y + 15, x - 32, y);
+}
+
+export function copyCpu() {
+  const { x, y } = posF;
+  world.copyRegion(x, y, x + 15, y + 15, x - 32, y);
 }
 
 function createPos(x: number, y: number): Position {

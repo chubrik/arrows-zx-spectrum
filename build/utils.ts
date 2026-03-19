@@ -34,12 +34,15 @@ export async function buildTs(code: string): Promise<string> {
 }
 
 export async function minifyJs(code: string): Promise<string> {
-  // Pass 1: Terser minification
-  // Pass 2: Convert function declarations/expressions to arrow functions
-  // Pass 3: Terser again - optimizes arrow bodies ({return expr} → expr), inlines IIFEs
-  const min = (await minify(code, terserOpts)).code!;
+  // Pass 1: Terser single pass with collapse_vars (multi-pass collapse_vars has a bug
+  //         that incorrectly folds variables used in both inline assignments and IIFE args)
+  // Pass 2: Terser remaining passes without collapse_vars
+  // Pass 3: Convert function declarations/expressions to arrow functions
+  // Pass 4: Terser again - optimizes arrow bodies ({return expr} → expr), inlines IIFEs
+  const min1 = (await minify(code, terserOptsCollapse)).code!;
+  const min = (await minify(min1, terserOptsNoCollapse)).code!;
   const min2 = convertFunctions(min);
-  const final = (await minify(min2, terserOpts)).code!;
+  const final = (await minify(min2, terserOptsNoCollapse)).code!;
   return final;
 }
 
@@ -48,34 +51,45 @@ export function writeToPath(path: string, content: string | NodeJS.ArrayBufferVi
   writeFileSync(path, content);
 }
 
-const terserOpts: MinifyOptions = {
+const terserCompress = {
+  passes: 3,
+  toplevel: true,
+  ecma: 2020 as const,
+  inline: 3 as const,
+  reduce_vars: true,
+  collapse_vars: false,
+  arrows: true,
+  unsafe: true,
+  unsafe_comps: true,
+  unsafe_math: true,
+  unsafe_proto: true,
+  unsafe_undefined: true,
+  dead_code: true,
+  conditionals: true,
+  if_return: true,
+  switches: true,
+  pure_getters: true,
+  hoist_funs: true,
+  hoist_vars: true,
+  join_vars: true,
+  sequences: true,
+  booleans_as_integers: true,
+};
+
+const terserOptsCollapse: MinifyOptions = {
   module: true,
   toplevel: true,
   ecma: 2020,
-  compress: {
-    passes: 4,
-    toplevel: true,
-    ecma: 2020,
-    inline: 3,
-    reduce_vars: true,
-    collapse_vars: true,
-    arrows: true,
-    unsafe: true,
-    unsafe_comps: true,
-    unsafe_math: true,
-    unsafe_proto: true,
-    unsafe_undefined: true,
-    dead_code: true,
-    conditionals: true,
-    if_return: true,
-    switches: true,
-    pure_getters: true,
-    hoist_funs: true,
-    hoist_vars: true,
-    join_vars: true,
-    sequences: true,
-    booleans_as_integers: true,
-  },
+  compress: { ...terserCompress, passes: 1, collapse_vars: true },
+  mangle: { toplevel: true, eval: true },
+  format: { ecma: 2020, semicolons: true },
+};
+
+const terserOptsNoCollapse: MinifyOptions = {
+  module: true,
+  toplevel: true,
+  ecma: 2020,
+  compress: terserCompress,
   mangle: { toplevel: true, eval: true },
   format: { ecma: 2020, semicolons: true },
 };

@@ -1,11 +1,17 @@
 import { getMemPos, readMem16, readMem8, writeMem16 } from '../common/memory';
 import { get1, get16, get8, set1, set16, set8 } from '../common/utils';
 import { bitFC } from './flags';
-import { posA, posB, posC, posD, posE, posF, posH, posHalt, posI, posIFF1, posIFF2, posIM1, posIM2, posIXh, posIXl, posIYh, posIYl, posL, posPCh, posPCl, posR, posReg, posSPh, posSPl } from './positions';
+import { initCpuPositions, posA, posB, posC, posD, posE, posF, posH, posHalt, posI, posIFF1, posIFF2, posIM1, posIM2, posIXh, posIXl, posIYh, posIYl, posL, posPCh, posPCl, posR, posSPh, posSPl } from './positions';
 import { HLMode, QQSelect, RegSelect, RhlSelect, SSSelect } from './types';
 
 export let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
+export let posReg: (Position | null)[];
+
+export function initCpu(chunkX: number, chunkY: number) {
+  initCpuPositions(chunkX, chunkY);
+  posReg = [posB, posC, posD, posE, posH, posL, null, posA];
+}
 
 export function getF(): number { return get8(posF); }
 export function setF(value: number) { set8(posF, value); }
@@ -113,13 +119,6 @@ export function splitOp(op: number): { b76: number, b543: number, b210: number }
 
 export function refresh() {
   currentR = (currentR & 0x80) | ((currentR + 1) & 0x7F)
-}
-
-export function copyCPU() {
-  /* TODO */
-  // const topLeft = { x: 0, y: 0 };
-  // const bottomRight = { x: topLeft.x + 15, y: topLeft.y + 15 };
-  // world.copyRegion(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y, topLeft.x - 32, topLeft.y);
 }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
