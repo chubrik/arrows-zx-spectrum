@@ -122,10 +122,6 @@ export function copyCPU() {
   // world.copyRegion(topLeft.x, topLeft.y, bottomRight.x, bottomRight.y, topLeft.x - 32, topLeft.y);
 }
 
-export function interrupt() {
-  /* TODO */
-}
-
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
 export function getPosRhl(select: RhlSelect): Position {
   return posRhl[select]();

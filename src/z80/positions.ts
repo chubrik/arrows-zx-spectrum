@@ -29,6 +29,7 @@ export let posIFF1: Position;
 export let posIFF2: Position;
 export let posIM1: Position;
 export let posIM2: Position;
+export let posINT: Position;
 export let posReg: (Position | null)[];
 
 export function initCpu(chunkX: number, chunkY: number) {
@@ -66,6 +67,7 @@ export function initCpu(chunkX: number, chunkY: number) {
   posIFF2 = createPos(cpuX + 8, cpuY + 12);
   posIM1 = createPos(cpuX + 8, cpuY + 13);
   posIM2 = createPos(cpuX + 8, cpuY + 14);
+  posINT = createPos(cpuX + 8, cpuY + 15);
   posReg = [posB, posC, posD, posE, posH, posL, null, posA];
 }
 
