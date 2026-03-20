@@ -1,6 +1,7 @@
 import { readMem8, writeMem8 } from '../../common/memory';
+import { bitFPV, flagsSZ53 } from '../flags';
 import { RhlSelect } from '../types';
-import { getA, getBC, getDE, getI, getR, getRhl, next16, next8, setA, setI, setR, setRhl } from '../utils';
+import { getA, getBC, getDE, getFC, getI, getIFF2, getR, getRhl, next16, next8, setA, setF, setI, setR, setRhl } from '../utils';
 
 /** 
  * LD r,r'
@@ -24,19 +25,19 @@ export function LD_Rhl_N(dest: RhlSelect) {
 /** LD A,I */
 export function LD_A_I() {
   const value = getI();
-  setA(value);
+  ld_A_IR(value)
+}
+
+/** LD A,R */
+export function LD_A_R() {
+  const value = getR();
+  ld_A_IR(value)
 }
 
 /** LD I,A */
 export function LD_I_A() {
   const value = getA();
   setI(value);
-}
-
-/** LD A,R */
-export function LD_A_R() {
-  const value = getR();
-  setA(value);
 }
 
 /** LD R,A */
@@ -79,6 +80,11 @@ export function LD_de_A() {
 export function LD_nn_A() {
   const addr = next16();
   ld_addr_A(addr);
+}
+
+function ld_A_IR(value: number) {
+  setA(value);
+  setF(flagsSZ53(value) | (getIFF2() ? bitFPV : 0) | getFC());
 }
 
 function ld_A_addr(addr: number) {

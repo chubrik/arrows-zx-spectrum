@@ -6,11 +6,11 @@ import { HLMode, QQSelect, RegSelect, RhlSelect, SSSelect } from './types';
 
 export let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
-export let posReg: (Position | null)[];
+export let posReg: (Position | 0)[];
 
 export function initCpu(chunkX: number, chunkY: number) {
   initCpuPositions(chunkX, chunkY);
-  posReg = [posB, posC, posD, posE, posH, posL, null, posA];
+  posReg = [posB, posC, posD, posE, posH, posL, 0, posA];
 }
 
 export function getF(): number { return get8(posF); }
@@ -69,12 +69,19 @@ export function pop16(): number {
 
 export function getHalt(): 0 | 1 { return get1(posHalt); }
 export function setHalt(value: 0 | 1) { set1(posHalt, value); }
-export function getIFF1(): 0 | 1 { return get1(posIFF1); }
 export function setIFF1(value: 0 | 1) { set1(posIFF1, value); }
 export function getIFF2(): 0 | 1 { return get1(posIFF2); }
 export function setIFF2(value: 0 | 1) { set1(posIFF2, value); }
 export function getIM(): 0 | 1 | 2 { return get1(posIM2) ? 2 : get1(posIM1) ? 1 : 0; }
 export function setIM(value: 0 | 1 | 2) { set1(posIM1, value === 1 ? 1 : 0); set1(posIM2, value === 2 ? 1 : 0); }
+
+let eiDelay: 0 | 1 = 0;
+export function setEIDelay() { eiDelay = 1; }
+
+export function getIFF1NotDelayed(): 0 | 1 {
+  if (eiDelay) return eiDelay = 0;
+  return get1(posIFF1);
+}
 
 let startR: number;
 let currentR: number;
@@ -127,7 +134,7 @@ export function getPosRhl(select: RhlSelect): Position {
 }
 
 /** B, C, D, E, H, L, null, A */
-export function getPosReg(select: RegSelect): Position | null {
+export function getPosReg(select: RegSelect): Position | 0 {
   return posReg[select];
 }
 

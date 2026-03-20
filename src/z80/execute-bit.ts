@@ -7,20 +7,21 @@ import { getMemPosIXIYd, getPosReg, getPosRhl, hlMode, next8, refresh, splitOp }
 /** Bit Instructions (CB) | IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
 export function executeBit() {
   let b76, b543, b210: number;
-  let srcPos, destPos: Position;
+  let srcPos: Position;
+  let destPos: Position | 0 = 0;
 
   if (hlMode === HLMode.HL) {
     refresh();
     const op = next8();
     ({ b76, b543, b210 } = splitOp(op));
-    srcPos = destPos = getPosRhl(b210);
+    srcPos = getPosRhl(b210);
   }
   else {
     const rawD = next8();
     const op = next8();
     ({ b76, b543, b210 } = splitOp(op));
     srcPos = getMemPosIXIYd(rawD);
-    destPos = getPosReg(b210) || srcPos;
+    destPos = getPosReg(b210);
   }
 
   const value = get8(srcPos);
@@ -51,5 +52,8 @@ export function executeBit() {
     }
   }
 
-  set8(destPos, result);
+  set8(srcPos, result);
+
+  if (destPos)
+    set8(destPos, result);
 }

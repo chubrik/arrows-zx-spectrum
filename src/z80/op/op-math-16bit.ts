@@ -1,4 +1,4 @@
-import { bitFC, bitFH, bitFN, bitFZ, flagsSZ53, maskF53, maskFSZPV } from '../flags';
+import { bitFC, bitFH, bitFN, bitFZ, maskF53, maskFS53, maskFSZPV } from '../flags';
 import { SSSelect } from '../types';
 import { getF, getFC, getHL, getSS, setF, setHL, setSS } from '../utils';
 
@@ -28,7 +28,7 @@ export function ADC_HL_SS(select: SSSelect) {
   setHL(result);
 
   setF(
-    flagsSZ53(result >> 8)
+    ((result >> 8) & maskFS53)
     | (result ? 0 : bitFZ)
     | (((hl ^ ss ^ result) >> 8) & bitFH)
     | (((hl ^ ~ss) & (hl ^ result) & 0x8000) >> 13)
@@ -46,7 +46,7 @@ export function SBC_HL_SS(select: SSSelect) {
   setHL(result);
 
   setF(
-    flagsSZ53(result >> 8)
+    ((result >> 8) & maskFS53)
     | (result ? 0 : bitFZ)
     | (((hl ^ ss ^ result) >> 8) & bitFH)
     | (((hl ^ ss) & (hl ^ result) & 0x8000) >> 13)

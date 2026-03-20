@@ -1,4 +1,4 @@
-import { incPC, setHalt, setIFF1, setIFF2, setIM } from '../utils';
+import { incPC, setEIDelay, setHalt, setIFF1, setIFF2, setIM } from '../utils';
 
 /** NOP */
 export function NOP() {
@@ -21,6 +21,7 @@ export function DI() {
 export function EI() {
   setIFF1(1);
   setIFF2(1);
+  setEIDelay();
 }
 
 /** IM 0 | IM 1 | IM 2 */
