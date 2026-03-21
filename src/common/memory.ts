@@ -1,6 +1,7 @@
 import { get8, readonlyMaxX, readonlyMinY, set8, setReadonly } from './utils';
 
 const RAM_MIN_ADDR = 0x4000;
+const ATTRIBUTES_MIN_ADDR = 0x5800;
 let memoryX: number;
 let memoryY: number;
 
@@ -48,14 +49,25 @@ export function writeMem8(addr: number, value: number) {
 
 export function getMemPos(addr: number): Position {
   const xShift = ((addr & 0xC000) >> 14) * 272;
+  let x, y: number;
 
-  // 8x8 blocks:
-  const x = memoryX + (addr & 0xF8) + xShift;
-  const y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
+  if (addr >= RAM_MIN_ADDR && addr < ATTRIBUTES_MIN_ADDR) {
+    // Pretty screen
+    x = memoryX + (addr & 0x1F) * 8 + xShift;
+    y = memoryY + ((addr & 0x1800) >> 5) + ((addr & 0x0700) >> 8) + ((addr & 0xE0) >> 2);
+  }
+  else {
+    // 8x8 blocks:
+    x = memoryX + (addr & 0xF8) + xShift;
+    y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
 
-  // Line by line:
-  // const x = memoryX + (addr & 0x1F) * 8 + xShift;
-  // const y = memoryY + ((addr & 0x3FFF) >> 5);
+    // Line by line:
+    // const x = memoryX + (addr & 0x1F) * 8 + xShift;
+    // const y = memoryY + ((addr & 0x3FFF) >> 5);
+
+    if (addr >= ATTRIBUTES_MIN_ADDR && addr < 0x8000)
+      y += 16;
+  }
 
   return { x, y };
 }
