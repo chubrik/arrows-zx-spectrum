@@ -10,7 +10,8 @@
   },
   "include": [
     "build/**/*.ts",
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "test/**/*.ts"
   ],
   "exclude": [
     "dist",

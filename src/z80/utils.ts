@@ -83,6 +83,11 @@ export function getIFF1NotDelayed(): 0 | 1 {
   return get1(posIFF1);
 }
 
+//todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
+let wz = 0;
+export function getWZ(): number { return wz; }
+export function setWZ(value: number) { wz = value; }
+
 let startR: number;
 let currentR: number;
 let startPC: number;
