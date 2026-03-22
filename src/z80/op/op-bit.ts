@@ -2,13 +2,13 @@ import { bitFH, bitFPV, bitFS, bitFZ, maskF53 } from '../flags';
 import { getFC, setF } from '../utils';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
-export function BIT_b_val(bit: number, value: number) {
+export function BIT_b_val(bit: number, value: number, f53Source: number) {
   const isSet = value & bit;
 
   setF(
     (isSet & bitFS)
     | (isSet ? 0 : bitFZ | bitFPV)
-    | bitFH | (value & maskF53)
+    | bitFH | (f53Source & maskF53)
     | getFC());
 }
 

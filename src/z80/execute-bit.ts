@@ -1,27 +1,32 @@
+import { getMemPos } from '../common/memory';
 import { get8, set8 } from '../common/utils';
 import { BIT_b_val, RES_b_val, SET_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
 import { HLMode } from './types';
-import { getMemPosIXIYd, getPosReg, getPosRhl, hlMode, next8, refresh, splitOp } from './utils';
+import { getAddrIXIYd, getPosReg, getPosRhl, getWZ, hlMode, next8, refresh, splitOp } from './utils';
 
 /** Bit Instructions (CB) | IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
 export function executeBit() {
   let b76, b543, b210: number;
   let srcPos: Position;
   let destPos: Position | 0 = 0;
+  let addrHigh: number | undefined;
 
   if (hlMode === HLMode.HL) {
     refresh();
     const op = next8();
     ({ b76, b543, b210 } = splitOp(op));
     srcPos = getPosRhl(b210);
+    if (b210 === 6) addrHigh = (getWZ() >> 8) & 0xFF;
   }
   else {
     const rawD = next8();
     const op = next8();
     ({ b76, b543, b210 } = splitOp(op));
-    srcPos = getMemPosIXIYd(rawD);
+    const addr = getAddrIXIYd(rawD);
+    srcPos = getMemPos(addr);
     destPos = getPosReg(b210);
+    addrHigh = (addr >> 8) & 0xFF;
   }
 
   const value = get8(srcPos);
@@ -41,7 +46,8 @@ export function executeBit() {
     const bit = 1 << b543;
 
     if (b76 === 1) {
-      BIT_b_val(bit, value);
+      const f53Source = addrHigh ?? value;
+      BIT_b_val(bit, value, f53Source);
       return;
     }
     else if (b76 === 2) {

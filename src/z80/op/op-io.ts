@@ -108,8 +108,8 @@ function inx(increment: 1 | -1, repeat: boolean = false) {
 function outx(increment: 1 | -1, repeat: boolean = false) {
   const b = getB();
   const c = getC();
-  const ioAddr = (b << 8) | c;
   const count = (b - 1) & 0xFF;
+  const ioAddr = (count << 8) | c;
   const memAddr = getHL();
   const value = readMem8(memAddr);
   writePort(ioAddr, value);

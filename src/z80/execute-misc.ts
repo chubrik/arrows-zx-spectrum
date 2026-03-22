@@ -30,23 +30,24 @@ export function executeMisc() {
       if (b543 & 1) LD_SS_nn(b543 - 1);
       else LD_nn_SS(b543);
     }
+    else if (b210 === 4) {
+      NEG();
+    }
     else if (b210 === 5) {
-      // https://github.com/franckverrot/EmulationResources/blob/master/consoles/sms-gg/Z80%20Undocumented%20Features.txt#L141
       RETI_RETN();
     }
-    else if (b210 === 7) {
+    else if (b210 === 6) {
+      let imMode = (b543 & 3);
+      if (imMode) imMode--;
+      IM(imMode as 0 | 1 | 2);
+    }
+    else {
       if (b543 === 0) LD_I_A();
       else if (b543 === 1) LD_R_A();
       else if (b543 === 2) LD_A_I();
       else if (b543 === 3) LD_A_R();
       else if (b543 === 4) RRD();
       else if (b543 === 5) RLD();
-    }
-    else {
-      if (op === 0x44) NEG();
-      else if (op === 0x46) IM(0);
-      else if (op === 0x56) IM(1);
-      else if (op === 0x5E) IM(2);
     }
   }
   else {

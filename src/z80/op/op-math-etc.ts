@@ -27,14 +27,14 @@ export function CPL() {
 export function CCF() {
   const a = getA();
   const f = getF();
-  setF((f & maskFSZPV) | (a & maskF53) | ((f & bitFC) << 4) | (~f & bitFC));
+  setF((f & maskFSZPV) | ((a | f) & maskF53) | ((f & bitFC) << 4) | (~f & bitFC));
 }
 
 /** SCF */
 export function SCF() {
   const a = getA();
   const f = getF();
-  setF((f & maskFSZPV) | (a & maskF53) | bitFC);
+  setF((f & maskFSZPV) | ((a | f) & maskF53) | bitFC);
 }
 
 /** NEG */

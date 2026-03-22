@@ -53,13 +53,15 @@ function ldx(increment: 1 | -1, repeat: boolean = false) {
   setDE((destAddr + increment) & 0xFFFF);
   setHL((srcAddr + increment) & 0xFFFF);
 
-  // F5/F3: bit 1 and bit 3 from n = A + value
+  // F5 = bit 1 of n
+  // F3 = bit 3 of n, where n = A + value
   const n = (getA() + value) & 0xFF;
+  const f53 = ((n & 0x02) << 4) | (n & 0x08);
 
   setF(
     (getF() & (bitFS | bitFZ | bitFC))
     | (count ? bitFPV : 0)
-    | (((n << 4) | n) & maskF53));
+    | f53);
 
   if (repeat && count)
     incPC(-2);
@@ -75,9 +77,11 @@ function cpx(increment: 1 | -1, repeat: boolean = false) {
   setBC(count);
   setHL((addr + increment) & 0xFFFF);
 
-  // F5/F3: bit 1 and bit 3 from n = result - H
+  // F5 = bit 1 of n
+  // F3 = bit 3 of n, where n = diff - halfCarry
   const halfCarry = (a ^ value ^ diff) & bitFH;
   const n = (diff - (halfCarry ? 1 : 0)) & 0xFF;
+  const f53 = ((n & 0x02) << 4) | (n & 0x08);
 
   setF(
     (diff & bitFS)
@@ -85,7 +89,7 @@ function cpx(increment: 1 | -1, repeat: boolean = false) {
     | halfCarry
     | (count ? bitFPV : 0)
     | bitFN
-    | (((n << 4) | n) & maskF53)
+    | f53
     | getFC());
 
   if (repeat && count && diff)

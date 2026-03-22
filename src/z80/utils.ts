@@ -72,7 +72,7 @@ export function setHalt(value: 0 | 1) { set1(posHalt, value); }
 export function setIFF1(value: 0 | 1) { set1(posIFF1, value); }
 export function getIFF2(): 0 | 1 { return get1(posIFF2); }
 export function setIFF2(value: 0 | 1) { set1(posIFF2, value); }
-export function getIM(): 0 | 1 | 2 { return get1(posIM2) ? 2 : get1(posIM1) ? 1 : 0; }
+export function getIM(): 0 | 1 | 2 { return get1(posIM2) ? 2 : get1(posIM1) ? 1 : 0; } //todo 1|2 → 0
 export function setIM(value: 0 | 1 | 2) { set1(posIM1, value === 1 ? 1 : 0); set1(posIM2, value === 2 ? 1 : 0); }
 
 let eiDelay: 0 | 1 = 0;
@@ -157,19 +157,19 @@ const posRhl: (() => Position)[] = [
       return getMemPos(addr);
     }
     else {
-      let rawD = next8();
-      return getMemPosIXIYd(rawD);
+      const rawD = next8();
+      const addr = getAddrIXIYd(rawD);
+      return getMemPos(addr);
     }
   },
   () => posA,
 ];
 
 /** (IX+d/IY+d) */
-export function getMemPosIXIYd(rawD: number): Position {
-  let addr = getHL() // IX/IY
+export function getAddrIXIYd(rawD: number): number {
+  let hl = getHL() // IX/IY
   const d = rawD >= 128 ? rawD - 256 : rawD; // -128...+127
-  addr = (addr + d) & 0xFFFF;
-  return getMemPos(addr);
+  return (hl + d) & 0xFFFF;
 }
 
 /** BC, DE, HL/IX/IY, AF */

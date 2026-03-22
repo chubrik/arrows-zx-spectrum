@@ -1,16 +1,25 @@
 import { readMem8, writeMem8 } from '../../common/memory';
+import { get8, set8 } from '../../common/utils';
 import { bitFPV, flagsSZ53 } from '../flags';
-import { RhlSelect } from '../types';
-import { getA, getBC, getDE, getFC, getI, getIFF2, getR, getRhl, next16, next8, setA, setF, setI, setR, setRhl } from '../utils';
+import { RegSelect, RhlSelect } from '../types';
+import { getA, getBC, getDE, getFC, getI, getIFF2, getPosReg, getPosRhl, getR, getRhl, next16, next8, setA, setF, setI, setR, setRhl } from '../utils';
 
-/** 
+/**
  * LD r,r'
  * LD r,(HL) | LD r,(IX+d) | LD r,(IY+d)
  * LD (HL),r | LD (IX+d),r | LD (IY+d),r
  */
 export function LD_Rhl_Rhl(dest: RhlSelect, src: RhlSelect) {
-  const value = getRhl(src);
-  setRhl(dest, value);
+  if (src === RhlSelect.hl || dest === RhlSelect.hl) {
+    //todo optimize
+    const srcPos = getPosReg(src as any as RegSelect) || getPosRhl(src);
+    const destPos = getPosReg(dest as any as RegSelect) || getPosRhl(dest);
+    const value = get8(srcPos);
+    set8(destPos, value);
+  } else {
+    const value = getRhl(src);
+    setRhl(dest, value);
+  }
 }
 
 /**
@@ -18,8 +27,9 @@ export function LD_Rhl_Rhl(dest: RhlSelect, src: RhlSelect) {
  * LD (HL),n | LD (IX+d),n | LD (IY+d),n
  */
 export function LD_Rhl_N(dest: RhlSelect) {
+  const pos = getPosRhl(dest);
   const n = next8();
-  setRhl(dest, n);
+  set8(pos, n);
 }
 
 /** LD A,I */
