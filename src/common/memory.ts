@@ -1,4 +1,4 @@
-import { get8, readonlyMaxX, readonlyMinY, set8, setReadonly } from './utils';
+import { get8, readonlyMaxX, readonlyMinY, set8, set8Direct, setReadonly } from './utils';
 
 const RAM_MIN_ADDR = 0x4000;
 const ATTRIBUTES_MIN_ADDR = 0x5800;
@@ -20,7 +20,7 @@ export function deployMemory(rom: number[]) {
   for (let addr = 0; addr <= 0xFFFF; addr++) {
     const memPos = getMemPos(addr);
     const value = addr < rom.length ? rom[addr] : 0;
-    set8(memPos, value);
+    set8Direct(memPos, value);
   }
 
   setReadonly(origReadonlyMaxX, origReadonlyMinY);

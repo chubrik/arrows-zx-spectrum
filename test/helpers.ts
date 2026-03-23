@@ -1,14 +1,15 @@
 import { initMemory, writeMem8 } from '../src/common/memory';
-import { get1, get16, get8, set1, set16, set8, setReadonly } from '../src/common/utils';
+import { applyCache, get1, get16, get8, resetCache, set1, set16, set8, setReadonly } from '../src/common/utils';
 import { executeMain } from '../src/z80/execute';
 import { posA, posAa, posB, posBa, posC, posCa, posD, posDa, posE, posEa, posF, posFa, posH, posHa, posHalt, posI, posIFF1, posIFF2, posIXh, posIXl, posIYh, posIYl, posL, posLa, posPCh, posPCl, posR, posSPh, posSPl } from '../src/z80/positions';
 import { HLMode } from '../src/z80/types';
-import { commitRegs, fetchRegs, getIM, initCpu, setHLMode, setIM, setWZ } from '../src/z80/utils';
+import { getIM, initCpu, setHLMode, setIM, setWZ } from '../src/z80/utils';
 
 const CHUNK_X = 0;
 const CHUNK_Y = 100;
 
 export function setupCpu() {
+  resetCache();
   initCpu(CHUNK_X, CHUNK_Y);
   initMemory(CHUNK_X, CHUNK_Y);
   setReadonly(-99999, 99999);
@@ -107,7 +108,8 @@ export function loadProgram(addr: number, bytes: number[]) {
 }
 
 export function step() {
-  fetchRegs();
+  applyCache();
+  resetCache();
   executeMain();
-  commitRegs();
+  applyCache();
 }

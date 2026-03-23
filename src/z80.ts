@@ -1,8 +1,9 @@
 import { initMemory } from './common/memory';
+import { applyCache, resetCache } from './common/utils';
 import { executeMain } from './z80/execute';
 import { interrupt } from './z80/interrupt';
 import { copyCpu } from './z80/positions';
-import { commitRegs, fetchRegs, initCpu } from './z80/utils';
+import { initCpu } from './z80/utils';
 
 const pos = getPosition();
 const chunkX = pos.x & ~0xF;
@@ -10,14 +11,23 @@ const chunkY = pos.y & ~0xF;
 initMemory(chunkX, chunkY);
 initCpu(chunkX, chunkY);
 
-let enabled = false;
-onActive(() => enabled = !enabled);
+let opsPerTick = 0;
+
+onActive(() => {
+  if (opsPerTick === 0) opsPerTick = 1;
+  else if (opsPerTick === 1) opsPerTick = 3000;
+  else opsPerTick = 0;
+});
 
 always(() => {
-  if (!enabled) return;
+  if (!opsPerTick) return;
   copyCpu();
-  fetchRegs();
-  executeMain();
-  interrupt();
-  commitRegs();
+  resetCache();
+
+  for (let i = 0; i < opsPerTick; i++) {
+    executeMain();
+    interrupt();
+  }
+
+  applyCache();
 });

@@ -1,29 +1,29 @@
 import { getMemPos, readMem16, readMem8, writeMem16 } from '../common/memory';
 import { get1, get16, get8, set1, set16, set8 } from '../common/utils';
 import { bitFC } from './flags';
-import { initCpuPositions, posA, posB, posC, posD, posE, posF, posH, posHalt, posI, posIFF1, posIFF2, posIM1, posIM2, posIXh, posIXl, posIYh, posIYl, posL, posPCh, posPCl, posR, posSPh, posSPl } from './positions';
+import { getPosA, getPosB, getPosC, getPosD, getPosE, getPosF, getPosSPh, getPosSPl, initCpuPositions, posA, posB, posC, posD, posE, posF, posH, posHalt, posHXY, posI, posIFF1, posIFF2, posIM1, posIM2, posL, posLXY, posPCh, posPCl, posR, posReg, posSPh, posSPl } from './positions';
 import { HLMode, QQSelect, RegSelect, RhlSelect, SSSelect } from './types';
 
 export let hlMode = HLMode.HL;
 export function setHLMode(mode: HLMode) { hlMode = mode; }
-export let posReg: (Position | 0)[];
 
 export function initCpu(chunkX: number, chunkY: number) {
   initCpuPositions(chunkX, chunkY);
-  posReg = [posB, posC, posD, posE, posH, posL, 0, posA];
 }
 
+export function getA(): number { return get8(posA); }
+export function setA(value: number) { set8(posA, value); }
 export function getF(): number { return get8(posF); }
 export function setF(value: number) { set8(posF, value); }
 export function getFC(): number { return get8(posF) & bitFC; }
-export function getA(): number { return get8(posA); }
-export function setA(value: number) { set8(posA, value); }
 export function getB(): number { return get8(posB); }
 export function setB(value: number) { set8(posB, value); }
 export function getC(): number { return get8(posC); }
 export function setC(value: number) { set8(posC, value); }
 export function getI(): number { return get8(posI); }
 export function setI(value: number) { set8(posI, value); }
+export function getR(): number { return get8(posR); }
+export function setR(value: number) { set8(posR, value); }
 
 export function getBC(): number { return get16(posB, posC); }
 export function setBC(value: number) { set16(posB, posC, value); }
@@ -33,24 +33,35 @@ export function getSP(): number { return get16(posSPh, posSPl); }
 export function setSP(value: number) { set16(posSPh, posSPl, value); }
 
 /** HL/IX/IY */
-export function getHL(): number { return get16(getPosH(), getPosL()); }
+export function getHL(): number { return get16(getPosHXY(), getPosLXY()); }
 /** HL/IX/IY */
-export function setHL(value: number) { set16(getPosH(), getPosL(), value); }
+export function setHL(value: number) { set16(getPosHXY(), getPosLXY(), value); }
+
+/** B, C, D, E, H, L, 0, A */
+export function getPosReg(select: RegSelect): Position | 0 { return posReg[select]; }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-export function getRhl(select: RhlSelect): number { return get8(posRhl[select]()); }
+export function getRhl(select: RhlSelect): number { return get8(getPosRhl(select)); }
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-export function setRhl(select: RhlSelect, value: number) { set8(posRhl[select](), value); }
+export function setRhl(select: RhlSelect, value: number) { set8(getPosRhl(select), value); }
+/** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
+export function getPosRhl(select: RhlSelect): Position { return posRhl[select](); }
+/** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
+const posRhl = [getPosB, getPosC, getPosD, getPosE, getPosHXY, getPosLXY, getPosHLXYd, getPosA];
 
 /** BC, DE, HL/IX/IY, AF */
 export function getQQ(select: QQSelect): number { return get16(posQQ[select](), posQQ[select + 1]()); }
 /** BC, DE, HL/IX/IY, AF */
 export function setQQ(select: QQSelect, value: number) { set16(posQQ[select](), posQQ[select + 1](), value); }
+/** BC, DE, HL/IX/IY, AF */
+const posQQ = [getPosB, getPosC, getPosD, getPosE, getPosHXY, getPosLXY, getPosA, getPosF];
 
 /** BC, DE, HL/IX/IY, SP */
 export function getSS(select: SSSelect): number { return get16(posSS[select](), posSS[select + 1]()); }
 /** BC, DE, HL/IX/IY, SP */
 export function setSS(select: SSSelect, value: number) { set16(posSS[select](), posSS[select + 1](), value); }
+/** BC, DE, HL/IX/IY, SP */
+const posSS = [getPosB, getPosC, getPosD, getPosE, getPosHXY, getPosLXY, getPosSPh, getPosSPl];
 
 export function push16(value: number) {
   const oldSP = getSP();
@@ -88,26 +99,9 @@ let wz = 0;
 export function getWZ(): number { return wz; }
 export function setWZ(value: number) { wz = value; }
 
-let startR: number;
-let currentR: number;
-let startPC: number;
-let currentPC: number;
-
-export function fetchRegs() {
-  startR = currentR = get8(posR);
-  startPC = currentPC = get16(posPCh, posPCl);
-}
-
-export function commitRegs() {
-  if (currentR !== startR) set8(posR, currentR);
-  if (currentPC !== startPC) set16(posPCh, posPCl, currentPC);
-}
-
-export function getR(): number { return currentR; }
-export function setR(value: number) { currentR = value; }
-export function getPC(): number { return currentPC; }
-export function setPC(value: number) { currentPC = value; }
-export function incPC(add: number) { currentPC = (currentPC + add) & 0xFFFF; }
+export function getPC(): number { return get16(posPCh, posPCl); }
+export function setPC(value: number) { set16(posPCh, posPCl, value); }
+export function incPC(add: number) { setPC((getPC() + add) & 0xFFFF); }
 
 export function next16(): number {
   const valueLow = next8();
@@ -116,9 +110,15 @@ export function next16(): number {
 }
 
 export function next8(): number {
-  const value = readMem8(currentPC);
-  currentPC = (currentPC + 1) & 0xFFFF;
+  const value = readMem8(getPC());
+  incPC(1);
   return value;
+}
+
+export function refresh() {
+  const r = getR();
+  const newR = (r & 0x80) | ((r + 1) & 0x7F);
+  setR(newR);
 }
 
 export function splitOp(op: number): { b76: number, b543: number, b210: number } {
@@ -129,84 +129,28 @@ export function splitOp(op: number): { b76: number, b543: number, b210: number }
   };
 }
 
-export function refresh() {
-  currentR = (currentR & 0x80) | ((currentR + 1) & 0x7F)
-}
-
-/** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-export function getPosRhl(select: RhlSelect): Position {
-  return posRhl[select]();
-}
-
-/** B, C, D, E, H, L, null, A */
-export function getPosReg(select: RegSelect): Position | 0 {
-  return posReg[select];
-}
-
-/** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-const posRhl: (() => Position)[] = [
-  () => posB,
-  () => posC,
-  () => posD,
-  () => posE,
-  getPosH, // H/IXh/IYh
-  getPosL, // L/IXl/IYl
-  () => { // (HL/IX+d/IY+d)
-    if (hlMode === HLMode.HL) {
-      const addr = get16(posH, posL);
-      return getMemPos(addr);
-    }
-    else {
-      const rawD = next8();
-      const addr = getAddrIXIYd(rawD);
-      return getMemPos(addr);
-    }
-  },
-  () => posA,
-];
-
 /** (IX+d/IY+d) */
-export function getAddrIXIYd(rawD: number): number {
+export function getAddrXYd(rawD: number): number {
   let hl = getHL() // IX/IY
   const d = rawD >= 128 ? rawD - 256 : rawD; // -128...+127
   return (hl + d) & 0xFFFF;
 }
 
-/** BC, DE, HL/IX/IY, AF */
-const posQQ: (() => Position)[] = [
-  () => posB,
-  () => posC,
-  () => posD,
-  () => posE,
-  getPosH, // H/IXh/IYh
-  getPosL, // L/IXl/IYl
-  () => posA,
-  () => posF,
-];
-
-/** BC, DE, HL/IX/IY, SP */
-const posSS: (() => Position)[] = [
-  () => posB,
-  () => posC,
-  () => posD,
-  () => posE,
-  getPosH, // H/IXh/IYh
-  getPosL, // L/IXl/IYl
-  () => posSPh,
-  () => posSPl,
-];
-
 /** H/IXh/IYh */
-function getPosH() {
-  if (hlMode === HLMode.IX) return posIXh;
-  if (hlMode === HLMode.IY) return posIYh;
-  return posH;
-}
+function getPosHXY() { return posHXY[hlMode]; }
 
 /** L/IXl/IYl */
-function getPosL() {
-  if (hlMode === HLMode.IX) return posIXl;
-  if (hlMode === HLMode.IY) return posIYl;
-  return posL;
-}
+function getPosLXY() { return posLXY[hlMode]; }
 
+/** (HL/IX+d/IY+d) */
+function getPosHLXYd() {
+  if (hlMode === HLMode.HL) {
+    const addr = get16(posH, posL);
+    return getMemPos(addr);
+  }
+  else {
+    const rawD = next8();
+    const addr = getAddrXYd(rawD);
+    return getMemPos(addr);
+  }
+}

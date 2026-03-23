@@ -1,5 +1,5 @@
 import { readMem8, writeMem8 } from '../../common/memory';
-import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ, maskF53 } from '../flags';
+import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ } from '../flags';
 import { getA, getBC, getDE, getF, getFC, getHL, incPC, setBC, setDE, setF, setHL } from '../utils';
 
 /** LDI */

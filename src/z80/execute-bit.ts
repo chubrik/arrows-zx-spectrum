@@ -3,7 +3,7 @@ import { get8, set8 } from '../common/utils';
 import { BIT_b_val, RES_b_val, SET_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
 import { HLMode } from './types';
-import { getAddrIXIYd, getPosReg, getPosRhl, getWZ, hlMode, next8, refresh, splitOp } from './utils';
+import { getAddrXYd, getPosReg, getPosRhl, getWZ, hlMode, next8, refresh, splitOp } from './utils';
 
 /** Bit Instructions (CB) | IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
 export function executeBit() {
@@ -23,7 +23,7 @@ export function executeBit() {
     const rawD = next8();
     const op = next8();
     ({ b76, b543, b210 } = splitOp(op));
-    const addr = getAddrIXIYd(rawD);
+    const addr = getAddrXYd(rawD);
     srcPos = getMemPos(addr);
     destPos = getPosReg(b210);
     addrHigh = (addr >> 8) & 0xFF;
