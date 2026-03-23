@@ -2,16 +2,13 @@ export let readonlyMaxX: number;
 export let readonlyMinY: number;
 
 export function setReadonly(x: number, y: number) {
-   readonlyMaxX = x; 
-   readonlyMinY = y; 
+  readonlyMaxX = x;
+  readonlyMinY = y;
 }
 
 export function check(condition: boolean, message: string = 'Check failed') {
-  if (!condition) {
-    log(message);
-    showText(message);
+  if (!condition)
     throw new Error(message);
-  }
 }
 
 export function get16(posHigh: Position, posLow: Position): number {

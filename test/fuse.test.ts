@@ -1,8 +1,8 @@
-import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { readMem8 } from '../../src/common/memory';
-import { getState, loadProgram, setState, setupCpu, step } from '../helpers';
-import { FuseTestExpected, parseTestsExpected, parseTestsIn } from './parse-fuse';
+import { getResource } from '../build/resources';
+import { readMem8 } from '../src/common/memory';
+import { FuseTestExpected, parseTestsExpected, parseTestsIn } from './fuse-parse';
+import { getState, loadProgram, setState, setupCpu, step } from './helpers';
 
 // ---------------------------------------------------------------------------
 // Port mocking — queue-based for multiple reads per instruction
@@ -14,7 +14,7 @@ const mockPorts = vi.hoisted(() => ({
   writes: [] as Array<{ addr: number; value: number }>,
 }));
 
-vi.mock('../../src/common/ports', () => ({
+vi.mock('../src/common/ports', () => ({
   readPort: () => mockPorts.readQueue[mockPorts.readIndex++] ?? 0xFF,
   writePort: (addr: number, value: number) => { mockPorts.writes.push({ addr, value }); },
 }));
@@ -23,8 +23,8 @@ vi.mock('../../src/common/ports', () => ({
 // Load FUSE test data
 // ---------------------------------------------------------------------------
 
-const inputText = readFileSync(new URL('./data/tests.in', import.meta.url), 'utf-8');
-const expectedText = readFileSync(new URL('./data/tests.expected', import.meta.url), 'utf-8');
+const inputText = await getResource('fuse-tests.in', 'utf-8');
+const expectedText = await getResource('fuse-tests.expected', 'utf-8');
 
 const inputs = parseTestsIn(inputText);
 const expecteds = parseTestsExpected(expectedText);

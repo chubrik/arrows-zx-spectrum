@@ -1,8 +1,8 @@
-import { createHash } from 'crypto';
-import { existsSync, readFileSync } from 'fs';
+import { readFileSync } from 'fs';
 import { basename } from 'path';
 import { asciiToUnicode, bytesToUnicode } from '../src/common/encode.ts';
 import { check } from '../src/common/utils.ts';
+import { getResource } from './resources.ts';
 import { buildPath, buildTs, DIST_DIR, minifyJs, SRC_DIR, writeToPath } from './utils.ts';
 
 await buildAndPack(`${SRC_DIR}/ula.ts`);
@@ -42,7 +42,7 @@ async function buildAndPackDeployer(path: string) {
   const fileName = basename(path, '.ts');
   const toReplace = `unicodeToBytes('')`;
 
-  const rom = await getRom();
+  const rom = await getResource('48k.rom');
   const romBase64 = rom.toString('base64');
   check(Buffer.from(romBase64, 'base64').equals(rom), 'Base64 verification failed');
 
@@ -66,28 +66,3 @@ async function buildAndPackDeployer(path: string) {
     `packed: ${pack.length} bytes (${[...pack].length} chars)`);
 }
 
-async function getRom(): Promise<Buffer> {
-  const path = 'rom/48k.rom';
-  const sha256 = 'd55daa439b673b0e3f5897f99ac37ecb45f974d1862b4dadb85dec34af99cb42';
-
-  const exists = existsSync(path);
-  let buffer: Buffer;
-
-  if (exists)
-    buffer = readFileSync(path);
-  else {
-    const srcUrl = 'https://mdfs.net/Software/Spectrum/ROMImages/48k.rom';
-    const array = await fetch(srcUrl).then(r => r.arrayBuffer());
-    buffer = Buffer.from(array);
-  }
-
-  const hashCheck = createHash('sha256').update(buffer).digest('hex');
-  check(hashCheck === sha256, `sha256 mismatch: ${hashCheck}`);
-
-  if (!exists) {
-    writeToPath(path, buffer);
-    console.log(`${path}: ${buffer.length} bytes downloaded`);
-  }
-
-  return buffer;
-}
