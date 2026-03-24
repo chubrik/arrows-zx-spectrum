@@ -1,5 +1,5 @@
-export let readonlyMaxX: number;
-export let readonlyMinY: number;
+let readonlyMaxX: number;
+let readonlyMinY: number;
 
 export function setReadonly(x: number, y: number) {
   readonlyMaxX = x;
@@ -128,6 +128,13 @@ export function get1(pos: number): 0 | 1 {
   init1.set(pos, bit);
   update1.set(pos, bit);
   return bit;
+}
+
+export function set1Direct(pos: number, bit: 0 | 1) {
+  const x = unpackX(pos);
+  const y = unpackY(pos);
+  const arrowTypes = getArrowTypes(x, y);
+  world.setArrow(x, y, arrowTypes[bit], 1, false);
 }
 
 export function set1(pos: number, bit: 0 | 1) {

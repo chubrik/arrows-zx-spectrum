@@ -1,6 +1,6 @@
 import { unicodeToBytes } from './common/encode';
 import { deployMemoryBlock, initMemory } from './common/memory';
-import { initCpuStartPosition, resetCpu } from './z80/positions';
+import { initCpuStartPosition } from './z80/positions';
 
 const pos = getPosition();
 const chunkX = pos.x & ~0xF;
@@ -9,10 +9,6 @@ initMemory(chunkX, chunkY);
 initCpuStartPosition(chunkX, chunkY);
 
 onActive(() => {
-  const rom = unicodeToBytes(''); // Replaced during build
-  const ram: number[] = [];
-  ram.length = 0xC000;
-  deployMemoryBlock(rom, 0x0000);
-  deployMemoryBlock(ram, 0x4000);
-  resetCpu();
+  const data = unicodeToBytes(''); // Replaced during build
+  deployMemoryBlock(data, 0x0000); // 0x0000 replaced during build
 });
