@@ -1,6 +1,6 @@
 import { initMemory } from './common/memory';
 import { applyCache, resetCache, set1 } from './common/utils';
-import { executeMain } from './z80/execute';
+import { _executeMain } from './z80/_execute-main';
 import { interrupt } from './z80/interrupt';
 import { copyCpu, posINT } from './z80/positions';
 import { initCpu } from './z80/utils';
@@ -25,7 +25,7 @@ always(() => {
   resetCache();
 
   for (let i = 0; i < opsPerTick; i++) {
-    executeMain();
+    _executeMain();
     interrupt();
   }
 

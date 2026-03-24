@@ -41,7 +41,7 @@ export function RST_p(p: number) {
   call(addr);
 }
 
-function call(addr: number) {
+export function call(addr: number) {
   const retAddr = getPC();
   push16(retAddr);
   setPC(addr);

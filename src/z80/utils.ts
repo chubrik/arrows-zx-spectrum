@@ -1,5 +1,6 @@
 import { getMemPos, readMem16, readMem8, writeMem16 } from '../common/memory';
 import { get1, get16, get8, set1, set16, set8 } from '../common/utils';
+import { _initExecuteMain } from './_execute-main';
 import { bitFC } from './flags';
 import { getPosA, getPosB, getPosC, getPosD, getPosE, getPosF, getPosSPh, getPosSPl, initCpuPositions, posA, posB, posC, posD, posE, posF, posH, posHalt, posHXY, posI, posIFF1, posIFF2, posIM1, posIM2, posL, posLXY, posPCh, posPCl, posR, posReg, posSPh, posSPl } from './positions';
 import { HLMode, QQSelect, RegSelect, RhlSelect, SSSelect } from './types';
@@ -9,6 +10,7 @@ export function setHLMode(mode: HLMode) { hlMode = mode; }
 
 export function initCpu(chunkX: number, chunkY: number) {
   initCpuPositions(chunkX, chunkY);
+  _initExecuteMain();
 }
 
 export function getA(): number { return get8(posA); }
@@ -20,15 +22,26 @@ export function getB(): number { return get8(posB); }
 export function setB(value: number) { set8(posB, value); }
 export function getC(): number { return get8(posC); }
 export function setC(value: number) { set8(posC, value); }
+export function _getD(): number { return get8(posD); }
+export function _setD(value: number) { set8(posD, value); }
+export function _getE(): number { return get8(posE); }
+export function _setE(value: number) { set8(posE, value); }
+export function _getH(): number { return get8(posH); }
+export function _setH(value: number) { set8(posH, value); }
+export function _getL(): number { return get8(posL); }
+export function _setL(value: number) { set8(posL, value); }
 export function getI(): number { return get8(posI); }
 export function setI(value: number) { set8(posI, value); }
 export function getR(): number { return get8(posR); }
 export function setR(value: number) { set8(posR, value); }
 
+export function _getAF(): number { return get16(posA, posF); }
 export function getBC(): number { return get16(posB, posC); }
 export function setBC(value: number) { set16(posB, posC, value); }
 export function getDE(): number { return get16(posD, posE); }
 export function setDE(value: number) { set16(posD, posE, value); }
+export function _getHL(): number { return get16(posH, posL); }
+export function _setHL(value: number) { set16(posH, posL, value); }
 export function getSP(): number { return get16(posSPh, posSPl); }
 export function setSP(value: number) { set16(posSPh, posSPl, value); }
 
@@ -104,14 +117,16 @@ export function setPC(value: number) { set16(posPCh, posPCl, value); }
 export function incPC(add: number) { setPC((getPC() + add) & 0xFFFF); }
 
 export function next16(): number {
-  const valueLow = next8();
-  const valueHigh = next8();
-  return (valueHigh << 8) | valueLow;
+  const pc = getPC();
+  const value = readMem16(pc);
+  setPC((pc + 2) & 0xFFFF);
+  return value;
 }
 
 export function next8(): number {
-  const value = readMem8(getPC());
-  incPC(1);
+  const pc = getPC();
+  const value = readMem8(pc);
+  setPC((pc + 1) & 0xFFFF);
   return value;
 }
 

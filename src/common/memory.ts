@@ -3,12 +3,15 @@ import { get8, packPos, set8, set8Direct, setReadonly, unpackX, unpackY } from '
 const RAM_MIN_ADDR = 0x4000;
 const ATTRIBUTES_MIN_ADDR = 0x5800;
 const ATTRIBUTES_AFTER_ADDR = 0x5B00;
-let memoryX: number;
-let memoryY: number;
+const memPosCache: number[] = [];
 
 export function initMemory(chunkX: number, chunkY: number) {
-  memoryX = chunkX - 256;
-  memoryY = chunkY + 16;
+  const memoryX = chunkX - 256;
+  const memoryY = chunkY + 16;
+
+  for (let addr = 0; addr < 0xFFFF; addr++)
+    memPosCache[addr] = getMemPosCore(addr, memoryX, memoryY);
+
   const ramMinPos = getMemPos(RAM_MIN_ADDR);
   const ramMinX = unpackX(ramMinPos);
   const ramMinY = unpackY(ramMinPos);
@@ -44,25 +47,29 @@ export function writeMem8(addr: number, value: number) {
 }
 
 export function getMemPos(addr: number): number {
+  return memPosCache[addr];
+}
+
+function getMemPosCore(addr: number, mem0X: number, mem0Y: number): number {
   const xShift = ((addr & 0xC000) >> 14) * 272;
   let x, y: number;
 
   if (addr >= RAM_MIN_ADDR && addr < ATTRIBUTES_MIN_ADDR) {
     // Pretty screen
-    x = memoryX + (addr & 0x1F) * 8 + xShift;
-    y = memoryY + ((addr & 0x1800) >> 5) + ((addr & 0x0700) >> 8) + ((addr & 0xE0) >> 2);
+    x = mem0X + (addr & 0x1F) * 8 + xShift;
+    y = mem0Y + ((addr & 0x1800) >> 5) + ((addr & 0x0700) >> 8) + ((addr & 0xE0) >> 2);
   }
   else if (addr >= ATTRIBUTES_MIN_ADDR && addr < ATTRIBUTES_AFTER_ADDR) {
     // Line by line:
-    x = memoryX + (addr & 0x1F) * 8 + xShift;
-    y = memoryY + ((addr & 0x3FFF) >> 5);
+    x = mem0X + (addr & 0x1F) * 8 + xShift;
+    y = mem0Y + ((addr & 0x3FFF) >> 5);
 
     y += 16;
   }
   else {
     // 8x8 blocks:
-    x = memoryX + (addr & 0xF8) + xShift;
-    y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
+    x = mem0X + (addr & 0xF8) + xShift;
+    y = mem0Y + ((addr & 0x3F00) >> 5) + (addr & 0x7);
 
     if (addr >= ATTRIBUTES_MIN_ADDR && addr < 0x8000)
       y += 16;

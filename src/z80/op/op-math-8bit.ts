@@ -112,6 +112,10 @@ export function CP_N() {
 /** INC r | INC (HL) | INC (IX+d) | INC (IY+d) */
 export function INC_Rhl(select: RhlSelect) {
   const pos = getPosRhl(select);
+  _INC_Rhl(pos);
+}
+
+export function _INC_Rhl(pos: number) {
   const value = get8(pos);
   const result = (value + 1) & 0xFF;
   set8(pos, result);
@@ -127,6 +131,10 @@ export function INC_Rhl(select: RhlSelect) {
 /** DEC r | DEC (HL) | DEC (IX+d) | DEC (IY+d) */
 export function DEC_Rhl(select: RhlSelect) {
   const pos = getPosRhl(select);
+  _DEC_Rhl(pos);
+}
+
+export function _DEC_Rhl(pos: number) {
   const value = get8(pos);
   const result = (value - 1) & 0xFF;
   set8(pos, result);
@@ -140,7 +148,7 @@ export function DEC_Rhl(select: RhlSelect) {
   );
 }
 
-function add(operand: number, carry: number) {
+export function add(operand: number, carry: number) {
   const a = getA();
   const sum = a + operand + carry;
   const result = sum & 0xFF;
@@ -154,7 +162,7 @@ function add(operand: number, carry: number) {
   );
 }
 
-function sub(operand: number, carry: number) {
+export function sub(operand: number, carry: number) {
   const a = getA();
   const diff = a - operand - carry;
   const result = diff & 0xFF;
@@ -169,7 +177,7 @@ function sub(operand: number, carry: number) {
   );
 }
 
-function cp(operand: number) {
+export function cp(operand: number) {
   const a = getA();
   const diff = a - operand;
   const result = diff & 0xFF;
@@ -183,7 +191,7 @@ function cp(operand: number) {
   );
 }
 
-function logic(result: number, fH: number) {
+export function logic(result: number, fH: number) {
   setA(result);
   setF(flagsSZ53P(result) | fH);
 }

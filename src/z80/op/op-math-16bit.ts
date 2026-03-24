@@ -1,6 +1,7 @@
+import { get16, set16 } from '../../common/utils';
 import { bitFC, bitFH, bitFN, bitFZ, maskF53, maskFS53, maskFSZPV } from '../flags';
 import { SSSelect } from '../types';
-import { getF, getFC, getHL, getSS, setF, setHL, setSS } from '../utils';
+import { _getHL, _setHL, getF, getFC, getHL, getSS, setF, setHL, setSS } from '../utils';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
 export function ADD_HL_SS(select: SSSelect) {
@@ -9,6 +10,21 @@ export function ADD_HL_SS(select: SSSelect) {
   const sum = hl + ss;
   const result = sum & 0xFFFF;
   setHL(result);
+
+  setF(
+    (getF() & maskFSZPV)
+    | ((result >> 8) & maskF53)
+    | (((hl ^ ss ^ result) >> 8) & bitFH)
+    | ((sum >> 16) & bitFC)
+  );
+}
+
+/** ADD HL,ss */
+export function _ADD_HL_SS(ss: number) {
+  const hl = _getHL();
+  const sum = hl + ss;
+  const result = sum & 0xFFFF;
+  _setHL(result);
 
   setF(
     (getF() & maskFSZPV)
@@ -67,4 +83,16 @@ export function DEC_SS(select: SSSelect) {
   const value = getSS(select);
   const result = (value - 1) & 0xFFFF;
   setSS(select, result);
+}
+
+export function _INC_SS(posHigh: number, posLow: number) {
+  const value = get16(posHigh, posLow);
+  const result = (value + 1) & 0xFFFF;
+  set16(posHigh, posLow, result);
+}
+
+export function _DEC_SS(posHigh: number, posLow: number) {
+  const value = get16(posHigh, posLow);
+  const result = (value - 1) & 0xFFFF;
+  set16(posHigh, posLow, result);
 }

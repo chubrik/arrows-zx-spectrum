@@ -1,6 +1,6 @@
 import { initMemory, writeMem8 } from '../src/common/memory';
 import { applyCache, get1, get16, get8, resetCache, set1, set16, set8, setReadonly } from '../src/common/utils';
-import { executeMain } from '../src/z80/execute';
+import { _executeMain } from '../src/z80/_execute-main';
 import { posA, posAa, posB, posBa, posC, posCa, posD, posDa, posE, posEa, posF, posFa, posH, posHa, posHalt, posI, posIFF1, posIFF2, posIXh, posIXl, posIYh, posIYl, posL, posLa, posPCh, posPCl, posR, posSPh, posSPl } from '../src/z80/positions';
 import { HLMode } from '../src/z80/types';
 import { getIM, initCpu, setHLMode, setIM, setWZ } from '../src/z80/utils';
@@ -110,6 +110,6 @@ export function loadProgram(addr: number, bytes: number[]) {
 export function step() {
   applyCache();
   resetCache();
-  executeMain();
+  _executeMain();
   applyCache();
 }
