@@ -24,11 +24,11 @@ export function resetCache() {
 }
 
 export function applyCache() {
-  for (const [key, byte] of update8) {
-    const initByte = init8.get(key);
+  for (const [pos, byte] of update8) {
+    const initByte = init8.get(pos);
     if (byte === initByte) continue;
-    const x = (key >> 11) - 1024;
-    const y = (key & 0x7FF) - 1024;
+    const x = unpackX(pos);
+    const y = unpackY(pos);
     const arrowTypes = getArrowTypes(x, y);
 
     for (let i = 0; i < 8; i++) {
@@ -43,84 +43,100 @@ export function applyCache() {
     }
   }
 
-  for (const [key, bit] of update1) {
-    const initBit = init1.get(key);
+  for (const [pos, bit] of update1) {
+    const initBit = init1.get(pos);
     if (bit === initBit) continue;
-    const x = (key >> 11) - 1024;
-    const y = (key & 0x7FF) - 1024;
+    const x = unpackX(pos);
+    const y = unpackY(pos);
     const arrowTypes = getArrowTypes(x, y);
     world.setArrow(x, y, arrowTypes[bit], 1, false);
   }
 }
 
-export function get16(posHigh: Position, posLow: Position): number {
+export function packPos(x: number, y: number): number {
+  return ((x + 1024) << 11) | (y + 1024);
+}
+
+export function unpackX(pos: number): number {
+  return (pos >> 11) - 1024;
+}
+
+export function unpackY(pos: number): number {
+  return (pos & 0x7FF) - 1024;
+}
+
+export function get16(posHigh: number, posLow: number): number {
   const valueLow = get8(posLow);
   const valueHigh = get8(posHigh);
   return (valueHigh << 8) | valueLow;
 }
 
-export function set16(posHigh: Position, posLow: Position, value: number) {
+export function set16(posHigh: number, posLow: number, value: number) {
   set8(posLow, value & 0xFF);
   set8(posHigh, value >> 8);
 }
 
-export function get8(pos: Position): number {
-  const key = getKey(pos);
+export function get8(pos: number): number {
+  const cached = update8.get(pos);
+  if (cached !== undefined) return cached;
 
-  if (update8.has(key))
-    return update8.get(key)!;
-
+  const x = unpackX(pos);
+  const y = unpackY(pos);
   let byte = 0;
 
   for (let i = 0; i < 8; i++) {
-    const arrow = world.getArrow(pos.x + i, pos.y);
+    const arrow = world.getArrow(x + i, y);
 
     if (arrow && arrow.type >= 16)
       byte |= 1 << (7 - i);
   }
 
-  init8.set(key, byte);
-  update8.set(key, byte);
+  init8.set(pos, byte);
+  update8.set(pos, byte);
   return byte;
 }
 
-export function set8Direct(pos: Position, value: number) {
-  const arrowTypes = getArrowTypes(pos.x, pos.y);
+export function set8Direct(pos: number, value: number) {
+  const x = unpackX(pos);
+  const y = unpackY(pos);
+  const arrowTypes = getArrowTypes(x, y);
   for (let i = 0; i < 8; i++) {
     const bit = (value >> (7 - i)) & 1;
     const arrowType = arrowTypes[bit];
-    world.setArrow(pos.x + i, pos.y, arrowType, 1, false);
+    world.setArrow(x + i, y, arrowType, 1, false);
   }
 }
 
-export function set8(pos: Position, byte: number) {
-  if (pos.x < readonlyMaxX && pos.y >= readonlyMinY) return;
-  const key = getKey(pos);
-  update8.set(key, byte);
+export function set8(pos: number, byte: number) {
+  const x = unpackX(pos);
+  if (x < readonlyMaxX) {
+    const y = unpackY(pos);
+    if (y >= readonlyMinY) return;
+  }
+  update8.set(pos, byte);
 }
 
-export function get1(pos: Position): 0 | 1 {
-  const key = getKey(pos);
+export function get1(pos: number): 0 | 1 {
+  const cached = update1.get(pos);
+  if (cached !== undefined) return cached;
 
-  if (update1.has(key))
-    return update1.get(key) as 0 | 1;
-
-  const arrow = world.getArrow(pos.x, pos.y);
+  const x = unpackX(pos);
+  const y = unpackY(pos);
+  const arrow = world.getArrow(x, y);
   const bit = arrow && arrow.type >= 16 ? 1 : 0;
 
-  init1.set(key, bit);
-  update1.set(key, bit);
+  init1.set(pos, bit);
+  update1.set(pos, bit);
   return bit;
 }
 
-export function set1(pos: Position, bit: 0 | 1) {
-  if (pos.x < readonlyMaxX && pos.y >= readonlyMinY) return;
-  const key = getKey(pos);
-  update1.set(key, bit);
-}
-
-function getKey(pos: Position): number {
-  return ((pos.x + 1024) << 11) | (pos.y + 1024);
+export function set1(pos: number, bit: 0 | 1) {
+  const x = unpackX(pos);
+  if (x < readonlyMaxX) {
+    const y = unpackY(pos);
+    if (y >= readonlyMinY) return;
+  }
+  update1.set(pos, bit);
 }
 
 function getArrowTypes(x: number, y: number): number[] {

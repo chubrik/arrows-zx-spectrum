@@ -12,14 +12,16 @@ import { ADC_A_N, ADC_A_Rhl, ADD_A_N, ADD_A_Rhl, AND_N, AND_Rhl, CP_N, CP_Rhl, D
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { RLA, RLCA, RRA, RRCA } from './op/op-shift';
 import { HLMode, SSSelect } from './types';
-import { getHalt, next8, refresh, setHLMode, splitOp } from './utils';
+import { getHalt, next8, refresh, setHLMode } from './utils';
 
 /** Main Instructions | IX Instructions (DD) | IY Instructions (FD) */
 export function executeMain() {
   refresh();
   if (getHalt()) return;
   const op = next8();
-  const { b76, b543, b210 } = splitOp(op);
+  const b76 = op >> 6;
+  const b543 = (op >> 3) & 0x7;
+  const b210 = op & 0x7;
 
   if (b76 === 0) {
     if (b210 === 0) {

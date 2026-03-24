@@ -1,4 +1,4 @@
-import { get8, readonlyMaxX, readonlyMinY, set8, set8Direct, setReadonly } from './utils';
+import { get8, packPos, readonlyMaxX, readonlyMinY, set8, set8Direct, setReadonly, unpackX, unpackY } from './utils';
 
 const RAM_MIN_ADDR = 0x4000;
 const ATTRIBUTES_MIN_ADDR = 0x5800;
@@ -9,7 +9,9 @@ export function initMemory(chunkX: number, chunkY: number) {
   memoryX = chunkX - 256;
   memoryY = chunkY + 16;
   const ramMinPos = getMemPos(RAM_MIN_ADDR);
-  setReadonly(ramMinPos.x, ramMinPos.y);
+  const ramMinX = unpackX(ramMinPos);
+  const ramMinY = unpackY(ramMinPos);
+  setReadonly(ramMinX, ramMinY);
 }
 
 export function deployMemory(rom: number[]) {
@@ -47,7 +49,7 @@ export function writeMem8(addr: number, value: number) {
   set8(memPos, value);
 }
 
-export function getMemPos(addr: number): Position {
+export function getMemPos(addr: number): number {
   const xShift = ((addr & 0xC000) >> 14) * 272;
   let x, y: number;
 
@@ -69,5 +71,5 @@ export function getMemPos(addr: number): Position {
       y += 16;
   }
 
-  return { x, y };
+  return packPos(x, y);
 }

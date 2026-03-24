@@ -38,14 +38,14 @@ export function getHL(): number { return get16(getPosHXY(), getPosLXY()); }
 export function setHL(value: number) { set16(getPosHXY(), getPosLXY(), value); }
 
 /** B, C, D, E, H, L, 0, A */
-export function getPosReg(select: RegSelect): Position | 0 { return posReg[select]; }
+export function getPosReg(select: RegSelect): number | 0 { return posReg[select]; }
 
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
 export function getRhl(select: RhlSelect): number { return get8(getPosRhl(select)); }
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
 export function setRhl(select: RhlSelect, value: number) { set8(getPosRhl(select), value); }
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
-export function getPosRhl(select: RhlSelect): Position { return posRhl[select](); }
+export function getPosRhl(select: RhlSelect): number { return posRhl[select](); }
 /** B, C, D, E, H/IXh/IYh, L/IXl/IYl, (HL/IX+d/IY+d), A */
 const posRhl = [getPosB, getPosC, getPosD, getPosE, getPosHXY, getPosLXY, getPosHLXYd, getPosA];
 
@@ -119,14 +119,6 @@ export function refresh() {
   const r = getR();
   const newR = (r & 0x80) | ((r + 1) & 0x7F);
   setR(newR);
-}
-
-export function splitOp(op: number): { b76: number, b543: number, b210: number } {
-  return {
-    b76: op >> 6,
-    b543: (op >> 3) & 0x7,
-    b210: op & 0x7,
-  };
 }
 
 /** (IX+d/IY+d) */

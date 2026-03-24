@@ -7,13 +7,15 @@ import { LD_A_I, LD_A_R, LD_I_A, LD_R_A } from './op/op-load-8bit';
 import { ADC_HL_SS, SBC_HL_SS } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
 import { RLD, RRD } from './op/op-shift';
-import { next8, refresh, splitOp } from './utils';
+import { next8, refresh } from './utils';
 
 /** Misc. Instructions (ED) */
 export function executeMisc() {
   refresh();
   const op = next8();
-  const { b76, b543, b210 } = splitOp(op);
+  const b76 = op >> 6;
+  const b543 = (op >> 3) & 0x7;
+  const b210 = op & 0x7;
 
   if (b76 === 1) {
     if (b210 === 0) {

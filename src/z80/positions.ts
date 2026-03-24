@@ -1,81 +1,88 @@
-export let posA: Position;
-export let posF: Position;
-export let posB: Position;
-export let posC: Position;
-export let posD: Position;
-export let posE: Position;
-export let posH: Position;
-export let posL: Position;
-export let posAa: Position;
-export let posFa: Position;
-export let posBa: Position;
-export let posCa: Position;
-export let posDa: Position;
-export let posEa: Position;
-export let posHa: Position;
-export let posLa: Position;
-export let posIXh: Position;
-export let posIXl: Position;
-export let posIYh: Position;
-export let posIYl: Position;
-export let posSPh: Position;
-export let posSPl: Position;
-export let posPCh: Position;
-export let posPCl: Position;
-export let posI: Position;
-export let posR: Position;
-export let posIM1: Position;
-export let posIM2: Position;
-export let posIFF1: Position;
-export let posIFF2: Position;
-export let posHalt: Position;
-export let posINT: Position;
-export let posReg: (Position | 0)[]; // B, C, D, E, H, L, 0, A
-export let posHXY: Position[];       // H, IXh, IYh
-export let posLXY: Position[];       // L, IXl, IYl
+import { packPos, unpackX, unpackY } from '../common/utils';
 
-export function initCpuStartPosition(chunkX: number, chunkY: number): Position {
-  return posA = createPos(chunkX + 16, chunkY - 16);
+export let posA: number;
+export let posF: number;
+export let posB: number;
+export let posC: number;
+export let posD: number;
+export let posE: number;
+export let posH: number;
+export let posL: number;
+export let posAa: number;
+export let posFa: number;
+export let posBa: number;
+export let posCa: number;
+export let posDa: number;
+export let posEa: number;
+export let posHa: number;
+export let posLa: number;
+export let posIXh: number;
+export let posIXl: number;
+export let posIYh: number;
+export let posIYl: number;
+export let posSPh: number;
+export let posSPl: number;
+export let posPCh: number;
+export let posPCl: number;
+export let posI: number;
+export let posR: number;
+export let posIM1: number;
+export let posIM2: number;
+export let posIFF1: number;
+export let posIFF2: number;
+export let posHalt: number;
+export let posINT: number;
+export let posReg: (number | 0)[]; // B, C, D, E, H, L, 0, A
+export let posHXY: number[];       // H, IXh, IYh
+export let posLXY: number[];       // L, IXl, IYl
+
+export function initCpuStartPosition(chunkX: number, chunkY: number): number {
+  const x = chunkX + 16;
+  const y = chunkY - 16;
+  posA = packPos(x, y);
+  return posA;
 }
 
 export function initCpuPositions(chunkX: number, chunkY: number) {
-  let { x, y } = initCpuStartPosition(chunkX, chunkY);
+  initCpuStartPosition(chunkX, chunkY);
+  let x = chunkX + 16;
+  let y = chunkY - 16;
 
-  posF = createPos(x, ++y);
-  posB = createPos(x, ++y);
-  posC = createPos(x, ++y);
-  posD = createPos(x, ++y);
-  posE = createPos(x, ++y);
-  posH = createPos(x, ++y);
-  posL = createPos(x, ++y);
-  posIXh = createPos(x, ++y);
-  posIXl = createPos(x, ++y);
+  posF = packPos(x, ++y);
+  posB = packPos(x, ++y);
+  posC = packPos(x, ++y);
+  posD = packPos(x, ++y);
+  posE = packPos(x, ++y);
+  posH = packPos(x, ++y);
+  posL = packPos(x, ++y);
+  posIXh = packPos(x, ++y);
+  posIXl = packPos(x, ++y);
 
-  posSPh = createPos(x, y += 2);
-  posSPl = createPos(x, ++y);
-  posPCh = createPos(x, ++y);
-  posPCl = createPos(x, ++y);
+  posSPh = packPos(x, y += 2);
+  posSPl = packPos(x, ++y);
+  posPCh = packPos(x, ++y);
+  posPCl = packPos(x, ++y);
 
-  posAa = createPos(x += 8, y = posA.y);
-  posFa = createPos(x, ++y);
-  posBa = createPos(x, ++y);
-  posCa = createPos(x, ++y);
-  posDa = createPos(x, ++y);
-  posEa = createPos(x, ++y);
-  posHa = createPos(x, ++y);
-  posLa = createPos(x, ++y);
-  posIYh = createPos(x, ++y);
-  posIYl = createPos(x, ++y);
+  posAa = packPos(x += 8, y = chunkY - 16);
+  posFa = packPos(x, ++y);
+  posBa = packPos(x, ++y);
+  posCa = packPos(x, ++y);
+  posDa = packPos(x, ++y);
+  posEa = packPos(x, ++y);
+  posHa = packPos(x, ++y);
+  posLa = packPos(x, ++y);
+  posIYh = packPos(x, ++y);
+  posIYl = packPos(x, ++y);
 
-  posI = createPos(x, y += 2);
-  posR = createPos(x, ++y);
+  posI = packPos(x, y += 2);
+  posR = packPos(x, ++y);
 
-  posIM1 = createPos(x, y += 2);
-  posIM2 = createPos(++x, y);
-  posIFF1 = createPos(x += 2, y);
-  posIFF2 = createPos(++x, y);
-  posHalt = createPos(x += 2, y);
-  posINT = createPos(++x, y);
+  posIM1 = packPos(x, y += 2);
+  posIM2 = packPos(++x, y);
+  posIFF1 = packPos(x += 2, y);
+  posIFF2 = packPos(++x, y);
+  posHalt = packPos(x += 2, y);
+  posINT = packPos(++x, y);
 
   posReg = [posB, posC, posD, posE, posH, posL, 0, posA];
   posHXY = [posH, posIXh, posIYh];
@@ -94,16 +101,14 @@ export const getPosSPh = () => posSPh;
 export const getPosSPl = () => posSPl;
 
 export function resetCpu() {
-  const { x, y } = posA;
+  const x = unpackX(posA);
+  const y = unpackY(posA);
   world.copyRegion(x + 32, y, x + 47, y + 15, x, y);
   world.copyRegion(x, y, x + 15, y + 15, x - 32, y);
 }
 
 export function copyCpu() {
-  const { x, y } = posA;
+  const x = unpackX(posA);
+  const y = unpackY(posA);
   world.copyRegion(x, y, x + 15, y + 15, x - 32, y);
-}
-
-function createPos(x: number, y: number): Position {
-  return { x, y };
 }

@@ -3,26 +3,30 @@ import { get8, set8 } from '../common/utils';
 import { BIT_b_val, RES_b_val, SET_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
 import { HLMode } from './types';
-import { getAddrXYd, getPosReg, getPosRhl, getWZ, hlMode, next8, refresh, splitOp } from './utils';
+import { getAddrXYd, getPosReg, getPosRhl, getWZ, hlMode, next8, refresh } from './utils';
 
 /** Bit Instructions (CB) | IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
 export function executeBit() {
   let b76, b543, b210: number;
-  let srcPos: Position;
-  let destPos: Position | 0 = 0;
+  let srcPos: number;
+  let destPos: number | 0 = 0;
   let addrHigh: number | undefined;
 
   if (hlMode === HLMode.HL) {
     refresh();
     const op = next8();
-    ({ b76, b543, b210 } = splitOp(op));
+    b76 = op >> 6;
+    b543 = (op >> 3) & 0x7;
+    b210 = op & 0x7;
     srcPos = getPosRhl(b210);
     if (b210 === 6) addrHigh = (getWZ() >> 8) & 0xFF;
   }
   else {
     const rawD = next8();
     const op = next8();
-    ({ b76, b543, b210 } = splitOp(op));
+    b76 = op >> 6;
+    b543 = (op >> 3) & 0x7;
+    b210 = op & 0x7;
     const addr = getAddrXYd(rawD);
     srcPos = getMemPos(addr);
     destPos = getPosReg(b210);
