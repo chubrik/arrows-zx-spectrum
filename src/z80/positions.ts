@@ -1,4 +1,4 @@
-import { getInfo, Info, infos } from '../common/arrows';
+import { getInfo, infos, setDirect } from '../common/arrows';
 
 export const A = 0x10002;
 export const F = 0x10001;
@@ -38,19 +38,11 @@ export function setHLXY(hlxy: number) {
 
 export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY, PCl as PC, SPl as SP };
 
-export function initCpuStartPosition(chunkX: number, chunkY: number): Info {
-  const x = chunkX + 16;
-  const y = chunkY - 16;
-  const infoA = getInfo(x, y);
-  infos[A] = infoA;
-  return infoA;
-}
-
-export function initCpuPositions(chunkX: number, chunkY: number) {
-  initCpuStartPosition(chunkX, chunkY);
+export function initCpu(chunkX: number, chunkY: number) {
   let x = chunkX + 16;
   let y = chunkY - 16;
 
+  infos[A] = getInfo(x, y);
   infos[F] = getInfo(x, ++y);
   infos[B] = getInfo(x, ++y);
   infos[C] = getInfo(x, ++y);
@@ -83,14 +75,6 @@ export function initCpuPositions(chunkX: number, chunkY: number) {
 }
 
 export function resetCpu() {
-  const x = infos[A].x;
-  const y = infos[A].y;
-  world.copyRegion(x + 32, y, x + 47, y + 15, x, y);
-  world.copyRegion(x, y, x + 15, y + 15, x - 32, y);
-}
-
-export function copyCpu() {
-  const x = infos[A].x;
-  const y = infos[A].y;
-  world.copyRegion(x, y, x + 15, y + 15, x - 32, y);
+  for (let i = F; i <= SYS; i++)
+    setDirect(i, 0);
 }

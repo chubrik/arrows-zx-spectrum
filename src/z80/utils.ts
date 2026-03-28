@@ -1,12 +1,8 @@
 import { get, get16, set, set16, set88 } from '../common/utils';
-import { FC, IFF1 } from './flags';
-import { F, HL, HLXY, initCpuPositions, PC, R, SP } from './positions';
+import { FC } from './flags';
+import { F, HL, HLXY, PC, R, SP } from './positions';
 
-export function initCpu(chunkX: number, chunkY: number) {
-  initCpuPositions(chunkX, chunkY);
-}
-
-export const nop = () => { };
+export function nop() { };
 
 export function getFC(): number { return get(F) & FC; }
 
@@ -34,13 +30,8 @@ export function pop16(dest: number) {
   set88(dest, valueLow, valueHigh);
 }
 
-let eiDelay: 0 | 1 = 0;
-export function setEIDelay() { eiDelay = 1; }
-
-export function getIFF1NotDelayed(sys: number): 0 | 0x04 {
-  if (eiDelay) return eiDelay = 0;
-  return (sys & IFF1) as any;
-}
+export let eiDelay: 0 | 1 = 0;
+export function setEIDelay(value: 0 | 1) { eiDelay = value; }
 
 //todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
 let wz = 0;

@@ -42,5 +42,6 @@ export const IFF1 = 0x04;
 export const HLT = 0x02;
 export const INT = 0x01;
 
-export const IFF12 = IFF1 | IFF2;
 export const IM12 = IM1 | IM2;
+export const IFF12 = IFF1 | IFF2;
+export const IFF1_INT = IFF1 | INT;

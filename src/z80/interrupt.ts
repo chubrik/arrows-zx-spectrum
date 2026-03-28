@@ -1,17 +1,20 @@
 import { get, set } from '../common/utils';
-import { HLT, IFF12, IM2, INT } from './flags';
+import { HLT, IFF12, IFF1_INT, IM2, INT } from './flags';
 import { call88 } from './op/op-call';
 import { I, SYS } from './positions';
-import { addPC, getIFF1NotDelayed, refresh } from './utils';
+import { addPC, eiDelay, refresh, setEIDelay } from './utils';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = 0xFF;
 
-//todo hack not often
 export function interrupt() {
+  if (eiDelay) {
+    setEIDelay(0);
+    return;
+  };
+
   const sys = get(SYS);
-  if (!getIFF1NotDelayed(sys)) return;
-  if (!(sys & INT)) return;
+  if ((sys & IFF1_INT) !== IFF1_INT) return; // Needs both IFF1 and INT to interrupt
 
   const hlt = sys & HLT;
   set(SYS, sys & ~(INT | IFF12 | HLT));
