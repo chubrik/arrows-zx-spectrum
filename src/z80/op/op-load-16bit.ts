@@ -1,41 +1,21 @@
-import { readMem16, writeMem16 } from '../../common/memory';
-import { QQSelect, SSSelect } from '../types';
-import { getHL, getQQ, getSS, next16, pop16, push16, setQQ, setSP, setSS } from '../utils';
-
-/** LD (nn),dd | LD (nn),HL | LD (nn),IX | LD (nn),IY */
-export function LD_nn_SS(src: SSSelect) {
-  const destAddr = next16();
-  const value = getSS(src);
-  writeMem16(destAddr, value);
-}
-
-/** LD dd,(nn) | LD HL,(nn) | LD IX,(nn) | LD IY,(nn) */
-export function LD_SS_nn(dest: SSSelect) {
-  const srcAddr = next16();
-  const value = readMem16(srcAddr);
-  setSS(dest, value);
-}
+import { get, get16, set16, set88 } from '../../common/utils';
+import { PC } from '../positions';
 
 /** LD dd,nn | LD IX,nn | LD IY,nn */
-export function LD_SS_NN(dest: SSSelect) {
-  const nn = next16();
-  setSS(dest, nn);
+export function ld16Next(dest: number) {
+  let pc = get16(PC);
+  const valueLow = get(pc++);
+  const valueHigh = get(pc++);
+  set16(PC, pc & 0xFFFF);
+  set88(dest, valueLow, valueHigh);
 }
 
-/** LD SP,HL | LD SP,IX | LD SP,IY */
-export function LD_SP_HL() {
-  const value = getHL();
-  setSP(value);
-}
-
-/** PUSH qq | PUSH IX | PUSH IY */
-export function PUSH_QQ(select: QQSelect) {
-  const value = getQQ(select);
-  push16(value);
-}
-
-/** POP qq | POP IX | POP IY */
-export function POP_QQ(select: QQSelect) {
-  const value = pop16();
-  setQQ(select, value);
+/**
+ * LD (nn),dd | LD (nn),HL | LD (nn),IX | LD (nn),IY
+ * LD dd,(nn) | LD HL,(nn) | LD IX,(nn) | LD IY,(nn)
+ */
+export function ld16(dest: number, src: number) {
+  const valueLow = get(src);
+  const valueHigh = get(src + 1);
+  set88(dest, valueLow, valueHigh);
 }

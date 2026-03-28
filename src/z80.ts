@@ -1,8 +1,9 @@
 import { initMemory } from './common/memory';
-import { applyCache, resetCache, set1 } from './common/utils';
-import { _executeMain } from './z80/_execute-main';
+import { commitUpdated, fetchAll, get, set } from './common/utils';
+import { executeMain } from './z80/_execute-main';
+import { INT } from './z80/flags';
 import { interrupt } from './z80/interrupt';
-import { copyCpu, posINT } from './z80/positions';
+import { SYS } from './z80/positions';
 import { initCpu } from './z80/utils';
 
 const pos = getPosition();
@@ -14,24 +15,28 @@ initCpu(chunkX, chunkY);
 let opsPerTick = 0;
 
 onActive(() => {
-  if (opsPerTick === 0) opsPerTick = 1;
-  else if (opsPerTick === 1) opsPerTick = 5000;
-  else opsPerTick = 0;
+  if (opsPerTick === 0) {
+    fetchAll();
+    opsPerTick = 1;
+  }
+  else if (opsPerTick === 1)
+    opsPerTick = 10000; // Approximate number of operations per frame
+  else
+    opsPerTick = 0;
 });
 
 always(() => {
   if (!opsPerTick) return;
-  copyCpu();
-  resetCache();
+  // copyCpu();
 
   for (let i = 0; i < opsPerTick; i++) {
-    _executeMain();
+    executeMain();
     interrupt();
   }
 
   //todo Hack
   if (opsPerTick > 1000)
-    set1(posINT, 1);
+    set(SYS, get(SYS) | INT);
 
-  applyCache();
+  commitUpdated();
 });

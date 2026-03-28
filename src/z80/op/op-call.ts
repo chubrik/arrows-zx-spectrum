@@ -1,48 +1,29 @@
-import { checkCC } from '../flags';
-import { CCSelect } from '../types';
-import { getIFF2, getPC, incPC, next16, pop16, push16, setIFF1, setPC } from '../utils';
-
-/** CALL cc,nn */
-export function CALL_cc_NN(select: CCSelect) {
-  if (checkCC(select))
-    CALL_NN();
-  else
-    incPC(2);
-}
-
-/** CALL nn */
-export function CALL_NN() {
-  const addr = next16();
-  call(addr);
-}
-
-/** RET cc */
-export function RET_cc(select: CCSelect) {
-  if (checkCC(select))
-    RET();
-}
+import { get, get16, set, set88 } from '../../common/utils';
+import { IFF1, IFF2 } from '../flags';
+import { PC, PCh, PCl, SYS } from '../positions';
+import { pop16, pushValue88 } from '../utils';
 
 /** RETI | RETN */
 export function RETI_RETN() {
-  const iff2 = getIFF2();
-  setIFF1(iff2);
-  RET();
+  const sys = get(SYS);
+  const iff2 = sys & IFF2;
+  if (iff2) set(SYS, sys | IFF1);
+  else set(SYS, sys & ~IFF1);
+  pop16(PC);
 }
 
-/** RET */
-export function RET() {
-  const addr = pop16();
-  setPC(addr);
+export function call88(addrLow: number, addrHigh: number = 0) {
+  const pcLow = get(PCl);
+  const pcHigh = get(PCh);
+  pushValue88(pcLow, pcHigh);
+  set88(PC, addrLow, addrHigh);
 }
 
-/** RST p */
-export function RST_p(p: number) {
-  const addr = p << 3;
-  call(addr);
-}
-
-export function call(addr: number) {
-  const retAddr = getPC();
-  push16(retAddr);
-  setPC(addr);
+export function callNext16() {
+  let pc = get16(PC);
+  const addrLow = get(pc++);
+  const addrHigh = get(pc++);
+  pc &= 0xFFFF;
+  pushValue88(pc & 0xFF, pc >> 8);
+  set88(PC, addrLow, addrHigh);
 }

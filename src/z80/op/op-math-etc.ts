@@ -1,53 +1,54 @@
-import { bitFC, bitFH, bitFN, bitFPV, flagsSZ53, flagsSZ53P, maskF53, maskFSZPV } from '../flags';
-import { getA, getF, setA, setF } from '../utils';
+import { get, set } from '../../common/utils';
+import { F53, FC, FH, FHN, FN, FNC, FO, FSZO, FSZOC, flagsSZ53, flagsSZ53P } from '../flags';
+import { A, F } from '../positions';
 
 /** DAA */
 export function DAA() {
-  let a = getA();
-  let f = getF();
+  let a = get(A);
+  let f = get(F);
   const origA = a;
   let correction = 0;
-  if ((f & bitFH) || (a & 0x0F) > 9) correction |= 0x06;
-  if ((f & bitFC) || a > 0x99) { correction |= 0x60; f |= bitFC; }
-  a = (f & bitFN ? a - correction : a + correction) & 0xFF;
-  f = (f & (bitFN | bitFC)) | flagsSZ53P(a) | ((origA ^ correction ^ a) & bitFH);
-  setA(a);
-  setF(f);
+  if ((f & FH) || (a & 0x0F) > 9) correction |= 0x06;
+  if ((f & FC) || a > 0x99) { correction |= 0x60; f |= FC; }
+  a = (f & FN ? a - correction : a + correction) & 0xFF;
+  f = (f & FNC) | flagsSZ53P(a) | ((origA ^ correction ^ a) & FH);
+  set(A, a);
+  set(F, f);
 }
 
 /** CPL */
 export function CPL() {
-  const a = getA() ^ 0xFF;
-  const f = getF();
-  setA(a);
-  setF((f & (maskFSZPV | bitFC)) | (a & maskF53) | bitFH | bitFN);
+  const a = get(A) ^ 0xFF;
+  const f = get(F);
+  set(A, a);
+  set(F, (f & FSZOC) | (a & F53) | FHN);
 }
 
 /** CCF */
 export function CCF() {
-  const a = getA();
-  const f = getF();
-  setF((f & maskFSZPV) | ((a | f) & maskF53) | ((f & bitFC) << 4) | (~f & bitFC));
+  const a = get(A);
+  const f = get(F);
+  set(F, (f & FSZO) | ((a | f) & F53) | ((f & FC) << 4) | (~f & FC));
 }
 
 /** SCF */
 export function SCF() {
-  const a = getA();
-  const f = getF();
-  setF((f & maskFSZPV) | ((a | f) & maskF53) | bitFC);
+  const a = get(A);
+  const f = get(F);
+  set(F, (f & FSZO) | ((a | f) & F53) | FC);
 }
 
 /** NEG */
 export function NEG() {
-  const a = getA();
+  const a = get(A);
   const result = -a & 0xFF;
-  setA(result);
+  set(A, result);
 
-  setF(
+  set(F,
     flagsSZ53(result)
-    | (a === 0x80 ? bitFPV : 0)
-    | ((0 ^ a ^ result) & bitFH)
-    | (a ? bitFC : 0)
-    | bitFN
+    | (a === 0x80 ? FO : 0)
+    | ((0 ^ a ^ result) & FH)
+    | (a ? FC : 0)
+    | FN
   );
 }

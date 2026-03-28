@@ -1,11 +1,9 @@
-import { set1Direct, set8Direct } from './common/utils';
+import { setDirect } from './common/arrows';
 import { initMemory } from './common/memory';
 import {
   initCpuPositions,
-  posA, posF, posB, posC, posD, posE, posH, posL,
-  posAa, posFa, posBa, posCa, posDa, posEa, posHa, posLa,
-  posIXh, posIXl, posIYh, posIYl, posSPh, posSPl, posPCh, posPCl,
-  posI, posR, posIM1, posIM2, posIFF1, posIFF2, posHalt,
+  A, F, B, C, D, E, H, L, Aa, Fa, Ba, Ca, Da, Ea, Ha, La,
+  IXh, IXl, IYh, IYl, SPh, SPl, PCh, PCl, I, R, SYS,
 } from './z80/positions';
 
 const pos = getPosition();

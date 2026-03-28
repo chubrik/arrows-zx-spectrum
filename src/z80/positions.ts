@@ -1,46 +1,49 @@
-import { packPos, unpackX, unpackY } from '../common/utils';
+import { getInfo, Info, infos } from '../common/arrows';
 
-export let posA: number;
-export let posF: number;
-export let posB: number;
-export let posC: number;
-export let posD: number;
-export let posE: number;
-export let posH: number;
-export let posL: number;
-export let posAa: number;
-export let posFa: number;
-export let posBa: number;
-export let posCa: number;
-export let posDa: number;
-export let posEa: number;
-export let posHa: number;
-export let posLa: number;
-export let posIXh: number;
-export let posIXl: number;
-export let posIYh: number;
-export let posIYl: number;
-export let posSPh: number;
-export let posSPl: number;
-export let posPCh: number;
-export let posPCl: number;
-export let posI: number;
-export let posR: number;
-export let posIM1: number;
-export let posIM2: number;
-export let posIFF1: number;
-export let posIFF2: number;
-export let posHalt: number;
-export let posINT: number;
-export let posReg: (number | 0)[]; // B, C, D, E, H, L, 0, A
-export let posHXY: number[];       // H, IXh, IYh
-export let posLXY: number[];       // L, IXl, IYl
+export const A = 0x10002;
+export const F = 0x10001;
+export const B = 0x10004;
+export const C = 0x10003;
+export const D = 0x10006;
+export const E = 0x10005;
+export const H = 0x10008;
+export const L = 0x10007;
+export const Aa = 0x1000A;
+export const Fa = 0x10009;
+export const Ba = 0x1000C;
+export const Ca = 0x1000B;
+export const Da = 0x1000E;
+export const Ea = 0x1000D;
+export const Ha = 0x10010;
+export const La = 0x1000F;
+export const IXh = 0x10012;
+export const IXl = 0x10011;
+export const IYh = 0x10014;
+export const IYl = 0x10013;
+export const SPh = 0x10016;
+export const SPl = 0x10015;
+export const PCh = 0x10018;
+export const PCl = 0x10017;
+export const I = 0x10019;
+export const R = 0x1001A;
+export const SYS = 0x1001B;
 
-export function initCpuStartPosition(chunkX: number, chunkY: number): number {
+export let HXY = H; // H / IXh / IYh
+export let LXY = L; // L / IXl / IYl
+
+export function setHLXY(hlxy: number) {
+  LXY = hlxy;
+  HXY = hlxy + 1;
+}
+
+export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY, PCl as PC, SPl as SP };
+
+export function initCpuStartPosition(chunkX: number, chunkY: number): Info {
   const x = chunkX + 16;
   const y = chunkY - 16;
-  posA = packPos(x, y);
-  return posA;
+  const infoA = getInfo(x, y);
+  infos[A] = infoA;
+  return infoA;
 }
 
 export function initCpuPositions(chunkX: number, chunkY: number) {
@@ -48,67 +51,46 @@ export function initCpuPositions(chunkX: number, chunkY: number) {
   let x = chunkX + 16;
   let y = chunkY - 16;
 
-  posF = packPos(x, ++y);
-  posB = packPos(x, ++y);
-  posC = packPos(x, ++y);
-  posD = packPos(x, ++y);
-  posE = packPos(x, ++y);
-  posH = packPos(x, ++y);
-  posL = packPos(x, ++y);
-  posIXh = packPos(x, ++y);
-  posIXl = packPos(x, ++y);
+  infos[F] = getInfo(x, ++y);
+  infos[B] = getInfo(x, ++y);
+  infos[C] = getInfo(x, ++y);
+  infos[D] = getInfo(x, ++y);
+  infos[E] = getInfo(x, ++y);
+  infos[H] = getInfo(x, ++y);
+  infos[L] = getInfo(x, ++y);
+  infos[IXh] = getInfo(x, ++y);
+  infos[IXl] = getInfo(x, ++y);
 
-  posSPh = packPos(x, y += 2);
-  posSPl = packPos(x, ++y);
-  posPCh = packPos(x, ++y);
-  posPCl = packPos(x, ++y);
+  infos[SPh] = getInfo(x, y += 2);
+  infos[SPl] = getInfo(x, ++y);
+  infos[PCh] = getInfo(x, ++y);
+  infos[PCl] = getInfo(x, ++y);
 
-  posAa = packPos(x += 8, y = chunkY - 16);
-  posFa = packPos(x, ++y);
-  posBa = packPos(x, ++y);
-  posCa = packPos(x, ++y);
-  posDa = packPos(x, ++y);
-  posEa = packPos(x, ++y);
-  posHa = packPos(x, ++y);
-  posLa = packPos(x, ++y);
-  posIYh = packPos(x, ++y);
-  posIYl = packPos(x, ++y);
+  infos[Aa] = getInfo(x += 8, y = chunkY - 16);
+  infos[Fa] = getInfo(x, ++y);
+  infos[Ba] = getInfo(x, ++y);
+  infos[Ca] = getInfo(x, ++y);
+  infos[Da] = getInfo(x, ++y);
+  infos[Ea] = getInfo(x, ++y);
+  infos[Ha] = getInfo(x, ++y);
+  infos[La] = getInfo(x, ++y);
+  infos[IYh] = getInfo(x, ++y);
+  infos[IYl] = getInfo(x, ++y);
 
-  posI = packPos(x, y += 2);
-  posR = packPos(x, ++y);
-
-  posIM1 = packPos(x, y += 2);
-  posIM2 = packPos(++x, y);
-  posIFF1 = packPos(x += 2, y);
-  posIFF2 = packPos(++x, y);
-  posHalt = packPos(x += 2, y);
-  posINT = packPos(++x, y);
-
-  posReg = [posB, posC, posD, posE, posH, posL, 0, posA];
-  posHXY = [posH, posIXh, posIYh];
-  posLXY = [posL, posIXl, posIYl];
+  infos[I] = getInfo(x, y += 2);
+  infos[R] = getInfo(x, ++y);
+  infos[SYS] = getInfo(x, y + 2);
 }
 
-export const getPosA = () => posA;
-export const getPosF = () => posF;
-export const getPosB = () => posB;
-export const getPosC = () => posC;
-export const getPosD = () => posD;
-export const getPosE = () => posE;
-export const getPosH = () => posH;
-export const getPosL = () => posL;
-export const getPosSPh = () => posSPh;
-export const getPosSPl = () => posSPl;
-
 export function resetCpu() {
-  const x = unpackX(posA);
-  const y = unpackY(posA);
+  const x = infos[A].x;
+  const y = infos[A].y;
   world.copyRegion(x + 32, y, x + 47, y + 15, x, y);
   world.copyRegion(x, y, x + 15, y + 15, x - 32, y);
 }
 
 export function copyCpu() {
-  const x = unpackX(posA);
-  const y = unpackY(posA);
+  const x = infos[A].x;
+  const y = infos[A].y;
   world.copyRegion(x, y, x + 15, y + 15, x - 32, y);
 }

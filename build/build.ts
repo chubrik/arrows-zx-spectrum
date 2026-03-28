@@ -127,38 +127,40 @@ async function buildSnapshotCpu(gameName: string, snap: Z80Snapshot) {
   const fileName = 'snapshot-cpu';
   const rawCode = readFileSync(`${SRC_DIR}/snapshot-cpu.ts`, 'utf8');
 
+  // SYS byte: IM2=0x20, IM1=0x10, IFF2=0x08, IFF1=0x04, HLT=0x02
+  const sys =
+    (snap.IM === 2 ? 0x20 : snap.IM === 1 ? 0x10 : 0) |
+    (snap.IFF2 ? 0x08 : 0) |
+    (snap.IFF1 ? 0x04 : 0);
+
   const body = [
-    `set8Direct(posA, ${snap.A})`,
-    `set8Direct(posF, ${snap.F})`,
-    `set8Direct(posB, ${snap.B})`,
-    `set8Direct(posC, ${snap.C})`,
-    `set8Direct(posD, ${snap.D})`,
-    `set8Direct(posE, ${snap.E})`,
-    `set8Direct(posH, ${snap.H})`,
-    `set8Direct(posL, ${snap.L})`,
-    `set8Direct(posAa, ${snap.Aa})`,
-    `set8Direct(posFa, ${snap.Fa})`,
-    `set8Direct(posBa, ${snap.Ba})`,
-    `set8Direct(posCa, ${snap.Ca})`,
-    `set8Direct(posDa, ${snap.Da})`,
-    `set8Direct(posEa, ${snap.Ea})`,
-    `set8Direct(posHa, ${snap.Ha})`,
-    `set8Direct(posLa, ${snap.La})`,
-    `set8Direct(posIXh, ${snap.IX >> 8})`,
-    `set8Direct(posIXl, ${snap.IX & 0xFF})`,
-    `set8Direct(posIYh, ${snap.IY >> 8})`,
-    `set8Direct(posIYl, ${snap.IY & 0xFF})`,
-    `set8Direct(posSPh, ${snap.SP >> 8})`,
-    `set8Direct(posSPl, ${snap.SP & 0xFF})`,
-    `set8Direct(posPCh, ${snap.PC >> 8})`,
-    `set8Direct(posPCl, ${snap.PC & 0xFF})`,
-    `set8Direct(posI, ${snap.I})`,
-    `set8Direct(posR, ${snap.R})`,
-    `set1Direct(posIM1, ${snap.IM === 1 ? 1 : 0})`,
-    `set1Direct(posIM2, ${snap.IM === 2 ? 1 : 0})`,
-    `set1Direct(posIFF1, ${snap.IFF1})`,
-    `set1Direct(posIFF2, ${snap.IFF2})`,
-    `set1Direct(posHalt, 0)`,
+    `setDirect(A, ${snap.A})`,
+    `setDirect(F, ${snap.F})`,
+    `setDirect(B, ${snap.B})`,
+    `setDirect(C, ${snap.C})`,
+    `setDirect(D, ${snap.D})`,
+    `setDirect(E, ${snap.E})`,
+    `setDirect(H, ${snap.H})`,
+    `setDirect(L, ${snap.L})`,
+    `setDirect(Aa, ${snap.Aa})`,
+    `setDirect(Fa, ${snap.Fa})`,
+    `setDirect(Ba, ${snap.Ba})`,
+    `setDirect(Ca, ${snap.Ca})`,
+    `setDirect(Da, ${snap.Da})`,
+    `setDirect(Ea, ${snap.Ea})`,
+    `setDirect(Ha, ${snap.Ha})`,
+    `setDirect(La, ${snap.La})`,
+    `setDirect(IXh, ${snap.IX >> 8})`,
+    `setDirect(IXl, ${snap.IX & 0xFF})`,
+    `setDirect(IYh, ${snap.IY >> 8})`,
+    `setDirect(IYl, ${snap.IY & 0xFF})`,
+    `setDirect(SPh, ${snap.SP >> 8})`,
+    `setDirect(SPl, ${snap.SP & 0xFF})`,
+    `setDirect(PCh, ${snap.PC >> 8})`,
+    `setDirect(PCl, ${snap.PC & 0xFF})`,
+    `setDirect(I, ${snap.I})`,
+    `setDirect(R, ${snap.R})`,
+    `setDirect(SYS, ${sys})`,
   ].join('; ');
 
   const code = rawCode.replace(

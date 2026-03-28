@@ -1,98 +1,85 @@
-import { get16, set16 } from '../../common/utils';
-import { bitFC, bitFH, bitFN, bitFZ, maskF53, maskFS53, maskFSZPV } from '../flags';
-import { SSSelect } from '../types';
-import { _getHL, _setHL, getF, getFC, getHL, getSS, setF, setHL, setSS } from '../utils';
+import { get, get16, set, set16, set88 } from '../../common/utils';
+import { F53, FC, FH, FN, FS53, FSZO, FZ } from '../flags';
+import { F, HL, HLXY } from '../positions';
+import { getFC, next16 } from '../utils';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
-export function ADD_HL_SS(select: SSSelect) {
-  const hl = getHL();
-  const ss = getSS(select);
+export function addHLXY(SS: number) {
+  const hl = get16(HLXY);
+  const ss = get16(SS);
   const sum = hl + ss;
   const result = sum & 0xFFFF;
-  setHL(result);
+  set16(HLXY, result);
 
-  setF(
-    (getF() & maskFSZPV)
-    | ((result >> 8) & maskF53)
-    | (((hl ^ ss ^ result) >> 8) & bitFH)
-    | ((sum >> 16) & bitFC)
+  set(F,
+    (get(F) & FSZO)
+    | ((result >> 8) & F53)
+    | (((hl ^ ss ^ result) >> 8) & FH)
+    | ((sum >> 16) & FC)
   );
 }
 
-/** ADD HL,ss */
-export function _ADD_HL_SS(ss: number) {
-  const hl = _getHL();
-  const sum = hl + ss;
-  const result = sum & 0xFFFF;
-  _setHL(result);
+/** LD (nn),dd */
+export function LD_nn_dd(src: number) {
+  const destAddr = next16();
+  const valueLow = get(src);
+  const valueHigh = get(src + 1);
+  set88(destAddr, valueLow, valueHigh);
+}
 
-  setF(
-    (getF() & maskFSZPV)
-    | ((result >> 8) & maskF53)
-    | (((hl ^ ss ^ result) >> 8) & bitFH)
-    | ((sum >> 16) & bitFC)
-  );
+/** LD dd,(nn) */
+export function LD_dd_nn(dest: number) {
+  const srcAddr = next16();
+  const valueLow = get(srcAddr);
+  const valueHigh = get(srcAddr + 1);
+  set88(dest, valueLow, valueHigh);
 }
 
 /** ADC HL,ss */
-export function ADC_HL_SS(select: SSSelect) {
-  const hl = getHL();
-  const ss = getSS(select);
+export function ADC_HL(src: number) {
+  const hl = get16(HL);
+  const ss = get16(src);
   const carry = getFC();
   const sum = hl + ss + carry;
   const result = sum & 0xFFFF;
-  setHL(result);
+  set16(HL, result);
 
-  setF(
-    ((result >> 8) & maskFS53)
-    | (result ? 0 : bitFZ)
-    | (((hl ^ ss ^ result) >> 8) & bitFH)
+  set(F,
+    ((result >> 8) & FS53)
+    | (result ? 0 : FZ)
+    | (((hl ^ ss ^ result) >> 8) & FH)
     | (((hl ^ ~ss) & (hl ^ result) & 0x8000) >> 13)
-    | ((sum >> 16) & bitFC)
+    | ((sum >> 16) & FC)
   );
 }
 
 /** SBC HL,ss */
-export function SBC_HL_SS(select: SSSelect) {
-  const hl = getHL();
-  const ss = getSS(select);
+export function SBC_HL(src: number) {
+  const hl = get16(HL);
+  const ss = get16(src);
   const carry = getFC();
   const diff = hl - ss - carry;
   const result = diff & 0xFFFF;
-  setHL(result);
+  set16(HL, result);
 
-  setF(
-    ((result >> 8) & maskFS53)
-    | (result ? 0 : bitFZ)
-    | (((hl ^ ss ^ result) >> 8) & bitFH)
+  set(F,
+    ((result >> 8) & FS53)
+    | (result ? 0 : FZ)
+    | (((hl ^ ss ^ result) >> 8) & FH)
     | (((hl ^ ss) & (hl ^ result) & 0x8000) >> 13)
-    | ((diff >> 16) & bitFC)
-    | bitFN
+    | ((diff >> 16) & FC)
+    | FN
   );
 }
 
-/** INC ss | INC IX | INC IY */
-export function INC_SS(select: SSSelect) {
-  const value = getSS(select);
+export function inc16(addr: number) {
+  const value = get16(addr);
   const result = (value + 1) & 0xFFFF;
-  setSS(select, result);
+  set16(addr, result);
 }
 
-/** DEC ss | DEC IX | DEC IY */
-export function DEC_SS(select: SSSelect) {
-  const value = getSS(select);
+export function dec16(addr: number) {
+  const value = get16(addr);
   const result = (value - 1) & 0xFFFF;
-  setSS(select, result);
-}
-
-export function _INC_SS(posHigh: number, posLow: number) {
-  const value = get16(posHigh, posLow);
-  const result = (value + 1) & 0xFFFF;
-  set16(posHigh, posLow, result);
-}
-
-export function _DEC_SS(posHigh: number, posLow: number) {
-  const value = get16(posHigh, posLow);
-  const result = (value - 1) & 0xFFFF;
-  set16(posHigh, posLow, result);
+  set16(addr, result);
 }

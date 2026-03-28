@@ -1,35 +1,30 @@
-import { get8 } from '../common/utils';
-import { posF } from './positions';
-import { CCSelect } from './types';
+export const FS = 0x80; // Sign
+export const FZ = 0x40; // Zero
+const F5 = 0x20;        // Bit 5 (undocumented)
+export const FH = 0x10; // Half-carry
+const F3 = 0x08;        // Bit 3 (undocumented)
+export const FO = 0x04; // Parity/Overflow
+export const FN = 0x02; // Subtract
+export const FC = 0x01; // Carry
 
-export const bitFS = 0x80;  // Sign
-export const bitFZ = 0x40;  // Zero
-const bitF5 = 0x20;         // Bit 5 (undocumented)
-export const bitFH = 0x10;  // Half-carry
-const bitF3 = 0x08;         // Bit 3 (undocumented)
-export const bitFPV = 0x04; // Parity/Overflow
-export const bitFN = 0x02;  // Subtract
-export const bitFC = 0x01;  // Carry
+export const FSZC = FS | FZ | FC;
+export const FSZO = FS | FZ | FO;
+export const FSZOC = FS | FZ | FO | FC;
+export const FZO = FZ | FO;
+export const F53 = F5 | F3;
+export const FS53 = FS | F53;
+export const FHC = FH | FC;
+export const FHN = FH | FN;
+export const FNC = FN | FC;
 
-export const maskFSZPV = bitFS | bitFZ | bitFPV;
-export const maskF53 = bitF5 | bitF3;
-export const maskFS53 = bitFS | maskF53;
-const maskCC = [bitFZ, bitFC, bitFPV, bitFS];
-
-/** NZ, Z, NC, C, PO, PE, P, M */
-export function checkCC(cc: CCSelect): any {
-  const isSet = get8(posF) & maskCC[cc >> 1];
-  return cc & 1 ? isSet : !isSet;
-}
-
-/** S, Z, F5, F3, P from 8-bit result */
+/** S, Z, 5, 3, P from 8-bit result */
 export function flagsSZ53P(value: number): number {
   return flagsSZ53(value) | flagP(value);
 }
 
-/** S, Z, F5, F3 from 8-bit result */
+/** S, Z, 5, 3 from 8-bit result */
 export function flagsSZ53(value: number): number {
-  return (value & maskFS53) | (value ? 0 : bitFZ);
+  return (value & FS53) | (value ? 0 : FZ);
 }
 
 /** P: 0x04 if parity is even */
@@ -37,5 +32,15 @@ export function flagP(value: number): number {
   value ^= value >> 4;
   value ^= value << 2;
   value ^= value >> 1;
-  return ~value & bitFPV;
+  return ~value & FO;
 }
+
+export const IM2 = 0x20;
+export const IM1 = 0x10;
+export const IFF2 = 0x08;
+export const IFF1 = 0x04;
+export const HLT = 0x02;
+export const INT = 0x01;
+
+export const IFF12 = IFF1 | IFF2;
+export const IM12 = IM1 | IM2;

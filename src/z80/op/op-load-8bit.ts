@@ -1,108 +1,21 @@
-import { readMem8, writeMem8 } from '../../common/memory';
-import { get8, set8 } from '../../common/utils';
-import { bitFPV, flagsSZ53 } from '../flags';
-import { RegSelect, RhlSelect } from '../types';
-import { getA, getBC, getDE, getFC, getI, getIFF2, getPosReg, getPosRhl, getR, getRhl, next16, next8, setA, setF, setI, setR, setRhl } from '../utils';
-
-/**
- * LD r,r'
- * LD r,(HL) | LD r,(IX+d) | LD r,(IY+d)
- * LD (HL),r | LD (IX+d),r | LD (IY+d),r
- */
-export function LD_Rhl_Rhl(dest: RhlSelect, src: RhlSelect) {
-  if (src === RhlSelect.hl || dest === RhlSelect.hl) {
-    //todo optimize
-    const srcPos = getPosReg(src as any as RegSelect) || getPosRhl(src);
-    const destPos = getPosReg(dest as any as RegSelect) || getPosRhl(dest);
-    const value = get8(srcPos);
-    set8(destPos, value);
-  } else {
-    const value = getRhl(src);
-    setRhl(dest, value);
-  }
-}
-
-/**
- * LD r,n
- * LD (HL),n | LD (IX+d),n | LD (IY+d),n
- */
-export function LD_Rhl_N(dest: RhlSelect) {
-  const pos = getPosRhl(dest);
-  const n = next8();
-  set8(pos, n);
-}
+import { get, set } from '../../common/utils';
+import { FO, IFF2, flagsSZ53 } from '../flags';
+import { A, F, I, R, SYS } from '../positions';
+import { getFC } from '../utils';
 
 /** LD A,I */
 export function LD_A_I() {
-  const value = getI();
-  ld_A_IR(value)
+  const value = get(I);
+  ld_A_IR(value);
 }
 
 /** LD A,R */
 export function LD_A_R() {
-  const value = getR();
-  ld_A_IR(value)
-}
-
-/** LD I,A */
-export function LD_I_A() {
-  const value = getA();
-  setI(value);
-}
-
-/** LD R,A */
-export function LD_R_A() {
-  const value = getA();
-  setR(value);
-}
-
-/** LD A,(BC) */
-export function LD_A_bc() {
-  const addr = getBC();
-  ld_A_addr(addr);
-}
-
-/** LD A,(DE) */
-export function LD_A_de() {
-  const addr = getDE();
-  ld_A_addr(addr);
-}
-
-/** LD A,(nn) */
-export function LD_A_nn() {
-  const addr = next16();
-  ld_A_addr(addr);
-}
-
-/** LD (BC),A */
-export function LD_bc_A() {
-  const addr = getBC();
-  ld_addr_A(addr);
-}
-
-/** LD (DE),A */
-export function LD_de_A() {
-  const addr = getDE();
-  ld_addr_A(addr);
-}
-
-/** LD (nn),A */
-export function LD_nn_A() {
-  const addr = next16();
-  ld_addr_A(addr);
+  const value = get(R);
+  ld_A_IR(value);
 }
 
 function ld_A_IR(value: number) {
-  setA(value);
-  setF(flagsSZ53(value) | (getIFF2() ? bitFPV : 0) | getFC());
-}
-
-function ld_A_addr(addr: number) {
-  const value = readMem8(addr);
-  setA(value);
-}
-
-function ld_addr_A(addr: number) {
-  const value = getA();
-  writeMem8(addr, value);
+  set(A, value);
+  set(F, flagsSZ53(value) | ((get(SYS) & IFF2) ? FO : 0) | getFC());
 }

@@ -1,97 +1,61 @@
-import { readMem8, writeMem8 } from '../../common/memory';
-import { bitFC, bitFH, bitFN, bitFPV, bitFS, bitFZ } from '../flags';
-import { getA, getBC, getDE, getF, getFC, getHL, incPC, setBC, setDE, setF, setHL } from '../utils';
+import { get, get16, set, set16 } from '../../common/utils';
+import { FH, FN, FO, FS, FSZC, FZ } from '../flags';
+import { A, BC, DE, F, HLXY } from '../positions';
+import { addPC, getFC } from '../utils';
 
-/** LDI */
-export function LDI() {
-  ldx(+1);
-}
+export function ldx(increment: 1 | -1, repeat: 0 | 1 = 0) {
+  const a = get(A);
+  const count = get16(BC);
+  const destAddr = get16(DE);
+  const srcAddr = get16(HLXY);
+  const value = get(srcAddr);
 
-/** LDIR */
-export function LDIR() {
-  ldx(+1, true);
-}
-
-/** LDD */
-export function LDD() {
-  ldx(-1);
-}
-
-/** LDDR */
-export function LDDR() {
-  ldx(-1, true);
-}
-
-/** CPI */
-export function CPI() {
-  cpx(+1);
-}
-
-/** CPIR */
-export function CPIR() {
-  cpx(+1, true);
-}
-
-/** CPD */
-export function CPD() {
-  cpx(-1);
-}
-
-/** CPDR */
-export function CPDR() {
-  cpx(-1, true);
-}
-
-function ldx(increment: 1 | -1, repeat: boolean = false) {
-  const oldCount = getBC();
-  const count = (oldCount - 1) & 0xFFFF;
-  const destAddr = getDE();
-  const srcAddr = getHL();
-  const value = readMem8(srcAddr);
-  writeMem8(destAddr, value);
-  setBC(count);
-  setDE((destAddr + increment) & 0xFFFF);
-  setHL((srcAddr + increment) & 0xFFFF);
+  const newCount = (count - 1) & 0xFFFF;
+  set(destAddr, value);
+  set16(BC, newCount);
+  set16(DE, (destAddr + increment) & 0xFFFF);
+  set16(HLXY, (srcAddr + increment) & 0xFFFF);
 
   // F5 = bit 1 of n
   // F3 = bit 3 of n, where n = A + value
-  const n = (getA() + value) & 0xFF;
-  const f53 = ((n & 0x02) << 4) | (n & 0x08);
+  const n = (a + value) & 0xFF;
+  const f53 = ((n & 0x02) << 4) | (n & 0x08); //todo const
 
-  setF(
-    (getF() & (bitFS | bitFZ | bitFC))
-    | (count ? bitFPV : 0)
+  set(F,
+    (get(F) & FSZC)
+    | (newCount ? FO : 0)
     | f53);
 
-  if (repeat && count)
-    incPC(-2);
+  if (repeat && newCount)
+    addPC(-2);
 }
 
-function cpx(increment: 1 | -1, repeat: boolean = false) {
-  const oldCount = getBC();
-  const count = (oldCount - 1) & 0xFFFF;
-  const addr = getHL();
-  const value = readMem8(addr);
-  const a = getA();
+export function cpx(increment: 1 | -1, repeat: 0 | 1 = 0) {
+  const a = get(A);
+  const count = get16(BC);
+  const srcAddr = get16(HLXY);
+  const value = get(srcAddr);
+
+  const newCount = (count - 1) & 0xFFFF;
   const diff = (a - value) & 0xFF;
-  setBC(count);
-  setHL((addr + increment) & 0xFFFF);
+  set16(BC, newCount);
+  set16(HLXY, (srcAddr + increment) & 0xFFFF);
 
   // F5 = bit 1 of n
   // F3 = bit 3 of n, where n = diff - halfCarry
-  const halfCarry = (a ^ value ^ diff) & bitFH;
+  const halfCarry = (a ^ value ^ diff) & FH;
   const n = (diff - (halfCarry ? 1 : 0)) & 0xFF;
-  const f53 = ((n & 0x02) << 4) | (n & 0x08);
+  const f53 = ((n & 0x02) << 4) | (n & 0x08); //todo const
 
-  setF(
-    (diff & bitFS)
-    | (diff ? 0 : bitFZ)
+  set(F,
+    (diff & FS)
+    | (diff ? 0 : FZ)
     | halfCarry
-    | (count ? bitFPV : 0)
-    | bitFN
+    | (newCount ? FO : 0)
+    | FN
     | f53
     | getFC());
 
-  if (repeat && count && diff)
-    incPC(-2);
+  if (repeat && newCount && diff)
+    addPC(-2);
 }
