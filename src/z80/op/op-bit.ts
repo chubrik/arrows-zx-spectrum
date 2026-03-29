@@ -14,12 +14,3 @@ export function BIT_b_val(bit: number, value: number, f53Source: number) {
     | getFC());
 }
 
-/** RES b,r | RES b,(HL) | RES b,(IX+d) | RES b,(IY+d) */
-export function RES_b_val(bit: number, value: number): number {
-  return value & ~bit;
-}
-
-/** SET b,r | SET b,(HL) | SET b,(IX+d) | SET b,(IY+d) */
-export function SET_b_val(bit: number, value: number): number {
-  return value | bit;
-}

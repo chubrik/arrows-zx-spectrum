@@ -25,7 +25,7 @@ export function setDirect(addr: number, value: number) {
   }
 }
 
-export function getInfo(x: number, y: number): Info {
+export function createInfo(x: number, y: number): Info {
   const xMod = x & 0x8;
   const yMod = y & 0x8;
   const arrowTypes = xMod === yMod ? arrowTypes1 : arrowTypes2;

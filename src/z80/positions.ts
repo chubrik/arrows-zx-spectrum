@@ -1,4 +1,4 @@
-import { getInfo, infos, setDirect } from '../common/arrows';
+import { createInfo, infos, setDirect } from '../common/arrows';
 
 export const A = 0x10002;
 export const F = 0x10001;
@@ -42,36 +42,36 @@ export function initCpu(chunkX: number, chunkY: number) {
   let x = chunkX + 16;
   let y = chunkY - 16;
 
-  infos[A] = getInfo(x, y);
-  infos[F] = getInfo(x, ++y);
-  infos[B] = getInfo(x, ++y);
-  infos[C] = getInfo(x, ++y);
-  infos[D] = getInfo(x, ++y);
-  infos[E] = getInfo(x, ++y);
-  infos[H] = getInfo(x, ++y);
-  infos[L] = getInfo(x, ++y);
-  infos[IXh] = getInfo(x, ++y);
-  infos[IXl] = getInfo(x, ++y);
+  infos[A] = createInfo(x, y);
+  infos[F] = createInfo(x, ++y);
+  infos[B] = createInfo(x, ++y);
+  infos[C] = createInfo(x, ++y);
+  infos[D] = createInfo(x, ++y);
+  infos[E] = createInfo(x, ++y);
+  infos[H] = createInfo(x, ++y);
+  infos[L] = createInfo(x, ++y);
+  infos[IXh] = createInfo(x, ++y);
+  infos[IXl] = createInfo(x, ++y);
 
-  infos[SPh] = getInfo(x, y += 2);
-  infos[SPl] = getInfo(x, ++y);
-  infos[PCh] = getInfo(x, ++y);
-  infos[PCl] = getInfo(x, ++y);
+  infos[SPh] = createInfo(x, y += 2);
+  infos[SPl] = createInfo(x, ++y);
+  infos[PCh] = createInfo(x, ++y);
+  infos[PCl] = createInfo(x, ++y);
 
-  infos[Aa] = getInfo(x += 8, y = chunkY - 16);
-  infos[Fa] = getInfo(x, ++y);
-  infos[Ba] = getInfo(x, ++y);
-  infos[Ca] = getInfo(x, ++y);
-  infos[Da] = getInfo(x, ++y);
-  infos[Ea] = getInfo(x, ++y);
-  infos[Ha] = getInfo(x, ++y);
-  infos[La] = getInfo(x, ++y);
-  infos[IYh] = getInfo(x, ++y);
-  infos[IYl] = getInfo(x, ++y);
+  infos[Aa] = createInfo(x += 8, y = chunkY - 16);
+  infos[Fa] = createInfo(x, ++y);
+  infos[Ba] = createInfo(x, ++y);
+  infos[Ca] = createInfo(x, ++y);
+  infos[Da] = createInfo(x, ++y);
+  infos[Ea] = createInfo(x, ++y);
+  infos[Ha] = createInfo(x, ++y);
+  infos[La] = createInfo(x, ++y);
+  infos[IYh] = createInfo(x, ++y);
+  infos[IYl] = createInfo(x, ++y);
 
-  infos[I] = getInfo(x, y += 2);
-  infos[R] = getInfo(x, ++y);
-  infos[SYS] = getInfo(x, y + 2);
+  infos[I] = createInfo(x, y += 2);
+  infos[R] = createInfo(x, ++y);
+  infos[SYS] = createInfo(x, y + 2);
 }
 
 export function resetCpu() {

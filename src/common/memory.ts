@@ -1,4 +1,4 @@
-import { getInfo, infos, setDirect } from './arrows';
+import { createInfo, infos, setDirect } from './arrows';
 
 const SCREEN_MIN_ADDR = 0x4000;
 const ATTRIBUTES_MIN_ADDR = 0x5800;
@@ -39,7 +39,7 @@ function initMemoryInfo(addr: number, memoryX: number, memoryY: number) {
       y += 16;
   }
 
-  infos[addr] = getInfo(x, y);
+  infos[addr] = createInfo(x, y);
 }
 
 export function deployMemoryBlock(data: number[], startAddr: number) {

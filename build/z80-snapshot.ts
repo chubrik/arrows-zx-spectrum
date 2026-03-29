@@ -35,7 +35,7 @@ export function loadSnapshot(path: string): Z80Snapshot {
   return parseZ80(buf);
 }
 
-export function parseZ80(buf: Buffer): Z80Snapshot {
+function parseZ80(buf: Buffer): Z80Snapshot {
   check(buf.length >= 30, '.z80: file too short');
 
   // V1 header (bytes 0–29)
