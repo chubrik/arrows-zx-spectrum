@@ -1,5 +1,6 @@
 import { get, get16, set } from '../common/utils';
 import { executeBit } from './execute-bit';
+import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';
 import { FH, FO, FS, FZ, HLT, IFF12 } from './flags';
 import { call88, callNext16 } from './op/op-call';
@@ -237,7 +238,7 @@ const opsMain = [
   /* C8 RET Z      */ () => get(F) & FZ ? pop16(PC) : {},
   /* C9 RET        */ () => pop16(PC),
   /* CA JP Z,nn    */ () => get(F) & FZ ? setPCNext16() : addPC(2),
-  /* CB -- BIT --- */ executeBit,
+  /* CB -- BIT --- */ () => HLXY === HL ? executeBit() : executeBitXYd(),
   /* CC CALL Z,nn  */ () => get(F) & FZ ? callNext16() : addPC(2),
   /* CD CALL nn    */ () => callNext16(),
   /* CE ADC A,n    */ () => add(next(), getFC()),

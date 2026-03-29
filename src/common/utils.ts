@@ -14,7 +14,7 @@ export function check(condition: boolean, message: string = 'Check failed') {
 export function get16(addr: number): number {
   const valueLow = values[addr];
   const valueHigh = values[addr + 1];
-  return valueHigh * 256 + valueLow;
+  return (valueHigh << 8) | valueLow;
 }
 
 export function set16(addr: number, value: number) {

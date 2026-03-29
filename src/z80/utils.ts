@@ -34,9 +34,10 @@ export let eiDelay: 0 | 1 = 0;
 export function setEIDelay(value: 0 | 1) { eiDelay = value; }
 
 //todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
-let wz = 0;
-export function getWZ(): number { return wz; }
-export function setWZ(value: number) { wz = value; }
+let wzh = 0;
+let wzl = 0;
+export function getWZh(): number { return wzh; }
+export function setWZ(value: number) { wzl = value & 0xFF; wzh = value >> 8; }
 
 export function addPC(add: number) {
   const pc = get16(PC);
@@ -71,10 +72,11 @@ export function refresh() {
 }
 
 /** (IX+d/IY+d) */
-export function getAddrXYd(rawD: number): number {
-  const hl = get16(HLXY); // IX/IY
+export function getXYd(): number {
+  const xy = get16(HLXY); // IX/IY
+  const rawD = next();
   const d = rawD >= 128 ? rawD - 256 : rawD; // -128...+127
-  return (hl + d) & 0xFFFF;
+  return (xy + d) & 0xFFFF;
 }
 
 /** (HL/IX+d/IY+d) */

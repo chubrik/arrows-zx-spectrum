@@ -10,7 +10,7 @@ export function BIT_b_val(bit: number, value: number, f53Source: number) {
   set(F,
     (isSet & FS)
     | (isSet ? 0 : FZO)
-    | FH | (f53Source & F53)
+    | FH
+    | (f53Source & F53)
     | getFC());
 }
-

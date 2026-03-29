@@ -1,144 +1,120 @@
 import { get, get16, set } from '../common/utils';
 import { BIT_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
-import { A, B, C, D, E, H, HL, HLXY, L } from './positions';
-import { getAddrXYd, getWZ, next, refresh } from './utils';
+import { A, B, C, D, E, H, HL, L } from './positions';
+import { getWZh, next, refresh } from './utils';
 
-const BIT7 = 0x80;
-const BIT6 = 0x40;
-const BIT5 = 0x20;
-const BIT4 = 0x10;
-const BIT3 = 0x08;
-const BIT2 = 0x04;
-const BIT1 = 0x02;
-const BIT0 = 0x01;
+export const BIT7 = 0x80;
+export const BIT6 = 0x40;
+export const BIT5 = 0x20;
+export const BIT4 = 0x10;
+export const BIT3 = 0x08;
+export const BIT2 = 0x04;
+export const BIT1 = 0x02;
+export const BIT0 = 0x01;
 
-let bitAddr = 0;
+export const _BIT7 = ~BIT7;
+export const _BIT6 = ~BIT6;
+export const _BIT5 = ~BIT5;
+export const _BIT4 = ~BIT4;
+export const _BIT3 = ~BIT3;
+export const _BIT2 = ~BIT2;
+export const _BIT1 = ~BIT1;
+export const _BIT0 = ~BIT0;
 
-/** Bit Instructions (CB) | IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
+/** Bit Instructions (CB) */
 export function executeBit() {
-  if (HLXY === HL) {
-    refresh();
-    bitAddr = get16(HL);
-  } else {
-    bitAddr = getAddrXYd(next());
-  }
+  refresh();
   const op = next();
   opsBit[op]();
 }
 
-function shiftBit(reg: number, fn: (value: number) => number) {
-  if (HLXY === HL) {
-    set(reg, fn(get(reg)));
-  } else {
-    const result = fn(get(bitAddr));
-    set(bitAddr, result);
-    set(reg, result);
-  }
-}
-
-function testBit(bit: number, reg: number) {
-  if (HLXY === HL) {
-    const value = get(reg);
-    BIT_b_val(bit, value, value);
-  } else {
-    BIT_b_val(bit, get(bitAddr), bitAddr >> 8);
-  }
+function testBit(bit: number, addr: number) {
+  const value = get(addr);
+  BIT_b_val(bit, value, value);
 }
 
 function testBitHL(bit: number) {
-  const f53Src = (HLXY === HL ? getWZ() : bitAddr) >> 8;
-  BIT_b_val(bit, get(bitAddr), f53Src);
+  const addr = get16(HL);
+  BIT_b_val(bit, get(addr), getWZh());
 }
 
-function resBit(bit: number, reg: number) {
-  if (HLXY === HL) {
-    set(reg, get(reg) & ~bit);
-  } else {
-    const result = get(bitAddr) & ~bit;
-    set(bitAddr, result);
-    set(reg, result);
-  }
+function resBit(_bit: number, addr: number) {
+  set(addr, get(addr) & _bit);
 }
 
-function setBit(bit: number, reg: number) {
-  if (HLXY === HL) {
-    set(reg, get(reg) | bit);
-  } else {
-    const result = get(bitAddr) | bit;
-    set(bitAddr, result);
-    set(reg, result);
-  }
+function setBit(bit: number, addr: number) {
+  set(addr, get(addr) | bit);
 }
 
 const opsBit: (() => void)[] = [
-  /* 00 RLC B      */ () => shiftBit(B, RLC_val),
-  /* 01 RLC C      */ () => shiftBit(C, RLC_val),
-  /* 02 RLC D      */ () => shiftBit(D, RLC_val),
-  /* 03 RLC E      */ () => shiftBit(E, RLC_val),
-  /* 04 RLC H      */ () => shiftBit(H, RLC_val),
-  /* 05 RLC L      */ () => shiftBit(L, RLC_val),
-  /* 06 RLC (HL)   */ () => set(bitAddr, RLC_val(get(bitAddr))),
-  /* 07 RLC A      */ () => shiftBit(A, RLC_val),
-  /* 08 RRC B      */ () => shiftBit(B, RRC_val),
-  /* 09 RRC C      */ () => shiftBit(C, RRC_val),
-  /* 0A RRC D      */ () => shiftBit(D, RRC_val),
-  /* 0B RRC E      */ () => shiftBit(E, RRC_val),
-  /* 0C RRC H      */ () => shiftBit(H, RRC_val),
-  /* 0D RRC L      */ () => shiftBit(L, RRC_val),
-  /* 0E RRC (HL)   */ () => set(bitAddr, RRC_val(get(bitAddr))),
-  /* 0F RRC A      */ () => shiftBit(A, RRC_val),
+  /* 00 RLC B      */ () => set(B, RLC_val(get(B))),
+  /* 01 RLC C      */ () => set(C, RLC_val(get(C))),
+  /* 02 RLC D      */ () => set(D, RLC_val(get(D))),
+  /* 03 RLC E      */ () => set(E, RLC_val(get(E))),
+  /* 04 RLC H      */ () => set(H, RLC_val(get(H))),
+  /* 05 RLC L      */ () => set(L, RLC_val(get(L))),
+  /* 06 RLC (HL)   */ () => { const hl = get16(HL); set(hl, RLC_val(get(hl))); },
+  /* 07 RLC A      */ () => set(A, RLC_val(get(A))),
+  /* 08 RRC B      */ () => set(B, RRC_val(get(B))),
+  /* 09 RRC C      */ () => set(C, RRC_val(get(C))),
+  /* 0A RRC D      */ () => set(D, RRC_val(get(D))),
+  /* 0B RRC E      */ () => set(E, RRC_val(get(E))),
+  /* 0C RRC H      */ () => set(H, RRC_val(get(H))),
+  /* 0D RRC L      */ () => set(L, RRC_val(get(L))),
+  /* 0E RRC (HL)   */ () => { const hl = get16(HL); set(hl, RRC_val(get(hl))); },
+  /* 0F RRC A      */ () => set(A, RRC_val(get(A))),
 
-  /* 10 RL B       */ () => shiftBit(B, RL_val),
-  /* 11 RL C       */ () => shiftBit(C, RL_val),
-  /* 12 RL D       */ () => shiftBit(D, RL_val),
-  /* 13 RL E       */ () => shiftBit(E, RL_val),
-  /* 14 RL H       */ () => shiftBit(H, RL_val),
-  /* 15 RL L       */ () => shiftBit(L, RL_val),
-  /* 16 RL (HL)    */ () => set(bitAddr, RL_val(get(bitAddr))),
-  /* 17 RL A       */ () => shiftBit(A, RL_val),
-  /* 18 RR B       */ () => shiftBit(B, RR_val),
-  /* 19 RR C       */ () => shiftBit(C, RR_val),
-  /* 1A RR D       */ () => shiftBit(D, RR_val),
-  /* 1B RR E       */ () => shiftBit(E, RR_val),
-  /* 1C RR H       */ () => shiftBit(H, RR_val),
-  /* 1D RR L       */ () => shiftBit(L, RR_val),
-  /* 1E RR (HL)    */ () => set(bitAddr, RR_val(get(bitAddr))),
-  /* 1F RR A       */ () => shiftBit(A, RR_val),
+  /* 10 RL B       */ () => set(B, RL_val(get(B))),
+  /* 11 RL C       */ () => set(C, RL_val(get(C))),
+  /* 12 RL D       */ () => set(D, RL_val(get(D))),
+  /* 13 RL E       */ () => set(E, RL_val(get(E))),
+  /* 14 RL H       */ () => set(H, RL_val(get(H))),
+  /* 15 RL L       */ () => set(L, RL_val(get(L))),
+  /* 16 RL (HL)    */ () => { const hl = get16(HL); set(hl, RL_val(get(hl))); },
+  /* 17 RL A       */ () => set(A, RL_val(get(A))),
+  /* 18 RR B       */ () => set(B, RR_val(get(B))),
+  /* 19 RR C       */ () => set(C, RR_val(get(C))),
+  /* 1A RR D       */ () => set(D, RR_val(get(D))),
+  /* 1B RR E       */ () => set(E, RR_val(get(E))),
+  /* 1C RR H       */ () => set(H, RR_val(get(H))),
+  /* 1D RR L       */ () => set(L, RR_val(get(L))),
+  /* 1E RR (HL)    */ () => { const hl = get16(HL); set(hl, RR_val(get(hl))); },
+  /* 1F RR A       */ () => set(A, RR_val(get(A))),
 
-  /* 20 SLA B      */ () => shiftBit(B, SLA_val),
-  /* 21 SLA C      */ () => shiftBit(C, SLA_val),
-  /* 22 SLA D      */ () => shiftBit(D, SLA_val),
-  /* 23 SLA E      */ () => shiftBit(E, SLA_val),
-  /* 24 SLA H      */ () => shiftBit(H, SLA_val),
-  /* 25 SLA L      */ () => shiftBit(L, SLA_val),
-  /* 26 SLA (HL)   */ () => set(bitAddr, SLA_val(get(bitAddr))),
-  /* 27 SLA A      */ () => shiftBit(A, SLA_val),
-  /* 28 SRA B      */ () => shiftBit(B, SRA_val),
-  /* 29 SRA C      */ () => shiftBit(C, SRA_val),
-  /* 2A SRA D      */ () => shiftBit(D, SRA_val),
-  /* 2B SRA E      */ () => shiftBit(E, SRA_val),
-  /* 2C SRA H      */ () => shiftBit(H, SRA_val),
-  /* 2D SRA L      */ () => shiftBit(L, SRA_val),
-  /* 2E SRA (HL)   */ () => set(bitAddr, SRA_val(get(bitAddr))),
-  /* 2F SRA A      */ () => shiftBit(A, SRA_val),
+  /* 20 SLA B      */ () => set(B, SLA_val(get(B))),
+  /* 21 SLA C      */ () => set(C, SLA_val(get(C))),
+  /* 22 SLA D      */ () => set(D, SLA_val(get(D))),
+  /* 23 SLA E      */ () => set(E, SLA_val(get(E))),
+  /* 24 SLA H      */ () => set(H, SLA_val(get(H))),
+  /* 25 SLA L      */ () => set(L, SLA_val(get(L))),
+  /* 26 SLA (HL)   */ () => { const hl = get16(HL); set(hl, SLA_val(get(hl))); },
+  /* 27 SLA A      */ () => set(A, SLA_val(get(A))),
+  /* 28 SRA B      */ () => set(B, SRA_val(get(B))),
+  /* 29 SRA C      */ () => set(C, SRA_val(get(C))),
+  /* 2A SRA D      */ () => set(D, SRA_val(get(D))),
+  /* 2B SRA E      */ () => set(E, SRA_val(get(E))),
+  /* 2C SRA H      */ () => set(H, SRA_val(get(H))),
+  /* 2D SRA L      */ () => set(L, SRA_val(get(L))),
+  /* 2E SRA (HL)   */ () => { const hl = get16(HL); set(hl, SRA_val(get(hl))); },
+  /* 2F SRA A      */ () => set(A, SRA_val(get(A))),
 
-  /* 30 SLL B    * */ () => shiftBit(B, SLL_val),
-  /* 31 SLL C    * */ () => shiftBit(C, SLL_val),
-  /* 32 SLL D    * */ () => shiftBit(D, SLL_val),
-  /* 33 SLL E    * */ () => shiftBit(E, SLL_val),
-  /* 34 SLL H    * */ () => shiftBit(H, SLL_val),
-  /* 35 SLL L    * */ () => shiftBit(L, SLL_val),
-  /* 36 SLL (HL) * */ () => set(bitAddr, SLL_val(get(bitAddr))),
-  /* 37 SLL A    * */ () => shiftBit(A, SLL_val),
-  /* 38 SRL B      */ () => shiftBit(B, SRL_val),
-  /* 39 SRL C      */ () => shiftBit(C, SRL_val),
-  /* 3A SRL D      */ () => shiftBit(D, SRL_val),
-  /* 3B SRL E      */ () => shiftBit(E, SRL_val),
-  /* 3C SRL H      */ () => shiftBit(H, SRL_val),
-  /* 3D SRL L      */ () => shiftBit(L, SRL_val),
-  /* 3E SRL (HL)   */ () => set(bitAddr, SRL_val(get(bitAddr))),
-  /* 3F SRL A      */ () => shiftBit(A, SRL_val),
+  /* 30 SLL B    * */ () => set(B, SLL_val(get(B))),
+  /* 31 SLL C    * */ () => set(C, SLL_val(get(C))),
+  /* 32 SLL D    * */ () => set(D, SLL_val(get(D))),
+  /* 33 SLL E    * */ () => set(E, SLL_val(get(E))),
+  /* 34 SLL H    * */ () => set(H, SLL_val(get(H))),
+  /* 35 SLL L    * */ () => set(L, SLL_val(get(L))),
+  /* 36 SLL (HL) * */ () => { const hl = get16(HL); set(hl, SLL_val(get(hl))); },
+  /* 37 SLL A    * */ () => set(A, SLL_val(get(A))),
+  /* 38 SRL B      */ () => set(B, SRL_val(get(B))),
+  /* 39 SRL C      */ () => set(C, SRL_val(get(C))),
+  /* 3A SRL D      */ () => set(D, SRL_val(get(D))),
+  /* 3B SRL E      */ () => set(E, SRL_val(get(E))),
+  /* 3C SRL H      */ () => set(H, SRL_val(get(H))),
+  /* 3D SRL L      */ () => set(L, SRL_val(get(L))),
+  /* 3E SRL (HL)   */ () => { const hl = get16(HL); set(hl, SRL_val(get(hl))); },
+  /* 3F SRL A      */ () => set(A, SRL_val(get(A))),
 
   /* 40 BIT 0,B    */ () => testBit(BIT0, B),
   /* 41 BIT 0,C    */ () => testBit(BIT0, C),
@@ -208,73 +184,73 @@ const opsBit: (() => void)[] = [
   /* 7E BIT 7,(HL) */ () => testBitHL(BIT7),
   /* 7F BIT 7,A    */ () => testBit(BIT7, A),
 
-  /* 80 RES 0,B    */ () => resBit(BIT0, B),
-  /* 81 RES 0,C    */ () => resBit(BIT0, C),
-  /* 82 RES 0,D    */ () => resBit(BIT0, D),
-  /* 83 RES 0,E    */ () => resBit(BIT0, E),
-  /* 84 RES 0,H    */ () => resBit(BIT0, H),
-  /* 85 RES 0,L    */ () => resBit(BIT0, L),
-  /* 86 RES 0,(HL) */ () => set(bitAddr, get(bitAddr) & ~BIT0),
-  /* 87 RES 0,A    */ () => resBit(BIT0, A),
-  /* 88 RES 1,B    */ () => resBit(BIT1, B),
-  /* 89 RES 1,C    */ () => resBit(BIT1, C),
-  /* 8A RES 1,D    */ () => resBit(BIT1, D),
-  /* 8B RES 1,E    */ () => resBit(BIT1, E),
-  /* 8C RES 1,H    */ () => resBit(BIT1, H),
-  /* 8D RES 1,L    */ () => resBit(BIT1, L),
-  /* 8E RES 1,(HL) */ () => set(bitAddr, get(bitAddr) & ~BIT1),
-  /* 8F RES 1,A    */ () => resBit(BIT1, A),
+  /* 80 RES 0,B    */ () => resBit(_BIT0, B),
+  /* 81 RES 0,C    */ () => resBit(_BIT0, C),
+  /* 82 RES 0,D    */ () => resBit(_BIT0, D),
+  /* 83 RES 0,E    */ () => resBit(_BIT0, E),
+  /* 84 RES 0,H    */ () => resBit(_BIT0, H),
+  /* 85 RES 0,L    */ () => resBit(_BIT0, L),
+  /* 86 RES 0,(HL) */ () => resBit(_BIT0, get16(HL)),
+  /* 87 RES 0,A    */ () => resBit(_BIT0, A),
+  /* 88 RES 1,B    */ () => resBit(_BIT1, B),
+  /* 89 RES 1,C    */ () => resBit(_BIT1, C),
+  /* 8A RES 1,D    */ () => resBit(_BIT1, D),
+  /* 8B RES 1,E    */ () => resBit(_BIT1, E),
+  /* 8C RES 1,H    */ () => resBit(_BIT1, H),
+  /* 8D RES 1,L    */ () => resBit(_BIT1, L),
+  /* 8E RES 1,(HL) */ () => resBit(_BIT1, get16(HL)),
+  /* 8F RES 1,A    */ () => resBit(_BIT1, A),
 
-  /* 90 RES 2,B    */ () => resBit(BIT2, B),
-  /* 91 RES 2,C    */ () => resBit(BIT2, C),
-  /* 92 RES 2,D    */ () => resBit(BIT2, D),
-  /* 93 RES 2,E    */ () => resBit(BIT2, E),
-  /* 94 RES 2,H    */ () => resBit(BIT2, H),
-  /* 95 RES 2,L    */ () => resBit(BIT2, L),
-  /* 96 RES 2,(HL) */ () => set(bitAddr, get(bitAddr) & ~BIT2),
-  /* 97 RES 2,A    */ () => resBit(BIT2, A),
-  /* 98 RES 3,B    */ () => resBit(BIT3, B),
-  /* 99 RES 3,C    */ () => resBit(BIT3, C),
-  /* 9A RES 3,D    */ () => resBit(BIT3, D),
-  /* 9B RES 3,E    */ () => resBit(BIT3, E),
-  /* 9C RES 3,H    */ () => resBit(BIT3, H),
-  /* 9D RES 3,L    */ () => resBit(BIT3, L),
-  /* 9E RES 3,(HL) */ () => set(bitAddr, get(bitAddr) & ~BIT3),
-  /* 9F RES 3,A    */ () => resBit(BIT3, A),
+  /* 90 RES 2,B    */ () => resBit(_BIT2, B),
+  /* 91 RES 2,C    */ () => resBit(_BIT2, C),
+  /* 92 RES 2,D    */ () => resBit(_BIT2, D),
+  /* 93 RES 2,E    */ () => resBit(_BIT2, E),
+  /* 94 RES 2,H    */ () => resBit(_BIT2, H),
+  /* 95 RES 2,L    */ () => resBit(_BIT2, L),
+  /* 96 RES 2,(HL) */ () => resBit(_BIT2, get16(HL)),
+  /* 97 RES 2,A    */ () => resBit(_BIT2, A),
+  /* 98 RES 3,B    */ () => resBit(_BIT3, B),
+  /* 99 RES 3,C    */ () => resBit(_BIT3, C),
+  /* 9A RES 3,D    */ () => resBit(_BIT3, D),
+  /* 9B RES 3,E    */ () => resBit(_BIT3, E),
+  /* 9C RES 3,H    */ () => resBit(_BIT3, H),
+  /* 9D RES 3,L    */ () => resBit(_BIT3, L),
+  /* 9E RES 3,(HL) */ () => resBit(_BIT3, get16(HL)),
+  /* 9F RES 3,A    */ () => resBit(_BIT3, A),
 
-  /* A0 RES 4,B    */ () => resBit(BIT4, B),
-  /* A1 RES 4,C    */ () => resBit(BIT4, C),
-  /* A2 RES 4,D    */ () => resBit(BIT4, D),
-  /* A3 RES 4,E    */ () => resBit(BIT4, E),
-  /* A4 RES 4,H    */ () => resBit(BIT4, H),
-  /* A5 RES 4,L    */ () => resBit(BIT4, L),
-  /* A6 RES 4,(HL) */ () => set(bitAddr, get(bitAddr) & ~BIT4),
-  /* A7 RES 4,A    */ () => resBit(BIT4, A),
-  /* A8 RES 5,B    */ () => resBit(BIT5, B),
-  /* A9 RES 5,C    */ () => resBit(BIT5, C),
-  /* AA RES 5,D    */ () => resBit(BIT5, D),
-  /* AB RES 5,E    */ () => resBit(BIT5, E),
-  /* AC RES 5,H    */ () => resBit(BIT5, H),
-  /* AD RES 5,L    */ () => resBit(BIT5, L),
-  /* AE RES 5,(HL) */ () => set(bitAddr, get(bitAddr) & ~BIT5),
-  /* AF RES 5,A    */ () => resBit(BIT5, A),
+  /* A0 RES 4,B    */ () => resBit(_BIT4, B),
+  /* A1 RES 4,C    */ () => resBit(_BIT4, C),
+  /* A2 RES 4,D    */ () => resBit(_BIT4, D),
+  /* A3 RES 4,E    */ () => resBit(_BIT4, E),
+  /* A4 RES 4,H    */ () => resBit(_BIT4, H),
+  /* A5 RES 4,L    */ () => resBit(_BIT4, L),
+  /* A6 RES 4,(HL) */ () => resBit(_BIT4, get16(HL)),
+  /* A7 RES 4,A    */ () => resBit(_BIT4, A),
+  /* A8 RES 5,B    */ () => resBit(_BIT5, B),
+  /* A9 RES 5,C    */ () => resBit(_BIT5, C),
+  /* AA RES 5,D    */ () => resBit(_BIT5, D),
+  /* AB RES 5,E    */ () => resBit(_BIT5, E),
+  /* AC RES 5,H    */ () => resBit(_BIT5, H),
+  /* AD RES 5,L    */ () => resBit(_BIT5, L),
+  /* AE RES 5,(HL) */ () => resBit(_BIT5, get16(HL)),
+  /* AF RES 5,A    */ () => resBit(_BIT5, A),
 
-  /* B0 RES 6,B    */ () => resBit(BIT6, B),
-  /* B1 RES 6,C    */ () => resBit(BIT6, C),
-  /* B2 RES 6,D    */ () => resBit(BIT6, D),
-  /* B3 RES 6,E    */ () => resBit(BIT6, E),
-  /* B4 RES 6,H    */ () => resBit(BIT6, H),
-  /* B5 RES 6,L    */ () => resBit(BIT6, L),
-  /* B6 RES 6,(HL) */ () => set(bitAddr, get(bitAddr) & ~BIT6),
-  /* B7 RES 6,A    */ () => resBit(BIT6, A),
-  /* B8 RES 7,B    */ () => resBit(BIT7, B),
-  /* B9 RES 7,C    */ () => resBit(BIT7, C),
-  /* BA RES 7,D    */ () => resBit(BIT7, D),
-  /* BB RES 7,E    */ () => resBit(BIT7, E),
-  /* BC RES 7,H    */ () => resBit(BIT7, H),
-  /* BD RES 7,L    */ () => resBit(BIT7, L),
-  /* BE RES 7,(HL) */ () => set(bitAddr, get(bitAddr) & ~BIT7),
-  /* BF RES 7,A    */ () => resBit(BIT7, A),
+  /* B0 RES 6,B    */ () => resBit(_BIT6, B),
+  /* B1 RES 6,C    */ () => resBit(_BIT6, C),
+  /* B2 RES 6,D    */ () => resBit(_BIT6, D),
+  /* B3 RES 6,E    */ () => resBit(_BIT6, E),
+  /* B4 RES 6,H    */ () => resBit(_BIT6, H),
+  /* B5 RES 6,L    */ () => resBit(_BIT6, L),
+  /* B6 RES 6,(HL) */ () => resBit(_BIT6, get16(HL)),
+  /* B7 RES 6,A    */ () => resBit(_BIT6, A),
+  /* B8 RES 7,B    */ () => resBit(_BIT7, B),
+  /* B9 RES 7,C    */ () => resBit(_BIT7, C),
+  /* BA RES 7,D    */ () => resBit(_BIT7, D),
+  /* BB RES 7,E    */ () => resBit(_BIT7, E),
+  /* BC RES 7,H    */ () => resBit(_BIT7, H),
+  /* BD RES 7,L    */ () => resBit(_BIT7, L),
+  /* BE RES 7,(HL) */ () => resBit(_BIT7, get16(HL)),
+  /* BF RES 7,A    */ () => resBit(_BIT7, A),
 
   /* C0 SET 0,B    */ () => setBit(BIT0, B),
   /* C1 SET 0,C    */ () => setBit(BIT0, C),
@@ -282,7 +258,7 @@ const opsBit: (() => void)[] = [
   /* C3 SET 0,E    */ () => setBit(BIT0, E),
   /* C4 SET 0,H    */ () => setBit(BIT0, H),
   /* C5 SET 0,L    */ () => setBit(BIT0, L),
-  /* C6 SET 0,(HL) */ () => set(bitAddr, get(bitAddr) | BIT0),
+  /* C6 SET 0,(HL) */ () => setBit(BIT0, get16(HL)),
   /* C7 SET 0,A    */ () => setBit(BIT0, A),
   /* C8 SET 1,B    */ () => setBit(BIT1, B),
   /* C9 SET 1,C    */ () => setBit(BIT1, C),
@@ -290,7 +266,7 @@ const opsBit: (() => void)[] = [
   /* CB SET 1,E    */ () => setBit(BIT1, E),
   /* CC SET 1,H    */ () => setBit(BIT1, H),
   /* CD SET 1,L    */ () => setBit(BIT1, L),
-  /* CE SET 1,(HL) */ () => set(bitAddr, get(bitAddr) | BIT1),
+  /* CE SET 1,(HL) */ () => setBit(BIT1, get16(HL)),
   /* CF SET 1,A    */ () => setBit(BIT1, A),
 
   /* D0 SET 2,B    */ () => setBit(BIT2, B),
@@ -299,7 +275,7 @@ const opsBit: (() => void)[] = [
   /* D3 SET 2,E    */ () => setBit(BIT2, E),
   /* D4 SET 2,H    */ () => setBit(BIT2, H),
   /* D5 SET 2,L    */ () => setBit(BIT2, L),
-  /* D6 SET 2,(HL) */ () => set(bitAddr, get(bitAddr) | BIT2),
+  /* D6 SET 2,(HL) */ () => setBit(BIT2, get16(HL)),
   /* D7 SET 2,A    */ () => setBit(BIT2, A),
   /* D8 SET 3,B    */ () => setBit(BIT3, B),
   /* D9 SET 3,C    */ () => setBit(BIT3, C),
@@ -307,7 +283,7 @@ const opsBit: (() => void)[] = [
   /* DB SET 3,E    */ () => setBit(BIT3, E),
   /* DC SET 3,H    */ () => setBit(BIT3, H),
   /* DD SET 3,L    */ () => setBit(BIT3, L),
-  /* DE SET 3,(HL) */ () => set(bitAddr, get(bitAddr) | BIT3),
+  /* DE SET 3,(HL) */ () => setBit(BIT3, get16(HL)),
   /* DF SET 3,A    */ () => setBit(BIT3, A),
 
   /* E0 SET 4,B    */ () => setBit(BIT4, B),
@@ -316,7 +292,7 @@ const opsBit: (() => void)[] = [
   /* E3 SET 4,E    */ () => setBit(BIT4, E),
   /* E4 SET 4,H    */ () => setBit(BIT4, H),
   /* E5 SET 4,L    */ () => setBit(BIT4, L),
-  /* E6 SET 4,(HL) */ () => set(bitAddr, get(bitAddr) | BIT4),
+  /* E6 SET 4,(HL) */ () => setBit(BIT4, get16(HL)),
   /* E7 SET 4,A    */ () => setBit(BIT4, A),
   /* E8 SET 5,B    */ () => setBit(BIT5, B),
   /* E9 SET 5,C    */ () => setBit(BIT5, C),
@@ -324,7 +300,7 @@ const opsBit: (() => void)[] = [
   /* EB SET 5,E    */ () => setBit(BIT5, E),
   /* EC SET 5,H    */ () => setBit(BIT5, H),
   /* ED SET 5,L    */ () => setBit(BIT5, L),
-  /* EE SET 5,(HL) */ () => set(bitAddr, get(bitAddr) | BIT5),
+  /* EE SET 5,(HL) */ () => setBit(BIT5, get16(HL)),
   /* EF SET 5,A    */ () => setBit(BIT5, A),
 
   /* F0 SET 6,B    */ () => setBit(BIT6, B),
@@ -333,7 +309,7 @@ const opsBit: (() => void)[] = [
   /* F3 SET 6,E    */ () => setBit(BIT6, E),
   /* F4 SET 6,H    */ () => setBit(BIT6, H),
   /* F5 SET 6,L    */ () => setBit(BIT6, L),
-  /* F6 SET 6,(HL) */ () => set(bitAddr, get(bitAddr) | BIT6),
+  /* F6 SET 6,(HL) */ () => setBit(BIT6, get16(HL)),
   /* F7 SET 6,A    */ () => setBit(BIT6, A),
   /* F8 SET 7,B    */ () => setBit(BIT7, B),
   /* F9 SET 7,C    */ () => setBit(BIT7, C),
@@ -341,6 +317,6 @@ const opsBit: (() => void)[] = [
   /* FB SET 7,E    */ () => setBit(BIT7, E),
   /* FC SET 7,H    */ () => setBit(BIT7, H),
   /* FD SET 7,L    */ () => setBit(BIT7, L),
-  /* FE SET 7,(HL) */ () => set(bitAddr, get(bitAddr) | BIT7),
+  /* FE SET 7,(HL) */ () => setBit(BIT7, get16(HL)),
   /* FF SET 7,A    */ () => setBit(BIT7, A),
 ];
