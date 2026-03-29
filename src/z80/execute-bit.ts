@@ -1,7 +1,7 @@
 import { get, get16, set } from '../common/utils';
 import { BIT_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
-import { A, B, C, D, E, H, HL, L } from './positions';
+import { A, B, C, D, E, H, HL, L } from './registers';
 import { getWZh, next, refresh } from './utils';
 
 export const BIT7 = 0x80;

@@ -1,34 +1,10 @@
 import { get, get16, set, set16, set88 } from '../common/utils';
 import { FC } from './flags';
-import { F, HL, HLXY, PC, R, SP } from './positions';
+import { F, HL, HLXY, PC, R } from './registers';
 
 export function nop() { };
 
 export function getFC(): number { return get(F) & FC; }
-
-export function pushValue88(valueLow: number, valueHigh: number) {
-  const sp = get16(SP);
-  const newSp = (sp - 2) & 0xFFFF;
-  set16(SP, newSp);
-  set88(newSp, valueLow, valueHigh);
-}
-
-export function push16(src: number) {
-  const sp = get16(SP);
-  const newSp = (sp - 2) & 0xFFFF;
-  set16(SP, newSp);
-  const valueLow = get(src);
-  const valueHigh = get(src + 1);
-  set88(newSp, valueLow, valueHigh);
-}
-
-export function pop16(dest: number) {
-  let sp = get16(SP);
-  const valueLow = get(sp++);
-  const valueHigh = get(sp++);
-  set16(SP, sp & 0xFFFF);
-  set88(dest, valueLow, valueHigh);
-}
 
 export let eiDelay: 0 | 1 = 0;
 export function setEIDelay(value: 0 | 1) { eiDelay = value; }

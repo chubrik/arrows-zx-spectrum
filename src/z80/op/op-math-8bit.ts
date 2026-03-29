@@ -1,6 +1,6 @@
 import { get, set } from '../../common/utils';
 import { F53, FC, FH, FN, FO, FS, FZ, flagsSZ53, flagsSZ53P } from '../flags';
-import { A, F } from '../positions';
+import { A, F } from '../registers';
 import { getFC } from '../utils';
 
 /** INC r | INC (HL) | INC (IX+d) | INC (IY+d) */

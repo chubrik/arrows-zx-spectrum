@@ -1,6 +1,6 @@
 import { unicodeToBytes } from './common/encode';
 import { deployMemoryBlock, initMemory } from './common/memory';
-import { initCpu, resetCpu } from './z80/positions';
+import { initCpu, resetCpu } from './z80/init';
 
 const pos = getPosition();
 const chunkX = pos.x & ~0xF;

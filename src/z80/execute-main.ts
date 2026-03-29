@@ -3,7 +3,6 @@ import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';
 import { FH, FO, FS, FZ, HLT, IFF12 } from './flags';
-import { call88, callNext16 } from './op/op-call';
 import { EX_AF_AF, EX_DE_HL, EX_sp_HL, EXX } from './op/op-exchange';
 import { IN_A_n, OUT_n_A } from './op/op-io';
 import { DJNZ_e, JR_e } from './op/op-jump';
@@ -12,8 +11,9 @@ import { addHLXY, dec16, inc16 } from './op/op-math-16bit';
 import { add, cp, dec, inc, logic, sub } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { RLA, RLCA, RRA, RRCA } from './op/op-shift';
-import { A, AF, B, BC, C, D, DE, E, F, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, setHLXY, SP, SPh, SPl, SYS } from './positions';
-import { addPC, getFC, getHLXYd, next, next16, nop, pop16, push16, refresh, setEIDelay, setPCNext16 } from './utils';
+import { call88, callNext16, pop16, push16 } from './op/op-stack';
+import { A, AF, B, BC, C, D, DE, E, F, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, setHLXY, SP, SPh, SPl, SYS } from './registers';
+import { addPC, getFC, getHLXYd, next, next16, nop, refresh, setEIDelay, setPCNext16 } from './utils';
 
 export function executeMain() {
   refresh();

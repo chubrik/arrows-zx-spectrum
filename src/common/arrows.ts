@@ -1,3 +1,5 @@
+type Info = { x: number; y: number; a: number[]; };
+
 export const infos: Info[] = [];
 
 export function getDirect(addr: number): number {
@@ -26,17 +28,11 @@ export function setDirect(addr: number, value: number) {
 }
 
 export function createInfo(x: number, y: number): Info {
-  const xMod = x & 0x8;
-  const yMod = y & 0x8;
+  const xMod = x & 8;
+  const yMod = y & 8;
   const arrowTypes = xMod === yMod ? arrowTypes1 : arrowTypes2;
   return { x, y, a: arrowTypes };
 }
 
 const arrowTypes1 = [10, 25];
 const arrowTypes2 = [1, 18];
-
-export type Info = {
-  x: number;
-  y: number;
-  a: number[];
-};

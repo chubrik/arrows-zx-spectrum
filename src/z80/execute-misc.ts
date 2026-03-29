@@ -1,14 +1,14 @@
 import { get, set } from '../common/utils';
 import { IM1, IM12, IM2 } from './flags';
 import { cpx, ldx } from './op/op-block';
-import { RETI_RETN } from './op/op-call';
 import { IN_c, inx, OUT_c, outx } from './op/op-io';
 import { LD_A_I, LD_A_R } from './op/op-load-8bit';
 import { ADC_HL, LD_dd_nn, LD_nn_dd, SBC_HL } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
 import { RLD, RRD } from './op/op-shift';
-import { A, B, BC, C, D, DE, E, H, HL, I, L, R, SP, SYS } from './positions';
-import { next, nop, nop as _, refresh } from './utils';
+import { RETI_RETN } from './op/op-stack';
+import { A, B, BC, C, D, DE, E, H, HL, I, L, R, SP, SYS } from './registers';
+import { nop as _, next, nop, refresh } from './utils';
 
 export function executeMisc() {
   refresh();

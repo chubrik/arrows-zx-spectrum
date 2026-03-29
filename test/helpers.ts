@@ -1,7 +1,7 @@
 import { setRamMinAddrForTest, values } from '../src/common/utils';
 import { executeMain } from '../src/z80/execute-main';
 import { HLT, IFF1, IFF2, IM1, IM12, IM2 } from '../src/z80/flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, setHLXY, SPh, SPl, SYS } from '../src/z80/positions';
+import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, setHLXY, SPh, SPl, SYS } from '../src/z80/registers';
 import { setWZ } from '../src/z80/utils';
 
 export function setupCpu() {

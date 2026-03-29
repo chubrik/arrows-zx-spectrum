@@ -1,6 +1,6 @@
 import { get, get16, set } from '../../common/utils';
 import { F53, FC, flagsSZ53P, FSZO } from '../flags';
-import { A, F, HL } from '../positions';
+import { A, F, HL } from '../registers';
 import { getFC } from '../utils';
 
 /** RLCA */

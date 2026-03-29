@@ -9,12 +9,12 @@ export function initMemory(chunkX: number, chunkY: number) {
   const memoryY = chunkY + 16;
 
   for (let addr = 0; addr <= 0xFFFF; addr++)
-    initMemoryInfo(addr, memoryX, memoryY);
-
-  infos[0x10000] = infos[0];
+    initAddrInfo(addr, memoryX, memoryY);
+  
+  infos[0x10000] = infos[0]; // Mirror 0x0000 address for easier access to byte pairs
 }
 
-function initMemoryInfo(addr: number, memoryX: number, memoryY: number) {
+function initAddrInfo(addr: number, memoryX: number, memoryY: number) {
   const xShift = ((addr & 0xC000) >> 14) * 272;
   let x, y: number;
 

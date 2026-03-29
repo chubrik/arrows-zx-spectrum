@@ -1,7 +1,7 @@
 import { readPort, writePort } from '../../common/ports';
 import { get, get16, set, set16 } from '../../common/utils';
 import { FHC, flagP, flagsSZ53P, FN, FS53, FZ } from '../flags';
-import { A, B, BC, C, F, HL } from '../positions';
+import { A, B, BC, C, F, HL } from '../registers';
 import { addPC, getFC, next } from '../utils';
 
 const ED71_VALUE = 0; // NMOS: 0, CMOS: 255 (undocumented)

@@ -1,5 +1,5 @@
 import { get, set } from '../../common/utils';
-import { B } from '../positions';
+import { B } from '../registers';
 import { addPC, next } from '../utils';
 
 /** DJNZ e */

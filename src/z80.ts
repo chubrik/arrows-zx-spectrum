@@ -2,8 +2,9 @@ import { initMemory } from './common/memory';
 import { commitUpdated, fetchAll, get, set } from './common/utils';
 import { executeMain } from './z80/execute-main';
 import { INT } from './z80/flags';
+import { initCpu } from './z80/init';
 import { interrupt } from './z80/interrupt';
-import { initCpu, SYS } from './z80/positions';
+import { SYS } from './z80/registers';
 
 const pos = getPosition();
 const chunkX = pos.x & ~0xF;

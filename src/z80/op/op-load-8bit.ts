@@ -1,6 +1,6 @@
 import { get, set } from '../../common/utils';
 import { FO, IFF2, flagsSZ53 } from '../flags';
-import { A, F, I, R, SYS } from '../positions';
+import { A, F, I, R, SYS } from '../registers';
 import { getFC } from '../utils';
 
 /** LD A,I */

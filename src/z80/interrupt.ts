@@ -1,7 +1,7 @@
 import { get, set } from '../common/utils';
 import { HLT, IFF12, IFF1_INT, IM2, INT } from './flags';
-import { call88 } from './op/op-call';
-import { I, SYS } from './positions';
+import { call88 } from './op/op-stack';
+import { I, SYS } from './registers';
 import { addPC, eiDelay, refresh, setEIDelay } from './utils';
 
 const IM01_VECTOR = 0x0038;

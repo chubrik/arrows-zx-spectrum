@@ -1,6 +1,6 @@
 import { get, get16, set, set16, set88 } from '../../common/utils';
 import { F53, FC, FH, FN, FS53, FSZO, FZ } from '../flags';
-import { F, HL, HLXY } from '../positions';
+import { F, HL, HLXY } from '../registers';
 import { getFC, next16 } from '../utils';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */

@@ -1,6 +1,6 @@
 import { set } from '../../common/utils';
 import { F53, FH, FS, FZO } from '../flags';
-import { F } from '../positions';
+import { F } from '../registers';
 import { getFC } from '../utils';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */

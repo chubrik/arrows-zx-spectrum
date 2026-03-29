@@ -1,5 +1,5 @@
 import { get, get16, set16, set88 } from '../../common/utils';
-import { PC } from '../positions';
+import { PC } from '../registers';
 
 /** LD dd,nn | LD IX,nn | LD IY,nn */
 export function ld16Next(dest: number) {

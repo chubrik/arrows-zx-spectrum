@@ -1,6 +1,6 @@
 import { get, get16, set, set16 } from '../../common/utils';
 import { FH, FN, FO, FS, FSZC, FZ } from '../flags';
-import { A, BC, DE, F, HLXY } from '../positions';
+import { A, BC, DE, F, HLXY } from '../registers';
 import { addPC, getFC } from '../utils';
 
 export function ldx(increment: 1 | -1, repeat: 0 | 1 = 0) {

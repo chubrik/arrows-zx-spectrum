@@ -1,5 +1,5 @@
 import { get, get16, set } from '../../common/utils';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HXY, L, La, LXY, SP } from '../positions';
+import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HXY, L, La, LXY, SP } from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {

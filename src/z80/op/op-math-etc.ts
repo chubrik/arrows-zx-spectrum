@@ -1,6 +1,6 @@
 import { get, set } from '../../common/utils';
 import { F53, FC, FH, FHN, FN, FNC, FO, FSZO, FSZOC, flagsSZ53, flagsSZ53P } from '../flags';
-import { A, F } from '../positions';
+import { A, F } from '../registers';
 
 /** DAA */
 export function DAA() {

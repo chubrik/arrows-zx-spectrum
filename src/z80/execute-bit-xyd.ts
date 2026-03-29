@@ -2,7 +2,7 @@ import { get, set } from '../common/utils';
 import { _BIT0, _BIT1, _BIT2, _BIT3, _BIT4, _BIT5, _BIT6, _BIT7, BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './execute-bit';
 import { BIT_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
-import { A, B, C, D, E, H, L } from './positions';
+import { A, B, C, D, E, H, L } from './registers';
 import { getXYd, next } from './utils';
 
 let xyd = 0;

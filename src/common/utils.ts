@@ -4,7 +4,7 @@ export const values: number[] = [];
 const updated = new Set<number>();
 
 let ramMinAddr = 0x4000;
-export function setRamMinAddrForTest(addr: number) { ramMinAddr = addr; }
+export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
 
 export function check(condition: boolean, message: string = 'Check failed') {
   if (!condition)
