@@ -1,5 +1,5 @@
 import { unicodeToBytes } from './common/encode';
-import { deployMemoryBlock, initMemory } from './common/memory';
+import { deployMemoryBlock, initMemory, resetMemoryBlock } from './common/utils';
 import { initCpu, resetCpu } from './z80/init';
 
 const pos = getPosition();
@@ -12,7 +12,7 @@ onActive(() => {
   const rom = unicodeToBytes(''); // Replaced during build
   const ram: number[] = [];
   ram.length = 0xC000;
-  deployMemoryBlock(rom, 0x0000);
-  deployMemoryBlock(ram, 0x4000);
+  deployMemoryBlock(0x0000, rom);
+  resetMemoryBlock(0x4000, 0xFFFF);
   resetCpu();
 });

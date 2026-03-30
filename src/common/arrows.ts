@@ -1,14 +1,11 @@
-type Info = { x: number; y: number; a: number[]; };
+export type ArrowCtx = { x: number; y: number; a: number[]; };
 
-export const infos: Info[] = [];
-
-export function getDirect(addr: number): number {
-  const info = infos[addr];
+export function getDirect(ctx: ArrowCtx): number {
   let value = 0;
 
   for (let i = 0; i < 8; i++) {
     value <<= 1;
-    const arrow = world.getArrow(info.x + i, info.y);
+    const arrow = world.getArrow(ctx.x + i, ctx.y);
 
     if (arrow && arrow.type >= 16)
       value |= 1;
@@ -17,17 +14,15 @@ export function getDirect(addr: number): number {
   return value;
 }
 
-export function setDirect(addr: number, value: number) {
-  const info = infos[addr];
-
+export function setDirect(ctx: ArrowCtx, value: number) {
   for (let i = 7; i >= 0; i--) {
-    const arrowType = info.a[value & 1];
-    world.setArrow(info.x + i, info.y, arrowType, 1, false);
+    const arrowType = ctx.a[value & 1];
+    world.setArrow(ctx.x + i, ctx.y, arrowType, 1, false);
     value >>= 1;
   }
 }
 
-export function createInfo(x: number, y: number): Info {
+export function createCtx(x: number, y: number): ArrowCtx {
   const xMod = x & 8;
   const yMod = y & 8;
   const arrowTypes = xMod === yMod ? arrowTypes1 : arrowTypes2;

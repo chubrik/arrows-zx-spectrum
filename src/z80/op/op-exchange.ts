@@ -1,6 +1,6 @@
-import { get, set } from '../../common/utils';
+import { read, write } from '../../common/memory';
 import { packF, unpackF } from '../flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, Fa, getReg16, H, Ha, HXY, L, La, LXY, regs, SP } from '../registers';
+import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, Fa, get16, H, Ha, HXY, L, La, LXY, regs, SP } from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
@@ -44,15 +44,15 @@ export function EXX() {
 
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
 export function EX_sp_HL() {
-  const sp = getReg16(SP);
-  const stackLow = get(sp);
-  const stackHigh = get(sp + 1);
+  const sp = get16(SP);
+  const spl = read(sp);
+  const sph = read(sp + 1);
   const lxy = regs[LXY];
   const hxy = regs[HXY];
-  set(sp, lxy);
-  set(sp + 1, hxy);
-  regs[LXY] = stackLow;
-  regs[HXY] = stackHigh;
+  write(sp, lxy);
+  write(sp + 1, hxy);
+  regs[LXY] = spl;
+  regs[HXY] = sph;
 }
 
 /** EX DE,HL */

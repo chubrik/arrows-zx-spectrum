@@ -1,11 +1,11 @@
-import { setRamMinAddrForTest, values } from '../src/common/utils';
+import { setRamMinAddrForTest, mems } from '../src/common/memory';
 import { executeMain } from '../src/z80/execute-main';
 import { HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, packF, setHLT, setIFF1, setIFF2, setIM1, setIM2, unpackF, unpackSYS } from '../src/z80/flags';
 import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, regs, setHLXY, setWZ, SPh, SPl } from '../src/z80/registers';
 
 export function setupCpu() {
   setRamMinAddrForTest(0);
-  for (let i = 0; i <= 0xFFFF; i++) values[i] = 0;
+  for (let i = 0; i <= 0xFFFF; i++) mems[i] = 0;
   for (let i = 0; i < 32; i++) regs[i] = 0;
   unpackF(0);
   unpackSYS(0);
@@ -65,7 +65,7 @@ export function setState(state: CpuState) {
   if (state.halt !== undefined) setHLT(state.halt ? HLT : 0);
   if (state.mem) {
     for (const [addr, value] of Object.entries(state.mem)) {
-      values[Number(addr)] = value;
+      mems[Number(addr)] = value;
     }
   }
 }
@@ -103,7 +103,7 @@ export function getState() {
 
 export function loadProgram(addr: number, bytes: number[]) {
   for (let i = 0; i < bytes.length; i++) {
-    values[(addr + i) & 0xFFFF] = bytes[i];
+    mems[(addr + i) & 0xFFFF] = bytes[i];
   }
 }
 

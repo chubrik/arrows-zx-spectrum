@@ -1,28 +1,28 @@
-import { BIT7, F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FO, setF3, setF5, setFC, setFH, setFN, setFO, setFSZ53, setFSZ53P } from '../flags';
+import { BIT7, F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FP, setF3, setF5, setFC, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
 import { A, regs } from '../registers';
 
 /** DAA */
 export function DAA() {
-  let a = regs[A];
-  const origA = a;
+  const a = regs[A];
+  let newA = a;
   const wasN = fn;
   let correction = 0;
-  if (fh || (a & 0x0F) > 9) correction |= 0x06;
-  if (fc || a > 0x99) { correction |= 0x60; setFC(FC); }
-  a = (wasN ? a - correction : a + correction) & 0xFF;
-  regs[A] = a;
+  if (fh || (newA & 0x0F) > 9) correction |= 0x06;
+  if (fc || newA > 0x99) { correction |= 0x60; setFC(FC); }
+  newA = (wasN ? newA - correction : newA + correction) & 0xFF;
+  regs[A] = newA;
 
-  setFSZ53P(a);
-  setFH((origA ^ correction ^ a) & FH);
+  setFSZ53P(newA);
+  setFH((a ^ correction ^ newA) & FH);
 }
 
 /** CPL */
 export function CPL() {
-  const a = regs[A] ^ 0xFF;
-  regs[A] = a;
+  const newA = regs[A] ^ 0xFF;
+  regs[A] = newA;
 
-  setF5(a & F5);
-  setF3(a & F3);
+  setF5(newA & F5);
+  setF3(newA & F3);
   setFH(FH);
   setFN(FN);
 }
@@ -30,13 +30,12 @@ export function CPL() {
 /** CCF */
 export function CCF() {
   const a = regs[A];
-  const oldC = fc;
 
   setF5((a & F5) | f5);
   setF3((a & F3) | f3);
-  setFH(oldC ? FH : 0);
+  setFH(fc ? FH : 0);
   setFN(0);
-  setFC(oldC ? 0 : FC);
+  setFC(fc ? 0 : FC);
 }
 
 /** SCF */
@@ -53,12 +52,12 @@ export function SCF() {
 /** NEG */
 export function NEG() {
   const a = regs[A];
-  const result = -a & 0xFF;
-  regs[A] = result;
+  const newA = -a & 0xFF;
+  regs[A] = newA;
 
-  setFSZ53(result);
-  setFH((a ^ result) & FH);
-  setFO(a === BIT7 ? FO : 0);
+  setFSZ53(newA);
+  setFH((a ^ newA) & FH);
+  setFP(a === BIT7 ? FP : 0);
   setFN(FN);
   setFC(a ? FC : 0);
 }

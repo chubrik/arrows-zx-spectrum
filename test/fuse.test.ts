@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getResource } from '../build/resources';
-import { values } from '../src/common/utils';
+import { mems } from '../src/common/memory';
 import { FuseTestExpected, parseTestsExpected, parseTestsIn } from './fuse-parse';
 import { getState, loadProgram, setState, setupCpu, step } from './helpers';
 
@@ -172,7 +172,7 @@ describe('FUSE Z80 tests', () => {
       for (const block of expected.memBlocks) {
         for (let j = 0; j < block.bytes.length; j++) {
           const addr = (block.addr + j) & 0xFFFF;
-          const gotByte = values[addr];
+          const gotByte = mems[addr];
           const expByte = block.bytes[j];
           if (gotByte !== expByte) {
             mismatches.push(`  mem[0x${addr.toString(16).padStart(4, '0')}]: got 0x${gotByte.toString(16).padStart(2, '0')}, expected 0x${expByte.toString(16).padStart(2, '0')}`);

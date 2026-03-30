@@ -1,9 +1,9 @@
 import { setDirect } from './common/arrows';
-import { initMemory } from './common/memory';
+import { initMemory } from './common/utils';
 import { initCpu } from './z80/init';
 import {
   A, F, B, C, D, E, H, L, Aa, Fa, Ba, Ca, Da, Ea, Ha, La,
-  IXh, IXl, IYh, IYl, SPh, SPl, PCh, PCl, I, R, SYS,
+  IXh, IXl, IYh, IYl, SPh, SPl, PCh, PCl, I, R, SYS, regsCtx
 } from './z80/registers';
 
 const pos = getPosition();

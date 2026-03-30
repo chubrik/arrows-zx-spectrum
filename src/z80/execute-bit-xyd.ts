@@ -1,31 +1,30 @@
-import { get, set } from '../common/utils';
+import { read, write } from '../common/memory';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
-import { BIT_b_val } from './op/op-bit';
-import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
+import { BIT_b_val, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
 import { A, B, C, D, E, H, L, regs } from './registers';
 import { getXYd, next } from './utils';
 
-let xyd = 0;
+let xydAddr = 0;
 let xydVal = 0;
 
 /** IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
 export function executeBitXYd() {
-  xyd = getXYd();
-  xydVal = get(xyd);
+  xydAddr = getXYd();
+  xydVal = read(xydAddr);
   const op = next();
   opsBitXY[op]();
 }
 
 function testBitXYd(bit: number) {
-  BIT_b_val(bit, xydVal, xyd >> 8);
+  BIT_b_val(bit, xydVal, xydAddr >> 8);
 }
 
 function setXYd(value: number) {
-  set(xyd, value);
+  write(xydAddr, value);
 }
 
 function setXYdReg(value: number, reg: number) {
-  set(xyd, value);
+  write(xydAddr, value);
   regs[reg] = value;
 }
 

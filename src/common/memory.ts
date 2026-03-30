@@ -1,48 +1,74 @@
-import { createInfo, infos, setDirect } from './arrows';
+import { type ArrowCtx, getDirect, setDirect } from './arrows.ts';
 
-const SCREEN_MIN_ADDR = 0x4000;
-const ATTRIBUTES_MIN_ADDR = 0x5800;
-const ATTRIBUTES_AFTER_ADDR = 0x5B00;
+// This is hot code. The repeated code is intentional.
+// Any attempt to extract common parts leads to slowdown.
 
-export function initMemory(chunkX: number, chunkY: number) {
-  const memoryX = chunkX - 256;
-  const memoryY = chunkY + 16;
+export const mems: number[] = [];
+export const memsCtx: ArrowCtx[] = [];
+const DIRTY_BITMAP_SIZE = 2048; // 0x10000 >> 5
+const dirtyBitmap = new Uint32Array(DIRTY_BITMAP_SIZE);
 
-  for (let addr = 0; addr <= 0xFFFF; addr++)
-    initAddrInfo(addr, memoryX, memoryY);
+let ramMinAddr = 0x4000;
+export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
 
-  infos[0x10000] = infos[0]; // Mirror 0x0000 address for easier access to byte pairs
+export function read16(addr: number): number {
+  const low = mems[addr];
+  const high = mems[addr + 1];
+  return (high << 8) | low;
 }
 
-function initAddrInfo(addr: number, memoryX: number, memoryY: number) {
-  const xShift = ((addr & 0xC000) >> 14) * 272;
-  let x, y: number;
-
-  if (addr >= SCREEN_MIN_ADDR && addr < ATTRIBUTES_MIN_ADDR) {
-    // Pretty screen
-    x = memoryX + (addr & 0x1F) * 8 + xShift;
-    y = memoryY + ((addr & 0x1800) >> 5) + ((addr & 0x0700) >> 8) + ((addr & 0xE0) >> 2);
-  }
-  else if (addr >= ATTRIBUTES_MIN_ADDR && addr < ATTRIBUTES_AFTER_ADDR) {
-    // Line by line:
-    x = memoryX + (addr & 0x1F) * 8 + xShift;
-    y = memoryY + ((addr & 0x3FFF) >> 5);
-
-    y += 16;
-  }
-  else {
-    // 8x8 blocks:
-    x = memoryX + (addr & 0xF8) + xShift;
-    y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
-
-    if (addr >= ATTRIBUTES_MIN_ADDR && addr < 0x8000)
-      y += 16;
-  }
-
-  infos[addr] = createInfo(x, y);
+export function read(addr: number): number {
+  return mems[addr];
 }
 
-export function deployMemoryBlock(data: number[], startAddr: number) {
-  for (let i = 0; i < data.length; i++)
-    setDirect(startAddr + i, data[i]);
+export function write16(addr: number, value: number) {
+  const low = value & 0xFF;
+  const high = value >> 8;
+  write88(addr, low, high);
+}
+
+export function write88(addr: number, low: number, high: number) {
+  if (addr < ramMinAddr) return;
+  if (mems[addr] !== low) {
+    mems[addr] = low;
+    dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
+  }
+  if (addr === 0xFFFF) return;
+  if (mems[++addr] !== high) {
+    mems[addr] = high;
+    dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
+  }
+}
+
+export function write(addr: number, value: number) {
+  if (addr < ramMinAddr) return;
+  if (mems[addr] !== value) {
+    mems[addr] = value;
+    dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
+  }
+}
+
+export function fetchMemory() {
+  for (let addr = 0; addr < memsCtx.length; addr++) {
+    const ctx = memsCtx[addr];
+    mems[addr] = getDirect(ctx);
+  }
+}
+
+export function commitMemory() {
+  for (let i = ramMinAddr >> 5; i < DIRTY_BITMAP_SIZE; i++) {
+    let bits = dirtyBitmap[i];
+    if (bits === 0) continue;
+    dirtyBitmap[i] = 0;
+    const base = i << 5;
+    while (bits) {
+      const bit = bits & -bits;
+      const offset = 31 - Math.clz32(bit);
+      const addr = base + offset;
+      const value = mems[addr];
+      const ctx = memsCtx[addr];
+      setDirect(ctx, value);
+      bits ^= bit;
+    }
+  }
 }

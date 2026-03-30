@@ -1,33 +1,33 @@
-import { get, get16 } from '../common/utils';
+import { read, read16 } from '../common/memory';
 import { BIT7 } from './flags';
-import { getReg16, HL, HLXY, PC, R, regs, setReg16, setReg88 } from './registers';
+import { get16, HL, HLXY, PC, R, regs, set16, set88 } from './registers';
 
 export function nop() { };
 
-export function addPC(add: number) {
-  const pc = getReg16(PC);
-  setReg16(PC, (pc + add) & 0xFFFF);
+export function incPC(inc: number) {
+  const pc = get16(PC);
+  set16(PC, (pc + inc) & 0xFFFF);
 }
 
 export function next16(): number {
-  const pc = getReg16(PC);
-  setReg16(PC, (pc + 2) & 0xFFFF);
-  const value = get16(pc);
+  const pc = get16(PC);
+  set16(PC, (pc + 2) & 0xFFFF);
+  const value = read16(pc);
   return value;
 }
 
 export function next(): number {
-  const pc = getReg16(PC);
-  setReg16(PC, (pc + 1) & 0xFFFF);
-  const value = get(pc);
+  const pc = get16(PC);
+  set16(PC, (pc + 1) & 0xFFFF);
+  const value = read(pc);
   return value;
 }
 
 export function setPCNext16() {
-  const pc = getReg16(PC);
-  const valueLow = get(pc);
-  const valueHigh = get(pc + 1);
-  setReg88(PC, valueLow, valueHigh);
+  const pc = get16(PC);
+  const low = read(pc);
+  const high = read(pc + 1);
+  set88(PC, low, high);
 }
 
 export function refresh() {
@@ -38,7 +38,7 @@ export function refresh() {
 
 /** (IX+d/IY+d) */
 export function getXYd(): number {
-  const xy = getReg16(HLXY); // IX/IY
+  const xy = get16(HLXY); // IX/IY
   const rawD = next();
   const d = rawD >= 128 ? rawD - 256 : rawD; // -128...+127
   return (xy + d) & 0xFFFF;
@@ -46,7 +46,7 @@ export function getXYd(): number {
 
 /** (HL/IX+d/IY+d) */
 export function getHLXYd() {
-  let hlxyd = getReg16(HLXY);
+  let hlxyd = get16(HLXY);
 
   if (HLXY !== HL) {
     const rawD = next();

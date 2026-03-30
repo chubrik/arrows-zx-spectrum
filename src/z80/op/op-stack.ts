@@ -1,65 +1,59 @@
-import { get, set16, set88 } from '../../common/utils';
-import { IFF1, iff2, packF, setIFF1, unpackF } from '../flags';
-import { A, getReg16, PC, PCh, PCl, regs, setReg16, setReg88, SP } from '../registers';
-
-/** RETI | RETN */
-export function RETI_RETN() {
-  pop16(PC);
-  setIFF1(iff2 ? IFF1 : 0);
-}
+import { read, write16, write88 } from '../../common/memory';
+import { packF, unpackF } from '../flags';
+import { A, get16, PC, PCh, PCl, regs, set16, set88, SP } from '../registers';
 
 export function call88(addrLow: number, addrHigh: number = 0) {
-  const pcLow = regs[PCl];
-  const pcHigh = regs[PCh];
-  const sp = getReg16(SP);
+  const pcl = regs[PCl];
+  const pch = regs[PCh];
+  const sp = get16(SP);
   const newSp = (sp - 2) & 0xFFFF;
-  setReg16(SP, newSp);
-  set88(newSp, pcLow, pcHigh);
-  setReg88(PC, addrLow, addrHigh);
+  set88(PC, addrLow, addrHigh);
+  set16(SP, newSp);
+  write88(newSp, pcl, pch);
 }
 
 export function callNext16() {
-  let pc = getReg16(PC);
-  const addrLow = get(pc++);
-  const addrHigh = get(pc++);
-  const sp = getReg16(SP);
+  let pc = get16(PC);
+  const newPcl = read(pc++);
+  const newPch = read(pc++);
+  const sp = get16(SP);
   const newSp = (sp - 2) & 0xFFFF;
-  setReg16(SP, newSp);
-  set16(newSp, pc & 0xFFFF);
-  setReg88(PC, addrLow, addrHigh);
+  set88(PC, newPcl, newPch);
+  set16(SP, newSp);
+  write16(newSp, pc & 0xFFFF);
 }
 
-export function push16(src: number) {
-  const valueLow = regs[src];
-  const valueHigh = regs[src + 1];
-  const sp = getReg16(SP);
+export function push16(reg: number) {
+  const rLow = regs[reg];
+  const rHigh = regs[reg + 1];
+  const sp = get16(SP);
   const newSp = (sp - 2) & 0xFFFF;
-  setReg16(SP, newSp);
-  set88(newSp, valueLow, valueHigh);
-}
-
-export function pop16(reg: number) {
-  let sp = getReg16(SP);
-  const valueLow = get(sp++);
-  const valueHigh = get(sp++);
-  setReg16(SP, sp & 0xFFFF);
-  setReg88(reg, valueLow, valueHigh);
+  set16(SP, newSp);
+  write88(newSp, rLow, rHigh);
 }
 
 export function pushAF() {
-  const fByte = packF();
-  const aVal = regs[A];
-  const sp = getReg16(SP);
+  const f = packF();
+  const a = regs[A];
+  const sp = get16(SP);
   const newSp = (sp - 2) & 0xFFFF;
-  setReg16(SP, newSp);
-  set88(newSp, fByte, aVal);
+  set16(SP, newSp);
+  write88(newSp, f, a);
+}
+
+export function pop16(reg: number) {
+  let sp = get16(SP);
+  const rLow = read(sp++);
+  const rHigh = read(sp++);
+  set16(SP, sp & 0xFFFF);
+  set88(reg, rLow, rHigh);
 }
 
 export function popAF() {
-  let sp = getReg16(SP);
-  const fByte = get(sp++);
-  const aVal = get(sp++);
-  setReg16(SP, sp & 0xFFFF);
-  unpackF(fByte);
-  regs[A] = aVal;
+  let sp = get16(SP);
+  const f = read(sp++);
+  const a = read(sp++);
+  set16(SP, sp & 0xFFFF);
+  unpackF(f);
+  regs[A] = a;
 }

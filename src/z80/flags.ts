@@ -12,7 +12,7 @@ export const FZ = BIT6; // Zero
 export const F5 = BIT5; // (undocumented)
 export const FH = BIT4; // Half-carry
 export const F3 = BIT3; // (undocumented)
-export const FO = BIT2; // Parity/Overflow
+export const FP = BIT2; // Parity/Overflow
 export const FN = BIT1; // Subtract
 export const FC = BIT0; // Carry
 
@@ -23,15 +23,7 @@ export const IFF1 = BIT2;
 export const HLT = BIT1;
 export const INT = BIT0;
 
-/** P: 0x04 if parity is even */
-export function flagP(value: number): number {
-  value ^= value >> 4;
-  value ^= value << 2;
-  value ^= value >> 1;
-  return ~value & FO;
-}
-
-export let fs = 0, fz = 0, f5 = 0, fh = 0, f3 = 0, fo = 0, fn = 0, fc = 0;
+export let fs = 0, fz = 0, f5 = 0, fh = 0, f3 = 0, fp = 0, fn = 0, fc = 0;
 export let im2 = 0, im1 = 0, iff2 = 0, iff1 = 0, hlt = 0, int = 0;
 
 export function setFS(v: number) { fs = v; }
@@ -39,9 +31,10 @@ export function setFZ(v: number) { fz = v; }
 export function setF5(v: number) { f5 = v; }
 export function setFH(v: number) { fh = v; }
 export function setF3(v: number) { f3 = v; }
-export function setFO(v: number) { fo = v; }
+export function setFP(v: number) { fp = v; }
 export function setFN(v: number) { fn = v; }
 export function setFC(v: number) { fc = v; }
+
 export function setIM2(v: number) { im2 = v; }
 export function setIM1(v: number) { im1 = v; }
 export function setIFF2(v: number) { iff2 = v; }
@@ -50,7 +43,7 @@ export function setHLT(v: number) { hlt = v; }
 export function setINT(v: number) { int = v; }
 
 export function packF(): number {
-  return fs | fz | f5 | fh | f3 | fo | fn | fc;
+  return fs | fz | f5 | fh | f3 | fp | fn | fc;
 }
 
 export function unpackF(byte: number) {
@@ -59,7 +52,7 @@ export function unpackF(byte: number) {
   f5 = byte & F5;
   fh = byte & FH;
   f3 = byte & F3;
-  fo = byte & FO;
+  fp = byte & FP;
   fn = byte & FN;
   fc = byte & FC;
 }
@@ -77,6 +70,12 @@ export function unpackSYS(byte: number) {
   int = byte & INT;
 }
 
+/** Set S, Z, 5, 3, P flags from 8-bit result */
+export function setFSZ53P(value: number) {
+  setFSZ53(value);
+  calcFP(value);
+}
+
 /** Set S, Z, 5, 3 flags from 8-bit result */
 export function setFSZ53(value: number) {
   fs = value & FS;
@@ -85,8 +84,9 @@ export function setFSZ53(value: number) {
   f3 = value & F3;
 }
 
-/** Set S, Z, 5, 3, P flags from 8-bit result */
-export function setFSZ53P(value: number) {
-  setFSZ53(value);
-  fo = flagP(value);
+export function calcFP(value: number) {
+  value ^= value >> 4;
+  value ^= value << 2;
+  value ^= value >> 1;
+  fp = ~value & FP;
 }

@@ -1,5 +1,7 @@
+import { ArrowCtx } from '../common/arrows';
+
 export const regs: number[] = [];
-export const REG_BASE = 0x10001; // Arrows address of register F
+export const regsCtx: ArrowCtx[] = [];
 
 export const F = 0;
 export const A = 1;
@@ -28,6 +30,7 @@ export const PCh = 23;
 export const I = 24;
 export const R = 25;
 export const SYS = 26;
+
 export const REG_COUNT = 27;
 
 export let HXY = H; // H / IXh / IYh
@@ -47,18 +50,19 @@ let wzl = 0;
 export function getWZh(): number { return wzh; }
 export function setWZ(value: number) { wzl = value & 0xFF; wzh = value >> 8; }
 
-export function getReg16(r: number): number {
-  return (regs[r + 1] << 8) | regs[r];
+export function get16(reg: number): number {
+  return (regs[reg + 1] << 8) | regs[reg];
 }
 
-export function setReg16(r: number, value: number) {
-  regs[r] = value & 0xFF;
-  regs[r + 1] = value >> 8;
+export function set16(reg: number, value: number) {
+  regs[reg] = value & 0xFF;
+  regs[reg + 1] = value >> 8;
 }
 
-export function setReg88(r: number, valueLow: number, valueHigh: number) {
-  regs[r] = valueLow;
-  regs[r + 1] = valueHigh;
+export function set88(reg: number, valueLow: number, valueHigh: number) {
+  regs[reg] = valueLow;
+  regs[reg + 1] = valueHigh;
 }
 
 export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY, PCl as PC, SPl as SP };
+

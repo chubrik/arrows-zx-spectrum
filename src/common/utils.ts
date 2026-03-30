@@ -1,86 +1,63 @@
-import { packF, packSYS, unpackF, unpackSYS } from '../z80/flags.ts';
-import { F, REG_BASE, REG_COUNT, regs, SYS } from '../z80/registers.ts';
-import { getDirect, infos, setDirect } from './arrows.ts';
+import { createCtx, setDirect } from './arrows.ts';
+import { memsCtx } from './memory.ts';
 
-// This is hot code. The repeated code is intentional.
-// Any attempt to extract common parts leads to slowdown.
-
-export const values: number[] = [];
-const dirtyBitmap = new Uint32Array(2048); // 0x0000...0xFFFF
-
-let ramMinAddr = 0x4000;
-export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
+const SCREEN_MIN_ADDR = 0x4000;
+const ATTRIBUTES_MIN_ADDR = 0x5800;
+const ATTRIBUTES_AFTER_ADDR = 0x5B00;
 
 export function check(condition: boolean, message: string = 'Check failed') {
   if (!condition)
     throw new Error(message);
 }
 
-export function get16(addr: number): number {
-  const valueLow = values[addr];
-  const valueHigh = values[addr + 1];
-  return (valueHigh << 8) | valueLow;
+export function initMemory(chunkX: number, chunkY: number) {
+  const memoryX = chunkX - 256;
+  const memoryY = chunkY + 16;
+
+  for (let addr = 0; addr <= 0xFFFF; addr++)
+    initAddrCtx(addr, memoryX, memoryY);
+
+  memsCtx[0x10000] = memsCtx[0]; // Mirror 0x0000 address for easier access to byte pairs
 }
 
-export function get(addr: number): number {
-  return values[addr];
-}
+function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
+  const xShift = ((addr & 0xC000) >> 14) * 272;
+  let x, y: number;
 
-export function set16(addr: number, value: number) {
-  const valueLow = value & 0xFF;
-  const valueHigh = value >> 8;
-  set88(addr, valueLow, valueHigh);
-}
-
-export function set88(addr: number, valueLow: number, valueHigh: number) {
-  if (addr < ramMinAddr) return;
-  if (values[addr] !== valueLow) {
-    values[addr] = valueLow;
-    dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
+  if (addr >= SCREEN_MIN_ADDR && addr < ATTRIBUTES_MIN_ADDR) {
+    // Pretty screen
+    x = memoryX + (addr & 0x1F) * 8 + xShift;
+    y = memoryY + ((addr & 0x1800) >> 5) + ((addr & 0x0700) >> 8) + ((addr & 0xE0) >> 2);
   }
-  if (addr === 0xFFFF) return;
-  if (values[++addr] !== valueHigh) {
-    values[addr] = valueHigh;
-    dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
+  else if (addr >= ATTRIBUTES_MIN_ADDR && addr < ATTRIBUTES_AFTER_ADDR) {
+    // Line by line:
+    x = memoryX + (addr & 0x1F) * 8 + xShift;
+    y = memoryY + ((addr & 0x3FFF) >> 5);
+
+    y += 16;
+  }
+  else {
+    // 8x8 blocks:
+    x = memoryX + (addr & 0xF8) + xShift;
+    y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
+
+    if (addr >= ATTRIBUTES_MIN_ADDR && addr < 0x8000)
+      y += 16;
+  }
+
+  memsCtx[addr] = createCtx(x, y);
+}
+
+export function deployMemoryBlock(beginAddr: number, data: number[]) {
+  for (let i = 0; i < data.length; i++) {
+    const ctx = memsCtx[beginAddr + i];
+    setDirect(ctx, data[i]);
   }
 }
 
-export function set(addr: number, value: number) {
-  if (addr < ramMinAddr) return;
-  if (values[addr] === value) return;
-  values[addr] = value;
-  dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
-}
-
-export function fetchAll() {
-  for (let addr = 0; addr < infos.length; addr++)
-    values[addr] = getDirect(addr);
-
-  for (let i = 0; i < REG_COUNT; i++)
-    regs[i] = getDirect(REG_BASE + i);
-
-  unpackF(regs[F]);
-  unpackSYS(regs[SYS]);
-}
-
-export function commitUpdated() {
-  regs[F] = packF();
-  regs[SYS] = packSYS();
-
-  for (let i = 0; i < REG_COUNT; i++)
-    setDirect(REG_BASE + i, regs[i]);
-
-  for (let i = ramMinAddr >> 5; i < 2048; i++) {
-    let bits = dirtyBitmap[i];
-    if (bits === 0) continue;
-    dirtyBitmap[i] = 0;
-    const base = i << 5;
-    while (bits) {
-      const bit = bits & -bits;
-      const offset = 31 - Math.clz32(bit);
-      const addr = base + offset;
-      setDirect(addr, values[addr]);
-      bits ^= bit;
-    }
+export function resetMemoryBlock(firstAddr: number, lastAddr: number) {
+  for (let addr = firstAddr; addr <= lastAddr; addr++) {
+    const ctx = memsCtx[addr];
+    setDirect(ctx, 0);
   }
 }

@@ -1,8 +1,8 @@
-import { get } from '../common/utils';
+import { read } from '../common/memory';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { call88 } from './op/op-stack';
 import { I, regs } from './registers';
-import { addPC, refresh } from './utils';
+import { incPC, refresh } from './utils';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = 0xFF;
@@ -10,19 +10,18 @@ const IM2_BUS_VALUE = 0xFF;
 export function interrupt() {
   if (!(iff1 && int)) return;
 
-  const wasHlt = hlt;
+  if (hlt) incPC(1);
   setINT(0);
   setIFF1(0);
   setIFF2(0);
   setHLT(0);
-  if (wasHlt) addPC(1);
-  
+
   refresh();
 
   if (im2) {
     const vector = (regs[I] << 8) | IM2_BUS_VALUE;
-    const addrLow = get(vector);
-    const addrHigh = get(vector + 1);
+    const addrLow = read(vector);
+    const addrHigh = read(vector + 1);
     call88(addrLow, addrHigh);
   }
   else {
