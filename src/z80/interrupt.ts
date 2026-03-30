@@ -1,18 +1,13 @@
 import { get } from '../common/utils';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { call88 } from './op/op-stack';
-import { eiDelay, I, setEIDelay } from './registers';
+import { I } from './registers';
 import { addPC, refresh } from './utils';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = 0xFF;
 
 export function interrupt() {
-  if (eiDelay) {
-    setEIDelay(0);
-    return;
-  };
-
   if (!(iff1 && int)) return;
 
   const wasHlt = hlt;
@@ -21,6 +16,7 @@ export function interrupt() {
   setIFF2(0);
   setHLT(0);
   if (wasHlt) addPC(1);
+  
   refresh();
 
   if (im2) {
