@@ -1,4 +1,4 @@
-import { get, get16, set } from '../../common/utils';
+import { get, get16, set, setReg } from '../../common/utils';
 import { packF, unpackF } from '../flags';
 import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, Fa, H, Ha, HXY, L, La, LXY, SP } from '../registers';
 
@@ -8,10 +8,10 @@ export function EX_AF_AF() {
   const f1 = packF();
   const a2 = get(Aa);
   const f2 = get(Fa);
-  set(A, a2);
+  setReg(A, a2);
   unpackF(f2);
-  set(Aa, a1);
-  set(Fa, f1);
+  setReg(Aa, a1);
+  setReg(Fa, f1);
 }
 
 /** EXX */
@@ -28,18 +28,18 @@ export function EXX() {
   const e2 = get(Ea);
   const h2 = get(Ha);
   const l2 = get(La);
-  set(B, b2);
-  set(C, c2);
-  set(D, d2);
-  set(E, e2);
-  set(H, h2);
-  set(L, l2);
-  set(Ba, b1);
-  set(Ca, c1);
-  set(Da, d1);
-  set(Ea, e1);
-  set(Ha, h1);
-  set(La, l1);
+  setReg(B, b2);
+  setReg(C, c2);
+  setReg(D, d2);
+  setReg(E, e2);
+  setReg(H, h2);
+  setReg(L, l2);
+  setReg(Ba, b1);
+  setReg(Ca, c1);
+  setReg(Da, d1);
+  setReg(Ea, e1);
+  setReg(Ha, h1);
+  setReg(La, l1);
 }
 
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
@@ -51,8 +51,8 @@ export function EX_sp_HL() {
   const hxy = get(HXY);
   set(sp, lxy);
   set(sp + 1, hxy);
-  set(LXY, stackLow);
-  set(HXY, stackHigh);
+  setReg(LXY, stackLow);
+  setReg(HXY, stackHigh);
 }
 
 /** EX DE,HL */
@@ -61,8 +61,8 @@ export function EX_DE_HL() {
   const e1 = get(E);
   const h1 = get(H);
   const l1 = get(L);
-  set(D, h1);
-  set(E, l1);
-  set(H, d1);
-  set(L, e1);
+  setReg(D, h1);
+  setReg(E, l1);
+  setReg(H, d1);
+  setReg(L, e1);
 }

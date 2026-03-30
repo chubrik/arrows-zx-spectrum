@@ -1,5 +1,5 @@
 import { readPort, writePort } from '../../common/ports';
-import { get, get16, set, set16 } from '../../common/utils';
+import { get, get16, set, setReg, setReg16 } from '../../common/utils';
 import { F3, F5, FC, FH, flagP, FN, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFO, setFS, setFSZ53P, setFZ } from '../flags';
 import { A, B, BC, C, HL } from '../registers';
 import { addPC, next } from '../utils';
@@ -11,7 +11,7 @@ export function IN_A_n() {
   const a = get(A);
   const n = next();
   const ioAddr = (a << 8) | n;
-  set(A, readPort(ioAddr));
+  setReg(A, readPort(ioAddr));
 }
 
 /** OUT (n),A */
@@ -26,7 +26,7 @@ export function OUT_n_A() {
 export function IN_c(reg: number) {
   const ioAddr = get16(BC);
   const value = readPort(ioAddr);
-  if (reg) set(reg, value);
+  if (reg) setReg(reg, value);
   
   setFSZ53P(value);
   setFH(0);
@@ -48,8 +48,8 @@ export function inx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   const memAddr = get16(HL);
   const value = readPort(ioAddr);
   set(memAddr, value);
-  set(B, count);
-  set16(HL, (memAddr + increment) & 0xFFFF);
+  setReg(B, count);
+  setReg16(HL, (memAddr + increment) & 0xFFFF);
 
   const k = value + ((c + increment) & 0xFF);
   const kOverflow = k > 255;
@@ -74,9 +74,9 @@ export function outx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   const memAddr = get16(HL);
   const value = get(memAddr);
   writePort(ioAddr, value);
-  set(B, count);
+  setReg(B, count);
   const newHL = (memAddr + increment) & 0xFFFF;
-  set16(HL, newHL);
+  setReg16(HL, newHL);
 
   const k = value + (newHL & 0xFF);
   const kOverflow = k > 255;

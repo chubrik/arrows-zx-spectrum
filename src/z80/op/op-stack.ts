@@ -1,4 +1,4 @@
-import { get, get16, set, set16, set88 } from '../../common/utils';
+import { get, get16, set16, set88, setReg, setReg16, setReg88 } from '../../common/utils';
 import { IFF1, iff2, packF, setIFF1, unpackF } from '../flags';
 import { A, PC, PCh, PCl, SP } from '../registers';
 
@@ -13,9 +13,9 @@ export function call88(addrLow: number, addrHigh: number = 0) {
   const pcHigh = get(PCh);
   const sp = get16(SP);
   const newSp = (sp - 2) & 0xFFFF;
-  set16(SP, newSp);
+  setReg16(SP, newSp);
   set88(newSp, pcLow, pcHigh);
-  set88(PC, addrLow, addrHigh);
+  setReg88(PC, addrLow, addrHigh);
 }
 
 export function callNext16() {
@@ -24,9 +24,9 @@ export function callNext16() {
   const addrHigh = get(pc++);
   const sp = get16(SP);
   const newSp = (sp - 2) & 0xFFFF;
-  set16(SP, newSp);
+  setReg16(SP, newSp);
   set16(newSp, pc & 0xFFFF);
-  set88(PC, addrLow, addrHigh);
+  setReg88(PC, addrLow, addrHigh);
 }
 
 export function push16(src: number) {
@@ -34,16 +34,16 @@ export function push16(src: number) {
   const valueHigh = get(src + 1);
   const sp = get16(SP);
   const newSp = (sp - 2) & 0xFFFF;
-  set16(SP, newSp);
+  setReg16(SP, newSp);
   set88(newSp, valueLow, valueHigh);
 }
 
-export function pop16(dest: number) {
+export function pop16(reg: number) {
   let sp = get16(SP);
   const valueLow = get(sp++);
   const valueHigh = get(sp++);
-  set16(SP, sp & 0xFFFF);
-  set88(dest, valueLow, valueHigh);
+  setReg16(SP, sp & 0xFFFF);
+  setReg88(reg, valueLow, valueHigh);
 }
 
 export function pushAF() {
@@ -51,7 +51,7 @@ export function pushAF() {
   const aVal = get(A);
   const sp = get16(SP);
   const newSp = (sp - 2) & 0xFFFF;
-  set16(SP, newSp);
+  setReg16(SP, newSp);
   set88(newSp, fByte, aVal);
 }
 
@@ -59,7 +59,7 @@ export function popAF() {
   let sp = get16(SP);
   const fByte = get(sp++);
   const aVal = get(sp++);
-  set16(SP, sp & 0xFFFF);
+  setReg16(SP, sp & 0xFFFF);
   unpackF(fByte);
-  set(A, aVal);
+  setReg(A, aVal);
 }

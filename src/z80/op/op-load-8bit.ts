@@ -1,4 +1,4 @@
-import { get, set } from '../../common/utils';
+import { get, setReg } from '../../common/utils';
 import { FO, iff2, setFH, setFN, setFO, setFSZ53 } from '../flags';
 import { A, I, R } from '../registers';
 
@@ -15,7 +15,7 @@ export function LD_A_R() {
 }
 
 function ld_A_IR(value: number) {
-  set(A, value);
+  setReg(A, value);
   
   setFSZ53(value);
   setFO(iff2 ? FO : 0);

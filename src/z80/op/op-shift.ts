@@ -1,4 +1,4 @@
-import { get, get16, set } from '../../common/utils';
+import { get, get16, set, setReg } from '../../common/utils';
 import { BIT7, F3, F5, FC, fc, setF3, setF5, setFC, setFH, setFN, setFSZ53P } from '../flags';
 import { A, HL } from '../registers';
 
@@ -7,7 +7,7 @@ export function RLCA() {
   const a = get(A);
   const carry = (a >> 7) & FC;
   const result = ((a << 1) | carry) & 0xFF;
-  set(A, result);
+  setReg(A, result);
   setFRotA(result, carry);
 }
 
@@ -16,7 +16,7 @@ export function RRCA() {
   const a = get(A);
   const carry = a & FC;
   const result = ((a >> 1) | (carry << 7)) & 0xFF;
-  set(A, result);
+  setReg(A, result);
   setFRotA(result, carry);
 }
 
@@ -26,7 +26,7 @@ export function RLA() {
   const oldCarry = fc;
   const carry = (a >> 7) & FC;
   const result = ((a << 1) | oldCarry) & 0xFF;
-  set(A, result);
+  setReg(A, result);
   setFRotA(result, carry);
 }
 
@@ -36,7 +36,7 @@ export function RRA() {
   const oldCarry = fc;
   const carry = a & FC;
   const result = ((a >> 1) | (oldCarry << 7)) & 0xFF;
-  set(A, result);
+  setReg(A, result);
   setFRotA(result, carry);
 }
 
@@ -55,7 +55,7 @@ export function RLD() {
   const mem = get(addr);
   const resultA = (a & 0xF0) | (mem >> 4);
   const resultMem = ((mem << 4) | (a & 0x0F)) & 0xFF;
-  set(A, resultA);
+  setReg(A, resultA);
   set(addr, resultMem);
 
   setFSZ53P(resultA);
@@ -70,7 +70,7 @@ export function RRD() {
   const mem = get(addr);
   const resultA = (a & 0xF0) | (mem & 0x0F);
   const resultMem = ((a << 4) | (mem >> 4)) & 0xFF;
-  set(A, resultA);
+  setReg(A, resultA);
   set(addr, resultMem);
   
   setFSZ53P(resultA);

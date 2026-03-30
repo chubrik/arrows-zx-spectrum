@@ -1,4 +1,4 @@
-import { get, get16, set, set16 } from '../../common/utils';
+import { get, get16, set, setReg16 } from '../../common/utils';
 import { F3, FH, FN, FO, FS, FZ, setF3, setF5, setFH, setFN, setFO, setFS, setFZ } from '../flags';
 import { A, BC, DE, HLXY } from '../registers';
 import { addPC } from '../utils';
@@ -12,9 +12,9 @@ export function ldx(increment: 1 | -1, repeat: 0 | 1 = 0) {
 
   const newCount = (count - 1) & 0xFFFF;
   set(destAddr, value);
-  set16(BC, newCount);
-  set16(DE, (destAddr + increment) & 0xFFFF);
-  set16(HLXY, (srcAddr + increment) & 0xFFFF);
+  setReg16(BC, newCount);
+  setReg16(DE, (destAddr + increment) & 0xFFFF);
+  setReg16(HLXY, (srcAddr + increment) & 0xFFFF);
 
   const n = (a + value) & 0xFF;
   setF5((n & 0x02) << 4);
@@ -35,8 +35,8 @@ export function cpx(increment: 1 | -1, repeat: 0 | 1 = 0) {
 
   const newCount = (count - 1) & 0xFFFF;
   const diff = (a - value) & 0xFF;
-  set16(BC, newCount);
-  set16(HLXY, (srcAddr + increment) & 0xFFFF);
+  setReg16(BC, newCount);
+  setReg16(HLXY, (srcAddr + increment) & 0xFFFF);
 
   const halfCarry = (a ^ value ^ diff) & FH;
   const n = (diff - (halfCarry ? 1 : 0)) & 0xFF;

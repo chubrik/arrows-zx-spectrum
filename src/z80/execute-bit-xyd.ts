@@ -1,4 +1,4 @@
-import { get, set } from '../common/utils';
+import { get, set, setReg } from '../common/utils';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
 import { BIT_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
@@ -26,7 +26,7 @@ function setXYd(value: number) {
 
 function setXYdReg(value: number, reg: number) {
   set(xyd, value);
-  set(reg, value);
+  setReg(reg, value);
 }
 
 const opsBitXY: (() => void)[] = [

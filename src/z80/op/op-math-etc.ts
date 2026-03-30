@@ -1,4 +1,4 @@
-import { get, set } from '../../common/utils';
+import { get, setReg } from '../../common/utils';
 import { BIT7, F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FO, setF3, setF5, setFC, setFH, setFN, setFO, setFSZ53, setFSZ53P } from '../flags';
 import { A } from '../registers';
 
@@ -11,7 +11,7 @@ export function DAA() {
   if (fh || (a & 0x0F) > 9) correction |= 0x06;
   if (fc || a > 0x99) { correction |= 0x60; setFC(FC); }
   a = (wasN ? a - correction : a + correction) & 0xFF;
-  set(A, a);
+  setReg(A, a);
 
   setFSZ53P(a);
   setFH((origA ^ correction ^ a) & FH);
@@ -20,7 +20,7 @@ export function DAA() {
 /** CPL */
 export function CPL() {
   const a = get(A) ^ 0xFF;
-  set(A, a);
+  setReg(A, a);
 
   setF5(a & F5);
   setF3(a & F3);
@@ -55,7 +55,7 @@ export function SCF() {
 export function NEG() {
   const a = get(A);
   const result = -a & 0xFF;
-  set(A, result);
+  setReg(A, result);
 
   setFSZ53(result);
   setFH((a ^ result) & FH);
