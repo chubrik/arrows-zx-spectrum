@@ -1,13 +1,13 @@
-import { get, get16, set, setReg16 } from '../../common/utils';
+import { get, set } from '../../common/utils';
 import { F3, FH, FN, FO, FS, FZ, setF3, setF5, setFH, setFN, setFO, setFS, setFZ } from '../flags';
-import { A, BC, DE, HLXY } from '../registers';
+import { A, BC, DE, getReg16, HLXY, regs, setReg16 } from '../registers';
 import { addPC } from '../utils';
 
 export function ldx(increment: 1 | -1, repeat: 0 | 1 = 0) {
-  const a = get(A);
-  const count = get16(BC);
-  const destAddr = get16(DE);
-  const srcAddr = get16(HLXY);
+  const a = regs[A];
+  const count = getReg16(BC);
+  const destAddr = getReg16(DE);
+  const srcAddr = getReg16(HLXY);
   const value = get(srcAddr);
 
   const newCount = (count - 1) & 0xFFFF;
@@ -28,9 +28,9 @@ export function ldx(increment: 1 | -1, repeat: 0 | 1 = 0) {
 }
 
 export function cpx(increment: 1 | -1, repeat: 0 | 1 = 0) {
-  const a = get(A);
-  const count = get16(BC);
-  const srcAddr = get16(HLXY);
+  const a = regs[A];
+  const count = getReg16(BC);
+  const srcAddr = getReg16(HLXY);
   const value = get(srcAddr);
 
   const newCount = (count - 1) & 0xFFFF;

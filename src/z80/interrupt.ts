@@ -1,7 +1,7 @@
 import { get } from '../common/utils';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { call88 } from './op/op-stack';
-import { I } from './registers';
+import { I, regs } from './registers';
 import { addPC, refresh } from './utils';
 
 const IM01_VECTOR = 0x0038;
@@ -20,7 +20,7 @@ export function interrupt() {
   refresh();
 
   if (im2) {
-    const vector = (get(I) << 8) | IM2_BUS_VALUE;
+    const vector = (regs[I] << 8) | IM2_BUS_VALUE;
     const addrLow = get(vector);
     const addrHigh = get(vector + 1);
     call88(addrLow, addrHigh);

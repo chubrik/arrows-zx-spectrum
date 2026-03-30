@@ -1,42 +1,42 @@
-import { get, get16, set, setReg } from '../../common/utils';
+import { get, set } from '../../common/utils';
 import { BIT7, F3, F5, FC, fc, setF3, setF5, setFC, setFH, setFN, setFSZ53P } from '../flags';
-import { A, HL } from '../registers';
+import { A, getReg16, HL, regs } from '../registers';
 
 /** RLCA */
 export function RLCA() {
-  const a = get(A);
+  const a = regs[A];
   const carry = (a >> 7) & FC;
   const result = ((a << 1) | carry) & 0xFF;
-  setReg(A, result);
+  regs[A] = result;
   setFRotA(result, carry);
 }
 
 /** RRCA */
 export function RRCA() {
-  const a = get(A);
+  const a = regs[A];
   const carry = a & FC;
   const result = ((a >> 1) | (carry << 7)) & 0xFF;
-  setReg(A, result);
+  regs[A] = result;
   setFRotA(result, carry);
 }
 
 /** RLA */
 export function RLA() {
-  const a = get(A);
+  const a = regs[A];
   const oldCarry = fc;
   const carry = (a >> 7) & FC;
   const result = ((a << 1) | oldCarry) & 0xFF;
-  setReg(A, result);
+  regs[A] = result;
   setFRotA(result, carry);
 }
 
 /** RRA */
 export function RRA() {
-  const a = get(A);
+  const a = regs[A];
   const oldCarry = fc;
   const carry = a & FC;
   const result = ((a >> 1) | (oldCarry << 7)) & 0xFF;
-  setReg(A, result);
+  regs[A] = result;
   setFRotA(result, carry);
 }
 
@@ -50,12 +50,12 @@ function setFRotA(result: number, carry: number) {
 
 /** RLD */
 export function RLD() {
-  const a = get(A);
-  const addr = get16(HL);
+  const a = regs[A];
+  const addr = getReg16(HL);
   const mem = get(addr);
   const resultA = (a & 0xF0) | (mem >> 4);
   const resultMem = ((mem << 4) | (a & 0x0F)) & 0xFF;
-  setReg(A, resultA);
+  regs[A] = resultA;
   set(addr, resultMem);
 
   setFSZ53P(resultA);
@@ -65,14 +65,14 @@ export function RLD() {
 
 /** RRD */
 export function RRD() {
-  const a = get(A);
-  const addr = get16(HL);
+  const a = regs[A];
+  const addr = getReg16(HL);
   const mem = get(addr);
   const resultA = (a & 0xF0) | (mem & 0x0F);
   const resultMem = ((a << 4) | (mem >> 4)) & 0xFF;
-  setReg(A, resultA);
+  regs[A] = resultA;
   set(addr, resultMem);
-  
+
   setFSZ53P(resultA);
   setFH(0);
   setFN(0);

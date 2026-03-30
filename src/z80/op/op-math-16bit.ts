@@ -1,12 +1,12 @@
-import { get, get16, set88, setReg16, setReg88 } from '../../common/utils';
+import { get, set88 } from '../../common/utils';
 import { F3, F5, FC, fc, FH, FN, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFO, setFS, setFZ } from '../flags';
-import { HL, HLXY } from '../registers';
+import { getReg16, HL, HLXY, regs, setReg16, setReg88 } from '../registers';
 import { next16 } from '../utils';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
 export function addHLXY(SS: number) {
-  const hl = get16(HLXY);
-  const ss = get16(SS);
+  const hl = getReg16(HLXY);
+  const ss = getReg16(SS);
   const sum = hl + ss;
   const result = sum & 0xFFFF;
   setReg16(HLXY, result);
@@ -21,8 +21,8 @@ export function addHLXY(SS: number) {
 /** LD (nn),dd */
 export function LD_nn_dd(src: number) {
   const destAddr = next16();
-  const valueLow = get(src);
-  const valueHigh = get(src + 1);
+  const valueLow = regs[src];
+  const valueHigh = regs[src + 1];
   set88(destAddr, valueLow, valueHigh);
 }
 
@@ -36,8 +36,8 @@ export function LD_dd_nn(reg: number) {
 
 /** ADC HL,ss */
 export function ADC_HL(src: number) {
-  const hl = get16(HL);
-  const ss = get16(src);
+  const hl = getReg16(HL);
+  const ss = getReg16(src);
   const sum = hl + ss + fc;
   const result = sum & 0xFFFF;
   setReg16(HL, result);
@@ -54,8 +54,8 @@ export function ADC_HL(src: number) {
 
 /** SBC HL,ss */
 export function SBC_HL(src: number) {
-  const hl = get16(HL);
-  const ss = get16(src);
+  const hl = getReg16(HL);
+  const ss = getReg16(src);
   const diff = hl - ss - fc;
   const result = diff & 0xFFFF;
   setReg16(HL, result);
@@ -71,13 +71,13 @@ export function SBC_HL(src: number) {
 }
 
 export function incReg16(reg: number) {
-  const value = get16(reg);
+  const value = getReg16(reg);
   const result = (value + 1) & 0xFFFF;
   setReg16(reg, result);
 }
 
 export function decReg16(reg: number) {
-  const value = get16(reg);
+  const value = getReg16(reg);
   const result = (value - 1) & 0xFFFF;
   setReg16(reg, result);
 }

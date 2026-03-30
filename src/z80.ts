@@ -34,6 +34,8 @@ always(() => {
   for (let i = 0; i < opPerTick; i++) {
     opCount++;
     executeMain();
+
+    // Hack: we call interrupt only once per frame
     if (opCount < preFrame) continue;
 
     if (opCount === opPerFrame) {

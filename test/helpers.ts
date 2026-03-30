@@ -1,12 +1,12 @@
 import { setRamMinAddrForTest, values } from '../src/common/utils';
 import { executeMain } from '../src/z80/execute-main';
 import { HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, packF, setHLT, setIFF1, setIFF2, setIM1, setIM2, unpackF, unpackSYS } from '../src/z80/flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, setHLXY, setWZ, SPh, SPl } from '../src/z80/registers';
+import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, regs, setHLXY, setWZ, SPh, SPl } from '../src/z80/registers';
 
 export function setupCpu() {
   setRamMinAddrForTest(0);
   for (let i = 0; i <= 0xFFFF; i++) values[i] = 0;
-  for (let i = 0x10000; i <= 0x1001C; i++) values[i] = 0;
+  for (let i = 0; i < 32; i++) regs[i] = 0;
   unpackF(0);
   unpackSYS(0);
   setHLXY(HL);
@@ -33,29 +33,29 @@ export interface CpuState {
 }
 
 export function setState(state: CpuState) {
-  if (state.A !== undefined) values[A] = state.A;
-  if (state.F !== undefined) { values[F] = state.F; unpackF(state.F); }
-  if (state.B !== undefined) values[B] = state.B;
-  if (state.C !== undefined) values[C] = state.C;
-  if (state.D !== undefined) values[D] = state.D;
-  if (state.E !== undefined) values[E] = state.E;
-  if (state.H !== undefined) values[H] = state.H;
-  if (state.L !== undefined) values[L] = state.L;
-  if (state.Aa !== undefined) values[Aa] = state.Aa;
-  if (state.Fa !== undefined) values[Fa] = state.Fa;
-  if (state.Ba !== undefined) values[Ba] = state.Ba;
-  if (state.Ca !== undefined) values[Ca] = state.Ca;
-  if (state.Da !== undefined) values[Da] = state.Da;
-  if (state.Ea !== undefined) values[Ea] = state.Ea;
-  if (state.Ha !== undefined) values[Ha] = state.Ha;
-  if (state.La !== undefined) values[La] = state.La;
-  if (state.IX !== undefined) { values[IXl] = state.IX & 0xFF; values[IXh] = (state.IX >> 8) & 0xFF; }
-  if (state.IY !== undefined) { values[IYl] = state.IY & 0xFF; values[IYh] = (state.IY >> 8) & 0xFF; }
-  if (state.SP !== undefined) { values[SPl] = state.SP & 0xFF; values[SPh] = (state.SP >> 8) & 0xFF; }
-  if (state.PC !== undefined) { values[PCl] = state.PC & 0xFF; values[PCh] = (state.PC >> 8) & 0xFF; }
+  if (state.A !== undefined) regs[A] = state.A;
+  if (state.F !== undefined) { regs[F] = state.F; unpackF(state.F); }
+  if (state.B !== undefined) regs[B] = state.B;
+  if (state.C !== undefined) regs[C] = state.C;
+  if (state.D !== undefined) regs[D] = state.D;
+  if (state.E !== undefined) regs[E] = state.E;
+  if (state.H !== undefined) regs[H] = state.H;
+  if (state.L !== undefined) regs[L] = state.L;
+  if (state.Aa !== undefined) regs[Aa] = state.Aa;
+  if (state.Fa !== undefined) regs[Fa] = state.Fa;
+  if (state.Ba !== undefined) regs[Ba] = state.Ba;
+  if (state.Ca !== undefined) regs[Ca] = state.Ca;
+  if (state.Da !== undefined) regs[Da] = state.Da;
+  if (state.Ea !== undefined) regs[Ea] = state.Ea;
+  if (state.Ha !== undefined) regs[Ha] = state.Ha;
+  if (state.La !== undefined) regs[La] = state.La;
+  if (state.IX !== undefined) { regs[IXl] = state.IX & 0xFF; regs[IXh] = (state.IX >> 8) & 0xFF; }
+  if (state.IY !== undefined) { regs[IYl] = state.IY & 0xFF; regs[IYh] = (state.IY >> 8) & 0xFF; }
+  if (state.SP !== undefined) { regs[SPl] = state.SP & 0xFF; regs[SPh] = (state.SP >> 8) & 0xFF; }
+  if (state.PC !== undefined) { regs[PCl] = state.PC & 0xFF; regs[PCh] = (state.PC >> 8) & 0xFF; }
   if (state.WZ !== undefined) setWZ(state.WZ);
-  if (state.I !== undefined) values[I] = state.I;
-  if (state.R !== undefined) values[R] = state.R;
+  if (state.I !== undefined) regs[I] = state.I;
+  if (state.R !== undefined) regs[R] = state.R;
   if (state.IM !== undefined) {
     setIM1(state.IM === 1 ? IM1 : 0);
     setIM2(state.IM === 2 ? IM2 : 0);
@@ -72,28 +72,28 @@ export function setState(state: CpuState) {
 
 export function getState() {
   return {
-    A: values[A],
+    A: regs[A],
     F: packF(),
-    B: values[B],
-    C: values[C],
-    D: values[D],
-    E: values[E],
-    H: values[H],
-    L: values[L],
-    Aa: values[Aa],
-    Fa: values[Fa],
-    Ba: values[Ba],
-    Ca: values[Ca],
-    Da: values[Da],
-    Ea: values[Ea],
-    Ha: values[Ha],
-    La: values[La],
-    IX: (values[IXh] << 8) | values[IXl],
-    IY: (values[IYh] << 8) | values[IYl],
-    SP: (values[SPh] << 8) | values[SPl],
-    PC: (values[PCh] << 8) | values[PCl],
-    I: values[I],
-    R: values[R],
+    B: regs[B],
+    C: regs[C],
+    D: regs[D],
+    E: regs[E],
+    H: regs[H],
+    L: regs[L],
+    Aa: regs[Aa],
+    Fa: regs[Fa],
+    Ba: regs[Ba],
+    Ca: regs[Ca],
+    Da: regs[Da],
+    Ea: regs[Ea],
+    Ha: regs[Ha],
+    La: regs[La],
+    IX: (regs[IXh] << 8) | regs[IXl],
+    IY: (regs[IYh] << 8) | regs[IYl],
+    SP: (regs[SPh] << 8) | regs[SPl],
+    PC: (regs[PCh] << 8) | regs[PCl],
+    I: regs[I],
+    R: regs[R],
     IM: (im2 ? 2 : im1 ? 1 : 0) as 0 | 1 | 2,
     IFF1: (iff1 ? 1 : 0) as 0 | 1,
     IFF2: (iff2 ? 1 : 0) as 0 | 1,

@@ -1,5 +1,5 @@
 import { packF, packSYS, unpackF, unpackSYS } from '../z80/flags.ts';
-import { F, SYS } from '../z80/registers.ts';
+import { F, REG_BASE, REG_COUNT, regs, SYS } from '../z80/registers.ts';
 import { getDirect, infos, setDirect } from './arrows.ts';
 
 // This is hot code. The repeated code is intentional.
@@ -24,25 +24,6 @@ export function get16(addr: number): number {
 
 export function get(addr: number): number {
   return values[addr];
-}
-
-// Like set/set16/set88, but without ramMinAddr/0xFFFF guards.
-// Safe for register addresses (>= 0x10000).
-
-export function setReg16(addr: number, value: number) {
-  const valueLow = value & 0xFF;
-  const valueHigh = value >> 8;
-  values[addr] = valueLow;
-  values[++addr] = valueHigh;
-}
-
-export function setReg88(addr: number, valueLow: number, valueHigh: number) {
-  values[addr] = valueLow;
-  values[++addr] = valueHigh;
-}
-
-export function setReg(addr: number, value: number) {
-  values[addr] = value;
 }
 
 export function set16(addr: number, value: number) {
@@ -75,16 +56,19 @@ export function fetchAll() {
   for (let addr = 0; addr < infos.length; addr++)
     values[addr] = getDirect(addr);
 
-  unpackF(values[F]);
-  unpackSYS(values[SYS]);
+  for (let i = 0; i < REG_COUNT; i++)
+    regs[i] = getDirect(REG_BASE + i);
+
+  unpackF(regs[F]);
+  unpackSYS(regs[SYS]);
 }
 
 export function commitUpdated() {
-  values[F] = packF();
-  values[SYS] = packSYS();
+  regs[F] = packF();
+  regs[SYS] = packSYS();
 
-  for (let reg = F; reg <= SYS; reg++)
-    setDirect(reg, values[reg]);
+  for (let i = 0; i < REG_COUNT; i++)
+    setDirect(REG_BASE + i, regs[i]);
 
   for (let i = ramMinAddr >> 5; i < 2048; i++) {
     let bits = dirtyBitmap[i];

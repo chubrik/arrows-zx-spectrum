@@ -1,44 +1,44 @@
-import { get, get16, setReg, setReg16, setReg88 } from '../common/utils';
+import { get, get16 } from '../common/utils';
 import { BIT7 } from './flags';
-import { HL, HLXY, PC, R } from './registers';
+import { getReg16, HL, HLXY, PC, R, regs, setReg16, setReg88 } from './registers';
 
 export function nop() { };
 
 export function addPC(add: number) {
-  const pc = get16(PC);
+  const pc = getReg16(PC);
   setReg16(PC, (pc + add) & 0xFFFF);
 }
 
 export function next16(): number {
-  const pc = get16(PC);
+  const pc = getReg16(PC);
   setReg16(PC, (pc + 2) & 0xFFFF);
   const value = get16(pc);
   return value;
 }
 
 export function next(): number {
-  const pc = get16(PC);
+  const pc = getReg16(PC);
   setReg16(PC, (pc + 1) & 0xFFFF);
   const value = get(pc);
   return value;
 }
 
 export function setPCNext16() {
-  const pc = get16(PC);
+  const pc = getReg16(PC);
   const valueLow = get(pc);
   const valueHigh = get(pc + 1);
   setReg88(PC, valueLow, valueHigh);
 }
 
 export function refresh() {
-  const r = get(R);
+  const r = regs[R];
   const newR = (r & BIT7) | ((r + 1) & 0x7F);
-  setReg(R, newR);
+  regs[R] = newR;
 }
 
 /** (IX+d/IY+d) */
 export function getXYd(): number {
-  const xy = get16(HLXY); // IX/IY
+  const xy = getReg16(HLXY); // IX/IY
   const rawD = next();
   const d = rawD >= 128 ? rawD - 256 : rawD; // -128...+127
   return (xy + d) & 0xFFFF;
@@ -46,7 +46,7 @@ export function getXYd(): number {
 
 /** (HL/IX+d/IY+d) */
 export function getHLXYd() {
-  let hlxyd = get16(HLXY);
+  let hlxyd = getReg16(HLXY);
 
   if (HLXY !== HL) {
     const rawD = next();

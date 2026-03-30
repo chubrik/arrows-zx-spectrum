@@ -1,12 +1,12 @@
-import { get, set, setReg } from '../../common/utils';
+import { get, set } from '../../common/utils';
 import { BIT7, F3, F5, FC, FH, FN, FO, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFO, setFS, setFSZ53, setFSZ53P, setFZ } from '../flags';
-import { A } from '../registers';
+import { A, regs } from '../registers';
 
 /** INC r */
 export function incReg(reg: number) {
-  const value = get(reg);
+  const value = regs[reg];
   const result = (value + 1) & 0xFF;
-  setReg(reg, result);
+  regs[reg] = result;
 
   setFSZ53(result);
   setFH(!(result & 0x0F) ? FH : 0);
@@ -28,9 +28,9 @@ export function inc(addr: number) {
 
 /** DEC r */
 export function decReg(addr: number) {
-  const value = get(addr);
+  const value = regs[addr];
   const result = (value - 1) & 0xFF;
-  setReg(addr, result);
+  regs[addr] = result;
 
   setFSZ53(result);
   setFH(!(value & 0x0F) ? FH : 0);
@@ -51,10 +51,10 @@ export function dec(addr: number) {
 }
 
 export function add(operand: number, carry: number = 0) {
-  const a = get(A);
+  const a = regs[A];
   const sum = a + operand + carry;
   const result = sum & 0xFF;
-  setReg(A, result);
+  regs[A] = result;
 
   setFSZ53(result);
   setFH((a ^ operand ^ result) & FH);
@@ -64,10 +64,10 @@ export function add(operand: number, carry: number = 0) {
 }
 
 export function sub(operand: number, carry: number = 0) {
-  const a = get(A);
+  const a = regs[A];
   const diff = a - operand - carry;
   const result = diff & 0xFF;
-  setReg(A, result);
+  regs[A] = result;
 
   setFSZ53(result);
   setFH((a ^ operand ^ result) & FH);
@@ -77,7 +77,7 @@ export function sub(operand: number, carry: number = 0) {
 }
 
 export function cp(operand: number) {
-  const a = get(A);
+  const a = regs[A];
   const diff = a - operand;
   const result = diff & 0xFF;
 
@@ -92,8 +92,8 @@ export function cp(operand: number) {
 }
 
 export function logic(result: number, fH: number = 0) {
-  setReg(A, result);
-  
+  regs[A] = result;
+
   setFSZ53P(result);
   setFH(fH);
   setFN(0);

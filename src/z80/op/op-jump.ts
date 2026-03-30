@@ -1,12 +1,11 @@
-import { get, setReg } from '../../common/utils';
-import { B } from '../registers';
+import { B, regs } from '../registers';
 import { addPC, next } from '../utils';
 
 /** DJNZ e */
 export function DJNZ_e() {
-  const count = get(B);
+  const count = regs[B];
   const newCount = (count - 1) & 0xFF;
-  setReg(B, newCount);
+  regs[B] = newCount;
 
   if (newCount)
     JR_e();

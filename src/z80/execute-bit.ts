@@ -1,8 +1,8 @@
-import { get, get16, set, setReg } from '../common/utils';
+import { get, set } from '../common/utils';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
 import { BIT_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
-import { A, B, C, D, E, getWZh, H, HL, L } from './registers';
+import { A, B, C, D, E, getReg16, getWZh, H, HL, L, regs } from './registers';
 import { next, refresh } from './utils';
 
 /** Bit Instructions (CB) */
@@ -13,17 +13,17 @@ export function executeBit() {
 }
 
 function testBitReg(bit: number, reg: number) {
-  const value = get(reg);
+  const value = regs[reg];
   BIT_b_val(bit, value, value);
 }
 
 function testBit(bit: number) {
-  const addr = get16(HL);
+  const addr = getReg16(HL);
   BIT_b_val(bit, get(addr), getWZh());
 }
 
 function resBitReg(bit: number, reg: number) {
-  setReg(reg, get(reg) & bit);
+  regs[reg] = regs[reg] & bit;
 }
 
 function resBit(bit: number, addr: number) {
@@ -31,7 +31,7 @@ function resBit(bit: number, addr: number) {
 }
 
 function setBitReg(bit: number, reg: number) {
-  setReg(reg, get(reg) | bit);
+  regs[reg] = regs[reg] | bit;
 }
 
 function setBit(bit: number, addr: number) {
@@ -39,73 +39,73 @@ function setBit(bit: number, addr: number) {
 }
 
 const opsBit: (() => void)[] = [
-  /* 00 RLC B      */ () => setReg(B, RLC_val(get(B))),
-  /* 01 RLC C      */ () => setReg(C, RLC_val(get(C))),
-  /* 02 RLC D      */ () => setReg(D, RLC_val(get(D))),
-  /* 03 RLC E      */ () => setReg(E, RLC_val(get(E))),
-  /* 04 RLC H      */ () => setReg(H, RLC_val(get(H))),
-  /* 05 RLC L      */ () => setReg(L, RLC_val(get(L))),
-  /* 06 RLC (HL)   */ () => { const addr = get16(HL); set(addr, RLC_val(get(addr))); },
-  /* 07 RLC A      */ () => setReg(A, RLC_val(get(A))),
-  /* 08 RRC B      */ () => setReg(B, RRC_val(get(B))),
-  /* 09 RRC C      */ () => setReg(C, RRC_val(get(C))),
-  /* 0A RRC D      */ () => setReg(D, RRC_val(get(D))),
-  /* 0B RRC E      */ () => setReg(E, RRC_val(get(E))),
-  /* 0C RRC H      */ () => setReg(H, RRC_val(get(H))),
-  /* 0D RRC L      */ () => setReg(L, RRC_val(get(L))),
-  /* 0E RRC (HL)   */ () => { const addr = get16(HL); set(addr, RRC_val(get(addr))); },
-  /* 0F RRC A      */ () => setReg(A, RRC_val(get(A))),
+  /* 00 RLC B      */ () => regs[B] = RLC_val(regs[B]),
+  /* 01 RLC C      */ () => regs[C] = RLC_val(regs[C]),
+  /* 02 RLC D      */ () => regs[D] = RLC_val(regs[D]),
+  /* 03 RLC E      */ () => regs[E] = RLC_val(regs[E]),
+  /* 04 RLC H      */ () => regs[H] = RLC_val(regs[H]),
+  /* 05 RLC L      */ () => regs[L] = RLC_val(regs[L]),
+  /* 06 RLC (HL)   */ () => { const addr = getReg16(HL); set(addr, RLC_val(get(addr))); },
+  /* 07 RLC A      */ () => regs[A] = RLC_val(regs[A]),
+  /* 08 RRC B      */ () => regs[B] = RRC_val(regs[B]),
+  /* 09 RRC C      */ () => regs[C] = RRC_val(regs[C]),
+  /* 0A RRC D      */ () => regs[D] = RRC_val(regs[D]),
+  /* 0B RRC E      */ () => regs[E] = RRC_val(regs[E]),
+  /* 0C RRC H      */ () => regs[H] = RRC_val(regs[H]),
+  /* 0D RRC L      */ () => regs[L] = RRC_val(regs[L]),
+  /* 0E RRC (HL)   */ () => { const addr = getReg16(HL); set(addr, RRC_val(get(addr))); },
+  /* 0F RRC A      */ () => regs[A] = RRC_val(regs[A]),
 
-  /* 10 RL B       */ () => setReg(B, RL_val(get(B))),
-  /* 11 RL C       */ () => setReg(C, RL_val(get(C))),
-  /* 12 RL D       */ () => setReg(D, RL_val(get(D))),
-  /* 13 RL E       */ () => setReg(E, RL_val(get(E))),
-  /* 14 RL H       */ () => setReg(H, RL_val(get(H))),
-  /* 15 RL L       */ () => setReg(L, RL_val(get(L))),
-  /* 16 RL (HL)    */ () => { const addr = get16(HL); set(addr, RL_val(get(addr))); },
-  /* 17 RL A       */ () => setReg(A, RL_val(get(A))),
-  /* 18 RR B       */ () => setReg(B, RR_val(get(B))),
-  /* 19 RR C       */ () => setReg(C, RR_val(get(C))),
-  /* 1A RR D       */ () => setReg(D, RR_val(get(D))),
-  /* 1B RR E       */ () => setReg(E, RR_val(get(E))),
-  /* 1C RR H       */ () => setReg(H, RR_val(get(H))),
-  /* 1D RR L       */ () => setReg(L, RR_val(get(L))),
-  /* 1E RR (HL)    */ () => { const addr = get16(HL); set(addr, RR_val(get(addr))); },
-  /* 1F RR A       */ () => setReg(A, RR_val(get(A))),
+  /* 10 RL B       */ () => regs[B] = RL_val(regs[B]),
+  /* 11 RL C       */ () => regs[C] = RL_val(regs[C]),
+  /* 12 RL D       */ () => regs[D] = RL_val(regs[D]),
+  /* 13 RL E       */ () => regs[E] = RL_val(regs[E]),
+  /* 14 RL H       */ () => regs[H] = RL_val(regs[H]),
+  /* 15 RL L       */ () => regs[L] = RL_val(regs[L]),
+  /* 16 RL (HL)    */ () => { const addr = getReg16(HL); set(addr, RL_val(get(addr))); },
+  /* 17 RL A       */ () => regs[A] = RL_val(regs[A]),
+  /* 18 RR B       */ () => regs[B] = RR_val(regs[B]),
+  /* 19 RR C       */ () => regs[C] = RR_val(regs[C]),
+  /* 1A RR D       */ () => regs[D] = RR_val(regs[D]),
+  /* 1B RR E       */ () => regs[E] = RR_val(regs[E]),
+  /* 1C RR H       */ () => regs[H] = RR_val(regs[H]),
+  /* 1D RR L       */ () => regs[L] = RR_val(regs[L]),
+  /* 1E RR (HL)    */ () => { const addr = getReg16(HL); set(addr, RR_val(get(addr))); },
+  /* 1F RR A       */ () => regs[A] = RR_val(regs[A]),
 
-  /* 20 SLA B      */ () => setReg(B, SLA_val(get(B))),
-  /* 21 SLA C      */ () => setReg(C, SLA_val(get(C))),
-  /* 22 SLA D      */ () => setReg(D, SLA_val(get(D))),
-  /* 23 SLA E      */ () => setReg(E, SLA_val(get(E))),
-  /* 24 SLA H      */ () => setReg(H, SLA_val(get(H))),
-  /* 25 SLA L      */ () => setReg(L, SLA_val(get(L))),
-  /* 26 SLA (HL)   */ () => { const addr = get16(HL); set(addr, SLA_val(get(addr))); },
-  /* 27 SLA A      */ () => setReg(A, SLA_val(get(A))),
-  /* 28 SRA B      */ () => setReg(B, SRA_val(get(B))),
-  /* 29 SRA C      */ () => setReg(C, SRA_val(get(C))),
-  /* 2A SRA D      */ () => setReg(D, SRA_val(get(D))),
-  /* 2B SRA E      */ () => setReg(E, SRA_val(get(E))),
-  /* 2C SRA H      */ () => setReg(H, SRA_val(get(H))),
-  /* 2D SRA L      */ () => setReg(L, SRA_val(get(L))),
-  /* 2E SRA (HL)   */ () => { const addr = get16(HL); set(addr, SRA_val(get(addr))); },
-  /* 2F SRA A      */ () => setReg(A, SRA_val(get(A))),
+  /* 20 SLA B      */ () => regs[B] = SLA_val(regs[B]),
+  /* 21 SLA C      */ () => regs[C] = SLA_val(regs[C]),
+  /* 22 SLA D      */ () => regs[D] = SLA_val(regs[D]),
+  /* 23 SLA E      */ () => regs[E] = SLA_val(regs[E]),
+  /* 24 SLA H      */ () => regs[H] = SLA_val(regs[H]),
+  /* 25 SLA L      */ () => regs[L] = SLA_val(regs[L]),
+  /* 26 SLA (HL)   */ () => { const addr = getReg16(HL); set(addr, SLA_val(get(addr))); },
+  /* 27 SLA A      */ () => regs[A] = SLA_val(regs[A]),
+  /* 28 SRA B      */ () => regs[B] = SRA_val(regs[B]),
+  /* 29 SRA C      */ () => regs[C] = SRA_val(regs[C]),
+  /* 2A SRA D      */ () => regs[D] = SRA_val(regs[D]),
+  /* 2B SRA E      */ () => regs[E] = SRA_val(regs[E]),
+  /* 2C SRA H      */ () => regs[H] = SRA_val(regs[H]),
+  /* 2D SRA L      */ () => regs[L] = SRA_val(regs[L]),
+  /* 2E SRA (HL)   */ () => { const addr = getReg16(HL); set(addr, SRA_val(get(addr))); },
+  /* 2F SRA A      */ () => regs[A] = SRA_val(regs[A]),
 
-  /* 30 SLL B    * */ () => setReg(B, SLL_val(get(B))),
-  /* 31 SLL C    * */ () => setReg(C, SLL_val(get(C))),
-  /* 32 SLL D    * */ () => setReg(D, SLL_val(get(D))),
-  /* 33 SLL E    * */ () => setReg(E, SLL_val(get(E))),
-  /* 34 SLL H    * */ () => setReg(H, SLL_val(get(H))),
-  /* 35 SLL L    * */ () => setReg(L, SLL_val(get(L))),
-  /* 36 SLL (HL) * */ () => { const addr = get16(HL); set(addr, SLL_val(get(addr))); },
-  /* 37 SLL A    * */ () => setReg(A, SLL_val(get(A))),
-  /* 38 SRL B      */ () => setReg(B, SRL_val(get(B))),
-  /* 39 SRL C      */ () => setReg(C, SRL_val(get(C))),
-  /* 3A SRL D      */ () => setReg(D, SRL_val(get(D))),
-  /* 3B SRL E      */ () => setReg(E, SRL_val(get(E))),
-  /* 3C SRL H      */ () => setReg(H, SRL_val(get(H))),
-  /* 3D SRL L      */ () => setReg(L, SRL_val(get(L))),
-  /* 3E SRL (HL)   */ () => { const addr = get16(HL); set(addr, SRL_val(get(addr))); },
-  /* 3F SRL A      */ () => setReg(A, SRL_val(get(A))),
+  /* 30 SLL B    * */ () => regs[B] = SLL_val(regs[B]),
+  /* 31 SLL C    * */ () => regs[C] = SLL_val(regs[C]),
+  /* 32 SLL D    * */ () => regs[D] = SLL_val(regs[D]),
+  /* 33 SLL E    * */ () => regs[E] = SLL_val(regs[E]),
+  /* 34 SLL H    * */ () => regs[H] = SLL_val(regs[H]),
+  /* 35 SLL L    * */ () => regs[L] = SLL_val(regs[L]),
+  /* 36 SLL (HL) * */ () => { const addr = getReg16(HL); set(addr, SLL_val(get(addr))); },
+  /* 37 SLL A    * */ () => regs[A] = SLL_val(regs[A]),
+  /* 38 SRL B      */ () => regs[B] = SRL_val(regs[B]),
+  /* 39 SRL C      */ () => regs[C] = SRL_val(regs[C]),
+  /* 3A SRL D      */ () => regs[D] = SRL_val(regs[D]),
+  /* 3B SRL E      */ () => regs[E] = SRL_val(regs[E]),
+  /* 3C SRL H      */ () => regs[H] = SRL_val(regs[H]),
+  /* 3D SRL L      */ () => regs[L] = SRL_val(regs[L]),
+  /* 3E SRL (HL)   */ () => { const addr = getReg16(HL); set(addr, SRL_val(get(addr))); },
+  /* 3F SRL A      */ () => regs[A] = SRL_val(regs[A]),
 
   /* 40 BIT 0,B    */ () => testBitReg(BIT0, B),
   /* 41 BIT 0,C    */ () => testBitReg(BIT0, C),
@@ -181,7 +181,7 @@ const opsBit: (() => void)[] = [
   /* 83 RES 0,E    */ () => resBitReg(~BIT0, E),
   /* 84 RES 0,H    */ () => resBitReg(~BIT0, H),
   /* 85 RES 0,L    */ () => resBitReg(~BIT0, L),
-  /* 86 RES 0,(HL) */ () => resBit(~BIT0, get16(HL)),
+  /* 86 RES 0,(HL) */ () => resBit(~BIT0, getReg16(HL)),
   /* 87 RES 0,A    */ () => resBitReg(~BIT0, A),
   /* 88 RES 1,B    */ () => resBitReg(~BIT1, B),
   /* 89 RES 1,C    */ () => resBitReg(~BIT1, C),
@@ -189,7 +189,7 @@ const opsBit: (() => void)[] = [
   /* 8B RES 1,E    */ () => resBitReg(~BIT1, E),
   /* 8C RES 1,H    */ () => resBitReg(~BIT1, H),
   /* 8D RES 1,L    */ () => resBitReg(~BIT1, L),
-  /* 8E RES 1,(HL) */ () => resBit(~BIT1, get16(HL)),
+  /* 8E RES 1,(HL) */ () => resBit(~BIT1, getReg16(HL)),
   /* 8F RES 1,A    */ () => resBitReg(~BIT1, A),
 
   /* 90 RES 2,B    */ () => resBitReg(~BIT2, B),
@@ -198,7 +198,7 @@ const opsBit: (() => void)[] = [
   /* 93 RES 2,E    */ () => resBitReg(~BIT2, E),
   /* 94 RES 2,H    */ () => resBitReg(~BIT2, H),
   /* 95 RES 2,L    */ () => resBitReg(~BIT2, L),
-  /* 96 RES 2,(HL) */ () => resBit(~BIT2, get16(HL)),
+  /* 96 RES 2,(HL) */ () => resBit(~BIT2, getReg16(HL)),
   /* 97 RES 2,A    */ () => resBitReg(~BIT2, A),
   /* 98 RES 3,B    */ () => resBitReg(~BIT3, B),
   /* 99 RES 3,C    */ () => resBitReg(~BIT3, C),
@@ -206,7 +206,7 @@ const opsBit: (() => void)[] = [
   /* 9B RES 3,E    */ () => resBitReg(~BIT3, E),
   /* 9C RES 3,H    */ () => resBitReg(~BIT3, H),
   /* 9D RES 3,L    */ () => resBitReg(~BIT3, L),
-  /* 9E RES 3,(HL) */ () => resBit(~BIT3, get16(HL)),
+  /* 9E RES 3,(HL) */ () => resBit(~BIT3, getReg16(HL)),
   /* 9F RES 3,A    */ () => resBitReg(~BIT3, A),
 
   /* A0 RES 4,B    */ () => resBitReg(~BIT4, B),
@@ -215,7 +215,7 @@ const opsBit: (() => void)[] = [
   /* A3 RES 4,E    */ () => resBitReg(~BIT4, E),
   /* A4 RES 4,H    */ () => resBitReg(~BIT4, H),
   /* A5 RES 4,L    */ () => resBitReg(~BIT4, L),
-  /* A6 RES 4,(HL) */ () => resBit(~BIT4, get16(HL)),
+  /* A6 RES 4,(HL) */ () => resBit(~BIT4, getReg16(HL)),
   /* A7 RES 4,A    */ () => resBitReg(~BIT4, A),
   /* A8 RES 5,B    */ () => resBitReg(~BIT5, B),
   /* A9 RES 5,C    */ () => resBitReg(~BIT5, C),
@@ -223,7 +223,7 @@ const opsBit: (() => void)[] = [
   /* AB RES 5,E    */ () => resBitReg(~BIT5, E),
   /* AC RES 5,H    */ () => resBitReg(~BIT5, H),
   /* AD RES 5,L    */ () => resBitReg(~BIT5, L),
-  /* AE RES 5,(HL) */ () => resBit(~BIT5, get16(HL)),
+  /* AE RES 5,(HL) */ () => resBit(~BIT5, getReg16(HL)),
   /* AF RES 5,A    */ () => resBitReg(~BIT5, A),
 
   /* B0 RES 6,B    */ () => resBitReg(~BIT6, B),
@@ -232,7 +232,7 @@ const opsBit: (() => void)[] = [
   /* B3 RES 6,E    */ () => resBitReg(~BIT6, E),
   /* B4 RES 6,H    */ () => resBitReg(~BIT6, H),
   /* B5 RES 6,L    */ () => resBitReg(~BIT6, L),
-  /* B6 RES 6,(HL) */ () => resBit(~BIT6, get16(HL)),
+  /* B6 RES 6,(HL) */ () => resBit(~BIT6, getReg16(HL)),
   /* B7 RES 6,A    */ () => resBitReg(~BIT6, A),
   /* B8 RES 7,B    */ () => resBitReg(~BIT7, B),
   /* B9 RES 7,C    */ () => resBitReg(~BIT7, C),
@@ -240,7 +240,7 @@ const opsBit: (() => void)[] = [
   /* BB RES 7,E    */ () => resBitReg(~BIT7, E),
   /* BC RES 7,H    */ () => resBitReg(~BIT7, H),
   /* BD RES 7,L    */ () => resBitReg(~BIT7, L),
-  /* BE RES 7,(HL) */ () => resBit(~BIT7, get16(HL)),
+  /* BE RES 7,(HL) */ () => resBit(~BIT7, getReg16(HL)),
   /* BF RES 7,A    */ () => resBitReg(~BIT7, A),
 
   /* C0 SET 0,B    */ () => setBitReg(BIT0, B),
@@ -249,7 +249,7 @@ const opsBit: (() => void)[] = [
   /* C3 SET 0,E    */ () => setBitReg(BIT0, E),
   /* C4 SET 0,H    */ () => setBitReg(BIT0, H),
   /* C5 SET 0,L    */ () => setBitReg(BIT0, L),
-  /* C6 SET 0,(HL) */ () => setBit(BIT0, get16(HL)),
+  /* C6 SET 0,(HL) */ () => setBit(BIT0, getReg16(HL)),
   /* C7 SET 0,A    */ () => setBitReg(BIT0, A),
   /* C8 SET 1,B    */ () => setBitReg(BIT1, B),
   /* C9 SET 1,C    */ () => setBitReg(BIT1, C),
@@ -257,7 +257,7 @@ const opsBit: (() => void)[] = [
   /* CB SET 1,E    */ () => setBitReg(BIT1, E),
   /* CC SET 1,H    */ () => setBitReg(BIT1, H),
   /* CD SET 1,L    */ () => setBitReg(BIT1, L),
-  /* CE SET 1,(HL) */ () => setBit(BIT1, get16(HL)),
+  /* CE SET 1,(HL) */ () => setBit(BIT1, getReg16(HL)),
   /* CF SET 1,A    */ () => setBitReg(BIT1, A),
 
   /* D0 SET 2,B    */ () => setBitReg(BIT2, B),
@@ -266,7 +266,7 @@ const opsBit: (() => void)[] = [
   /* D3 SET 2,E    */ () => setBitReg(BIT2, E),
   /* D4 SET 2,H    */ () => setBitReg(BIT2, H),
   /* D5 SET 2,L    */ () => setBitReg(BIT2, L),
-  /* D6 SET 2,(HL) */ () => setBit(BIT2, get16(HL)),
+  /* D6 SET 2,(HL) */ () => setBit(BIT2, getReg16(HL)),
   /* D7 SET 2,A    */ () => setBitReg(BIT2, A),
   /* D8 SET 3,B    */ () => setBitReg(BIT3, B),
   /* D9 SET 3,C    */ () => setBitReg(BIT3, C),
@@ -274,7 +274,7 @@ const opsBit: (() => void)[] = [
   /* DB SET 3,E    */ () => setBitReg(BIT3, E),
   /* DC SET 3,H    */ () => setBitReg(BIT3, H),
   /* DD SET 3,L    */ () => setBitReg(BIT3, L),
-  /* DE SET 3,(HL) */ () => setBit(BIT3, get16(HL)),
+  /* DE SET 3,(HL) */ () => setBit(BIT3, getReg16(HL)),
   /* DF SET 3,A    */ () => setBitReg(BIT3, A),
 
   /* E0 SET 4,B    */ () => setBitReg(BIT4, B),
@@ -283,7 +283,7 @@ const opsBit: (() => void)[] = [
   /* E3 SET 4,E    */ () => setBitReg(BIT4, E),
   /* E4 SET 4,H    */ () => setBitReg(BIT4, H),
   /* E5 SET 4,L    */ () => setBitReg(BIT4, L),
-  /* E6 SET 4,(HL) */ () => setBit(BIT4, get16(HL)),
+  /* E6 SET 4,(HL) */ () => setBit(BIT4, getReg16(HL)),
   /* E7 SET 4,A    */ () => setBitReg(BIT4, A),
   /* E8 SET 5,B    */ () => setBitReg(BIT5, B),
   /* E9 SET 5,C    */ () => setBitReg(BIT5, C),
@@ -291,7 +291,7 @@ const opsBit: (() => void)[] = [
   /* EB SET 5,E    */ () => setBitReg(BIT5, E),
   /* EC SET 5,H    */ () => setBitReg(BIT5, H),
   /* ED SET 5,L    */ () => setBitReg(BIT5, L),
-  /* EE SET 5,(HL) */ () => setBit(BIT5, get16(HL)),
+  /* EE SET 5,(HL) */ () => setBit(BIT5, getReg16(HL)),
   /* EF SET 5,A    */ () => setBitReg(BIT5, A),
 
   /* F0 SET 6,B    */ () => setBitReg(BIT6, B),
@@ -300,7 +300,7 @@ const opsBit: (() => void)[] = [
   /* F3 SET 6,E    */ () => setBitReg(BIT6, E),
   /* F4 SET 6,H    */ () => setBitReg(BIT6, H),
   /* F5 SET 6,L    */ () => setBitReg(BIT6, L),
-  /* F6 SET 6,(HL) */ () => setBit(BIT6, get16(HL)),
+  /* F6 SET 6,(HL) */ () => setBit(BIT6, getReg16(HL)),
   /* F7 SET 6,A    */ () => setBitReg(BIT6, A),
   /* F8 SET 7,B    */ () => setBitReg(BIT7, B),
   /* F9 SET 7,C    */ () => setBitReg(BIT7, C),
@@ -308,6 +308,6 @@ const opsBit: (() => void)[] = [
   /* FB SET 7,E    */ () => setBitReg(BIT7, E),
   /* FC SET 7,H    */ () => setBitReg(BIT7, H),
   /* FD SET 7,L    */ () => setBitReg(BIT7, L),
-  /* FE SET 7,(HL) */ () => setBit(BIT7, get16(HL)),
+  /* FE SET 7,(HL) */ () => setBit(BIT7, getReg16(HL)),
   /* FF SET 7,A    */ () => setBitReg(BIT7, A),
 ];

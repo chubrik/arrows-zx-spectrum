@@ -1,4 +1,3 @@
-import { get, setReg } from '../common/utils';
 import { IM1, IM2, setIM1, setIM2 } from './flags';
 import { cpx, ldx } from './op/op-block';
 import { IN_c, inx, OUT_c, outx } from './op/op-io';
@@ -7,7 +6,7 @@ import { ADC_HL, LD_dd_nn, LD_nn_dd, SBC_HL } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
 import { RLD, RRD } from './op/op-shift';
 import { RETI_RETN } from './op/op-stack';
-import { A, B, BC, C, D, DE, E, H, HL, I, L, R, SP } from './registers';
+import { A, B, BC, C, D, DE, E, H, HL, I, L, R, regs, SP } from './registers';
 import { nop as _, next, nop, refresh } from './utils';
 
 export function executeMisc() {
@@ -29,7 +28,7 @@ const opsMisc = [
   /* ED44 NEG          */ NEG,
   /* ED45 RETN         */ RETI_RETN,
   /* ED46 IM 0         */ () => { setIM1(0); setIM2(0); },
-  /* ED47 LD I,A       */ () => setReg(I, get(A)),
+  /* ED47 LD I,A       */ () => regs[I] = regs[A],
   /* ED48 IN C,(C)     */ () => IN_c(C),
   /* ED49 OUT (C),C    */ () => OUT_c(C),
   /* ED4A ADC HL,BC    */ () => ADC_HL(BC),
@@ -37,7 +36,7 @@ const opsMisc = [
   /* ED4C NEG        * */ NEG,
   /* ED4D RETI         */ RETI_RETN,
   /* ED4E IM 0       * */ () => { setIM1(0); setIM2(0); },
-  /* ED4F LD R,A       */ () => setReg(R, get(A)),
+  /* ED4F LD R,A       */ () => regs[R] = regs[A],
 
   /* ED50 IN D,(C)     */ () => IN_c(D),
   /* ED51 OUT (C),D    */ () => OUT_c(D),
