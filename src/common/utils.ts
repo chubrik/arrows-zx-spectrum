@@ -1,7 +1,7 @@
 import { getDirect, infos, setDirect } from './arrows.ts';
 
 export const values: number[] = [];
-const updated = new Set<number>();
+const dirtyBitmap = new Uint32Array(2049); // 0x0000...0x1001F (including CPU registers)
 
 let ramMinAddr = 0x4000;
 export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
@@ -33,8 +33,9 @@ export function get(addr: number): number {
 
 export function set(addr: number, value: number) {
   if (addr < ramMinAddr) return;
+  if (values[addr] === value) return;
   values[addr] = value;
-  updated.add(addr);
+  dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
 }
 
 export function fetchAll() {
@@ -43,8 +44,16 @@ export function fetchAll() {
 }
 
 export function commitUpdated() {
-  for (let addr of updated)
-    setDirect(addr, values[addr]);
-
-  updated.clear();
+  for (let i = ramMinAddr >> 5; i < 2049; i++) {
+    let bits = dirtyBitmap[i];
+    if (bits === 0) continue;
+    dirtyBitmap[i] = 0;
+    const base = i << 5;
+    while (bits) {
+      const bit = bits & -bits;
+      const offset = 31 - Math.clz32(bit);
+      setDirect(base + offset, values[base + offset]);
+      bits ^= bit;
+    }
+  }
 }
