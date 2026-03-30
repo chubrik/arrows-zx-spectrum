@@ -2,7 +2,7 @@ import { get, get16, set } from '../common/utils';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';
-import { FH, FO, FS, FZ, HLT, IFF12 } from './flags';
+import { FH, ff, sf } from './flags';
 import { EX_AF_AF, EX_DE_HL, EX_sp_HL, EXX } from './op/op-exchange';
 import { IN_A_n, OUT_n_A } from './op/op-io';
 import { DJNZ_e, JR_e } from './op/op-jump';
@@ -11,13 +11,13 @@ import { addHLXY, dec16, inc16 } from './op/op-math-16bit';
 import { add, cp, dec, inc, logic, sub } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { RLA, RLCA, RRA, RRCA } from './op/op-shift';
-import { call88, callNext16, pop16, push16 } from './op/op-stack';
-import { A, AF, B, BC, C, D, DE, E, F, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, setHLXY, SP, SPh, SPl, SYS } from './registers';
-import { addPC, getFC, getHLXYd, next, next16, nop, refresh, setEIDelay, setPCNext16 } from './utils';
+import { call88, callNext16, pop16, popAF, push16, pushAF } from './op/op-stack';
+import { A, B, BC, C, D, DE, E, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, setHLXY, SP, SPh, SPl } from './registers';
+import { addPC, getHLXYd, next, next16, nop, refresh, setEIDelay, setPCNext16 } from './utils';
 
 export function executeMain() {
   refresh();
-  if (get(SYS) & HLT) return;
+  if (sf.hlt) return;
   const op = next();
   opsMain[op]();
 }
@@ -57,7 +57,7 @@ const opsMain = [
   /* 1E LD E,n     */ () => set(E, next()),
   /* 1F RRA        */ RRA,
 
-  /* 20 JR NZ,e    */ () => get(F) & FZ ? addPC(1) : JR_e(),
+  /* 20 JR NZ,e    */ () => ff.z ? addPC(1) : JR_e(),
   /* 21 LD HL,nn   */ () => ld16Next(HLXY),
   /* 22 LD (nn),HL */ () => ld16(next16(), HLXY),
   /* 23 INC HL     */ () => inc16(HLXY),
@@ -65,7 +65,7 @@ const opsMain = [
   /* 25 DEC H      */ () => dec(HXY),
   /* 26 LD H,n     */ () => set(HXY, next()),
   /* 27 DAA        */ DAA,
-  /* 28 JR Z,e     */ () => get(F) & FZ ? JR_e() : addPC(1),
+  /* 28 JR Z,e     */ () => ff.z ? JR_e() : addPC(1),
   /* 29 ADD HL,HL  */ () => addHLXY(HLXY),
   /* 2A LD HL,(nn) */ () => ld16(HLXY, next16()),
   /* 2B DEC HL     */ () => dec16(HLXY),
@@ -74,7 +74,7 @@ const opsMain = [
   /* 2E LD L,n     */ () => set(LXY, next()),
   /* 2F CPL        */ CPL,
 
-  /* 30 JR NC,e    */ () => getFC() ? addPC(1) : JR_e(),
+  /* 30 JR NC,e    */ () => ff.c ? addPC(1) : JR_e(),
   /* 31 LD SP,nn   */ () => ld16Next(SP),
   /* 32 LD (nn),A  */ () => set(next16(), get(A)),
   /* 33 INC SP     */ () => inc16(SP),
@@ -82,7 +82,7 @@ const opsMain = [
   /* 35 DEC (HL)   */ () => dec(getHLXYd()),
   /* 36 LD (HL),n  */ () => set(getHLXYd(), next()),
   /* 37 SCF        */ SCF,
-  /* 38 JR C,e     */ () => getFC() ? JR_e() : addPC(1),
+  /* 38 JR C,e     */ () => ff.c ? JR_e() : addPC(1),
   /* 39 ADD HL,SP  */ () => addHLXY(SP),
   /* 3A LD A,(nn)  */ () => set(A, get(next16())),
   /* 3B DEC SP     */ () => dec16(SP),
@@ -148,7 +148,7 @@ const opsMain = [
   /* 73 LD (HL),E  */ () => set(getHLXYd(), get(E)),
   /* 74 LD (HL),H  */ () => set(getHLXYd(), get(H)),
   /* 75 LD (HL),L  */ () => set(getHLXYd(), get(L)),
-  /* 76 HALT       */ () => { set(SYS, get(SYS) | HLT); addPC(-1); },
+  /* 76 HALT       */ () => { sf.hlt = 0x02; addPC(-1); },
   /* 77 LD (HL),A  */ () => set(getHLXYd(), get(A)),
   /* 78 LD A,B     */ () => set(A, get(B)),
   /* 79 LD A,C     */ () => set(A, get(C)),
@@ -167,14 +167,14 @@ const opsMain = [
   /* 85 ADD A,L    */ () => add(get(LXY)),
   /* 86 ADD A,(HL) */ () => add(get(getHLXYd())),
   /* 87 ADD A,A    */ () => add(get(A)),
-  /* 88 ADC A,B    */ () => add(get(B), getFC()),
-  /* 89 ADC A,C    */ () => add(get(C), getFC()),
-  /* 8A ADC A,D    */ () => add(get(D), getFC()),
-  /* 8B ADC A,E    */ () => add(get(E), getFC()),
-  /* 8C ADC A,H    */ () => add(get(HXY), getFC()),
-  /* 8D ADC A,L    */ () => add(get(LXY), getFC()),
-  /* 8E ADC A,(HL) */ () => add(get(getHLXYd()), getFC()),
-  /* 8F ADC A,A    */ () => add(get(A), getFC()),
+  /* 88 ADC A,B    */ () => add(get(B), ff.c),
+  /* 89 ADC A,C    */ () => add(get(C), ff.c),
+  /* 8A ADC A,D    */ () => add(get(D), ff.c),
+  /* 8B ADC A,E    */ () => add(get(E), ff.c),
+  /* 8C ADC A,H    */ () => add(get(HXY), ff.c),
+  /* 8D ADC A,L    */ () => add(get(LXY), ff.c),
+  /* 8E ADC A,(HL) */ () => add(get(getHLXYd()), ff.c),
+  /* 8F ADC A,A    */ () => add(get(A), ff.c),
 
   /* 90 SUB B      */ () => sub(get(B)),
   /* 91 SUB C      */ () => sub(get(C)),
@@ -184,14 +184,14 @@ const opsMain = [
   /* 95 SUB L      */ () => sub(get(LXY)),
   /* 96 SUB (HL)   */ () => sub(get(getHLXYd())),
   /* 97 SUB A      */ () => sub(get(A)),
-  /* 98 SBC A,B    */ () => sub(get(B), getFC()),
-  /* 99 SBC A,C    */ () => sub(get(C), getFC()),
-  /* 9A SBC A,D    */ () => sub(get(D), getFC()),
-  /* 9B SBC A,E    */ () => sub(get(E), getFC()),
-  /* 9C SBC A,H    */ () => sub(get(HXY), getFC()),
-  /* 9D SBC A,L    */ () => sub(get(LXY), getFC()),
-  /* 9E SBC A,(HL) */ () => sub(get(getHLXYd()), getFC()),
-  /* 9F SBC A,A    */ () => sub(get(A), getFC()),
+  /* 98 SBC A,B    */ () => sub(get(B), ff.c),
+  /* 99 SBC A,C    */ () => sub(get(C), ff.c),
+  /* 9A SBC A,D    */ () => sub(get(D), ff.c),
+  /* 9B SBC A,E    */ () => sub(get(E), ff.c),
+  /* 9C SBC A,H    */ () => sub(get(HXY), ff.c),
+  /* 9D SBC A,L    */ () => sub(get(LXY), ff.c),
+  /* 9E SBC A,(HL) */ () => sub(get(getHLXYd()), ff.c),
+  /* 9F SBC A,A    */ () => sub(get(A), ff.c),
 
   /* A0 AND B      */ () => logic(get(A) & get(B), FH),
   /* A1 AND C      */ () => logic(get(A) & get(C), FH),
@@ -227,70 +227,70 @@ const opsMain = [
   /* BE CP (HL)    */ () => cp(get(getHLXYd())),
   /* BF CP A       */ () => cp(get(A)),
 
-  /* C0 RET NZ     */ () => get(F) & FZ ? {} : pop16(PC),
+  /* C0 RET NZ     */ () => ff.z ? {} : pop16(PC),
   /* C1 POP BC     */ () => pop16(BC),
-  /* C2 JP NZ,nn   */ () => get(F) & FZ ? addPC(2) : setPCNext16(),
+  /* C2 JP NZ,nn   */ () => ff.z ? addPC(2) : setPCNext16(),
   /* C3 JP nn      */ () => setPCNext16(),
-  /* C4 CALL NZ,nn */ () => get(F) & FZ ? addPC(2) : callNext16(),
+  /* C4 CALL NZ,nn */ () => ff.z ? addPC(2) : callNext16(),
   /* C5 PUSH BC    */ () => push16(BC),
   /* C6 ADD A,n    */ () => add(next()),
   /* C7 CALL 00h   */ () => call88(0x00),
-  /* C8 RET Z      */ () => get(F) & FZ ? pop16(PC) : {},
+  /* C8 RET Z      */ () => ff.z ? pop16(PC) : {},
   /* C9 RET        */ () => pop16(PC),
-  /* CA JP Z,nn    */ () => get(F) & FZ ? setPCNext16() : addPC(2),
+  /* CA JP Z,nn    */ () => ff.z ? setPCNext16() : addPC(2),
   /* CB -- BIT --- */ () => HLXY === HL ? executeBit() : executeBitXYd(),
-  /* CC CALL Z,nn  */ () => get(F) & FZ ? callNext16() : addPC(2),
+  /* CC CALL Z,nn  */ () => ff.z ? callNext16() : addPC(2),
   /* CD CALL nn    */ () => callNext16(),
-  /* CE ADC A,n    */ () => add(next(), getFC()),
+  /* CE ADC A,n    */ () => add(next(), ff.c),
   /* CF CALL 08h   */ () => call88(0x08),
 
-  /* D0 RET NC     */ () => getFC() ? {} : pop16(PC),
+  /* D0 RET NC     */ () => ff.c ? {} : pop16(PC),
   /* D1 POP DE     */ () => pop16(DE),
-  /* D2 JP NC,nn   */ () => getFC() ? addPC(2) : setPCNext16(),
+  /* D2 JP NC,nn   */ () => ff.c ? addPC(2) : setPCNext16(),
   /* D3 OUT (n),A  */ OUT_n_A,
-  /* D4 CALL NC,nn */ () => getFC() ? addPC(2) : callNext16(),
+  /* D4 CALL NC,nn */ () => ff.c ? addPC(2) : callNext16(),
   /* D5 PUSH DE    */ () => push16(DE),
   /* D6 SUB A,n    */ () => sub(next()),
   /* D7 CALL 10h   */ () => call88(0x10),
-  /* D8 RET C      */ () => getFC() ? pop16(PC) : {},
+  /* D8 RET C      */ () => ff.c ? pop16(PC) : {},
   /* D9 EXX        */ EXX,
-  /* DA JP C,nn    */ () => getFC() ? setPCNext16() : addPC(2),
+  /* DA JP C,nn    */ () => ff.c ? setPCNext16() : addPC(2),
   /* DB IN A,(n)   */ IN_A_n,
-  /* DC CALL C,nn  */ () => getFC() ? callNext16() : addPC(2),
+  /* DC CALL C,nn  */ () => ff.c ? callNext16() : addPC(2),
   /* DD --- IX --- */ () => { setHLXY(IX); executeMain(); setHLXY(HL); },
-  /* DE SBC A,n    */ () => sub(next(), getFC()),
+  /* DE SBC A,n    */ () => sub(next(), ff.c),
   /* DF CALL 18h   */ () => call88(0x18),
 
-  /* E0 RET PO     */ () => get(F) & FO ? {} : pop16(PC),
+  /* E0 RET PO     */ () => ff.o ? {} : pop16(PC),
   /* E1 POP HL     */ () => pop16(HLXY),
-  /* E2 JP PO,nn   */ () => get(F) & FO ? addPC(2) : setPCNext16(),
+  /* E2 JP PO,nn   */ () => ff.o ? addPC(2) : setPCNext16(),
   /* E3 EX (SP),HL */ EX_sp_HL,
-  /* E4 CALL PO,nn */ () => get(F) & FO ? addPC(2) : callNext16(),
+  /* E4 CALL PO,nn */ () => ff.o ? addPC(2) : callNext16(),
   /* E5 PUSH HL    */ () => push16(HLXY),
   /* E6 AND n      */ () => logic(get(A) & next(), FH),
   /* E7 CALL 20h   */ () => call88(0x20),
-  /* E8 RET PE     */ () => get(F) & FO ? pop16(PC) : {},
+  /* E8 RET PE     */ () => ff.o ? pop16(PC) : {},
   /* E9 JP (HL)    */ () => { set(PCl, get(LXY)); set(PCh, get(HXY)); },
-  /* EA JP PE,nn   */ () => get(F) & FO ? setPCNext16() : addPC(2),
+  /* EA JP PE,nn   */ () => ff.o ? setPCNext16() : addPC(2),
   /* EB EX DE,HL   */ EX_DE_HL,
-  /* EC CALL PE,nn */ () => get(F) & FO ? callNext16() : addPC(2),
+  /* EC CALL PE,nn */ () => ff.o ? callNext16() : addPC(2),
   /* ED -- MISC -- */ executeMisc,
   /* EE XOR n      */ () => logic(get(A) ^ next()),
   /* EF CALL 28h   */ () => call88(0x28),
 
-  /* F0 RET P      */ () => get(F) & FS ? {} : pop16(PC),
-  /* F1 POP AF     */ () => pop16(AF),
-  /* F2 JP P,nn    */ () => get(F) & FS ? addPC(2) : setPCNext16(),
-  /* F3 DI         */ () => set(SYS, get(SYS) & ~IFF12),
-  /* F4 CALL P,nn  */ () => get(F) & FS ? addPC(2) : callNext16(),
-  /* F5 PUSH AF    */ () => push16(AF),
+  /* F0 RET P      */ () => ff.s ? {} : pop16(PC),
+  /* F1 POP AF     */ popAF,
+  /* F2 JP P,nn    */ () => ff.s ? addPC(2) : setPCNext16(),
+  /* F3 DI         */ () => { sf.iff1 = 0; sf.iff2 = 0; },
+  /* F4 CALL P,nn  */ () => ff.s ? addPC(2) : callNext16(),
+  /* F5 PUSH AF    */ pushAF,
   /* F6 OR n       */ () => logic(get(A) | next()),
   /* F7 RST 30h    */ () => call88(0x30),
-  /* F8 RET M      */ () => get(F) & FS ? pop16(PC) : {},
+  /* F8 RET M      */ () => ff.s ? pop16(PC) : {},
   /* F9 LD SP,HL   */ () => { set(SPl, get(LXY)); set(SPh, get(HXY)); },
-  /* FA JP M,nn    */ () => get(F) & FS ? setPCNext16() : addPC(2),
-  /* FB EI         */ () => { set(SYS, get(SYS) | IFF12); setEIDelay(1); },
-  /* FC CALL M,nn  */ () => get(F) & FS ? callNext16() : addPC(2),
+  /* FA JP M,nn    */ () => ff.s ? setPCNext16() : addPC(2),
+  /* FB EI         */ () => { sf.iff1 = 0x04; sf.iff2 = 0x08; setEIDelay(1); },
+  /* FC CALL M,nn  */ () => ff.s ? callNext16() : addPC(2),
   /* FD --- IY --- */ () => { setHLXY(IY); executeMain(); setHLXY(HL); },
   /* FE CP n       */ () => cp(next()),
   /* FF CALL 38h   */ () => call88(0x38),

@@ -1,6 +1,6 @@
 import { setRamMinAddrForTest, values } from '../src/common/utils';
 import { executeMain } from '../src/z80/execute-main';
-import { HLT, IFF1, IFF2, IM1, IM12, IM2 } from '../src/z80/flags';
+import { ff, packF, sf, unpackF } from '../src/z80/flags';
 import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, setHLXY, SPh, SPl, SYS } from '../src/z80/registers';
 import { setWZ } from '../src/z80/utils';
 
@@ -8,6 +8,8 @@ export function setupCpu() {
   setRamMinAddrForTest(0);
   for (let i = 0; i <= 0xFFFF; i++) values[i] = 0;
   for (let i = 0x10000; i <= 0x1001C; i++) values[i] = 0;
+  unpackF(0);
+  sf.im2 = 0; sf.im1 = 0; sf.iff2 = 0; sf.iff1 = 0; sf.hlt = 0; sf.int = 0;
   setHLXY(HL);
   setWZ(0);
 }
@@ -33,7 +35,7 @@ export interface CpuState {
 
 export function setState(state: CpuState) {
   if (state.A !== undefined) values[A] = state.A;
-  if (state.F !== undefined) values[F] = state.F;
+  if (state.F !== undefined) { values[F] = state.F; unpackF(state.F); }
   if (state.B !== undefined) values[B] = state.B;
   if (state.C !== undefined) values[C] = state.C;
   if (state.D !== undefined) values[D] = state.D;
@@ -56,20 +58,12 @@ export function setState(state: CpuState) {
   if (state.I !== undefined) values[I] = state.I;
   if (state.R !== undefined) values[R] = state.R;
   if (state.IM !== undefined) {
-    let sys = values[SYS] & ~IM12;
-    if (state.IM === 1) sys |= IM1;
-    else if (state.IM === 2) sys |= IM2;
-    values[SYS] = sys;
+    sf.im1 = state.IM === 1 ? 0x10 : 0;
+    sf.im2 = state.IM === 2 ? 0x20 : 0;
   }
-  if (state.IFF1 !== undefined) {
-    values[SYS] = state.IFF1 ? (values[SYS] | IFF1) : (values[SYS] & ~IFF1);
-  }
-  if (state.IFF2 !== undefined) {
-    values[SYS] = state.IFF2 ? (values[SYS] | IFF2) : (values[SYS] & ~IFF2);
-  }
-  if (state.halt !== undefined) {
-    values[SYS] = state.halt ? (values[SYS] | HLT) : (values[SYS] & ~HLT);
-  }
+  if (state.IFF1 !== undefined) sf.iff1 = state.IFF1 ? 0x04 : 0;
+  if (state.IFF2 !== undefined) sf.iff2 = state.IFF2 ? 0x08 : 0;
+  if (state.halt !== undefined) sf.hlt = state.halt ? 0x02 : 0;
   if (state.mem) {
     for (const [addr, value] of Object.entries(state.mem)) {
       values[Number(addr)] = value;
@@ -78,10 +72,9 @@ export function setState(state: CpuState) {
 }
 
 export function getState() {
-  const sys = values[SYS];
   return {
     A: values[A],
-    F: values[F],
+    F: packF(),
     B: values[B],
     C: values[C],
     D: values[D],
@@ -102,10 +95,10 @@ export function getState() {
     PC: (values[PCh] << 8) | values[PCl],
     I: values[I],
     R: values[R],
-    IM: (sys & IM2 ? 2 : sys & IM1 ? 1 : 0) as 0 | 1 | 2,
-    IFF1: (sys & IFF1 ? 1 : 0) as 0 | 1,
-    IFF2: (sys & IFF2 ? 1 : 0) as 0 | 1,
-    halt: (sys & HLT ? 1 : 0) as 0 | 1,
+    IM: (sf.im2 ? 2 : sf.im1 ? 1 : 0) as 0 | 1 | 2,
+    IFF1: (sf.iff1 ? 1 : 0) as 0 | 1,
+    IFF2: (sf.iff2 ? 1 : 0) as 0 | 1,
+    halt: (sf.hlt ? 1 : 0) as 0 | 1,
   };
 }
 

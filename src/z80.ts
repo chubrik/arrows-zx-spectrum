@@ -1,10 +1,9 @@
 import { initMemory } from './common/memory';
-import { commitUpdated, fetchAll, get, set } from './common/utils';
+import { commitUpdated, fetchAll } from './common/utils';
 import { executeMain } from './z80/execute-main';
-import { INT } from './z80/flags';
+import { sf } from './z80/flags';
 import { initCpu } from './z80/init';
 import { interrupt } from './z80/interrupt';
-import { SYS } from './z80/registers';
 
 const pos = getPosition();
 const chunkX = pos.x & ~0xF;
@@ -36,7 +35,7 @@ always(() => {
 
     if (opCount === opPerFrame) {
       opCount = 0;
-      set(SYS, get(SYS) | INT);
+      sf.int = 0x01;
     }
 
     interrupt();

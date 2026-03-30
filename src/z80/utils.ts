@@ -1,10 +1,8 @@
 import { get, get16, set, set16, set88 } from '../common/utils';
-import { FC } from './flags';
-import { F, HL, HLXY, PC, R } from './registers';
+import { ff } from './flags';
+import { HL, HLXY, PC, R } from './registers';
 
 export function nop() { };
-
-export function getFC(): number { return get(F) & FC; }
 
 export let eiDelay: 0 | 1 = 0;
 export function setEIDelay(value: 0 | 1) { eiDelay = value; }

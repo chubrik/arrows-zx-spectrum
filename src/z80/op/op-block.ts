@@ -1,7 +1,7 @@
 import { get, get16, set, set16 } from '../../common/utils';
-import { FH, FN, FO, FS, FSZC, FZ } from '../flags';
-import { A, BC, DE, F, HLXY } from '../registers';
-import { addPC, getFC } from '../utils';
+import { ff } from '../flags';
+import { A, BC, DE, HLXY } from '../registers';
+import { addPC } from '../utils';
 
 export function ldx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   const a = get(A);
@@ -16,15 +16,12 @@ export function ldx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   set16(DE, (destAddr + increment) & 0xFFFF);
   set16(HLXY, (srcAddr + increment) & 0xFFFF);
 
-  // F5 = bit 1 of n
-  // F3 = bit 3 of n, where n = A + value
   const n = (a + value) & 0xFF;
-  const f53 = ((n & 0x02) << 4) | (n & 0x08); //todo const
-
-  set(F,
-    (get(F) & FSZC)
-    | (newCount ? FO : 0)
-    | f53);
+  ff.f5 = (n & 0x02) << 4;
+  ff.f3 = n & 0x08;
+  ff.h  = 0;
+  ff.o  = newCount ? 0x04 : 0;
+  ff.n  = 0;
 
   if (repeat && newCount)
     addPC(-2);
@@ -41,20 +38,16 @@ export function cpx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   set16(BC, newCount);
   set16(HLXY, (srcAddr + increment) & 0xFFFF);
 
-  // F5 = bit 1 of n
-  // F3 = bit 3 of n, where n = diff - halfCarry
-  const halfCarry = (a ^ value ^ diff) & FH;
+  const halfCarry = (a ^ value ^ diff) & 0x10;
   const n = (diff - (halfCarry ? 1 : 0)) & 0xFF;
-  const f53 = ((n & 0x02) << 4) | (n & 0x08); //todo const
 
-  set(F,
-    (diff & FS)
-    | (diff ? 0 : FZ)
-    | halfCarry
-    | (newCount ? FO : 0)
-    | FN
-    | f53
-    | getFC());
+  ff.s  = diff & 0x80;
+  ff.z  = diff ? 0 : 0x40;
+  ff.f5 = (n & 0x02) << 4;
+  ff.h  = halfCarry;
+  ff.f3 = n & 0x08;
+  ff.o  = newCount ? 0x04 : 0;
+  ff.n  = 0x02;
 
   if (repeat && newCount && diff)
     addPC(-2);

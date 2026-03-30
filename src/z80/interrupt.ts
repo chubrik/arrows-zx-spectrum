@@ -1,7 +1,7 @@
-import { get, set } from '../common/utils';
-import { HLT, IFF12, IFF1_INT, IM2, INT } from './flags';
+import { get } from '../common/utils';
+import { sf } from './flags';
 import { call88 } from './op/op-stack';
-import { I, SYS } from './registers';
+import { I } from './registers';
 import { addPC, eiDelay, refresh, setEIDelay } from './utils';
 
 const IM01_VECTOR = 0x0038;
@@ -13,15 +13,17 @@ export function interrupt() {
     return;
   };
 
-  const sys = get(SYS);
-  if ((sys & IFF1_INT) !== IFF1_INT) return; // Needs both IFF1 and INT to interrupt
+  if (!(sf.iff1 && sf.int)) return;
 
-  const hlt = sys & HLT;
-  set(SYS, sys & ~(INT | IFF12 | HLT));
-  if (hlt) addPC(1);
+  const wasHlt = sf.hlt;
+  sf.int = 0;
+  sf.iff1 = 0;
+  sf.iff2 = 0;
+  sf.hlt = 0;
+  if (wasHlt) addPC(1);
   refresh();
 
-  if (sys & IM2) {
+  if (sf.im2) {
     const vector = (get(I) << 8) | IM2_BUS_VALUE;
     const addrLow = get(vector);
     const addrHigh = get(vector + 1);

@@ -1,13 +1,10 @@
 import { get, get16, set, set16, set88 } from '../../common/utils';
-import { IFF1, IFF2 } from '../flags';
-import { PC, PCh, PCl, SP, SYS } from '../registers';
+import { packF, sf, unpackF } from '../flags';
+import { A, PC, PCh, PCl, SP } from '../registers';
 
 /** RETI | RETN */
 export function RETI_RETN() {
-  const sys = get(SYS);
-  const iff2 = sys & IFF2;
-  if (iff2) set(SYS, sys | IFF1);
-  else set(SYS, sys & ~IFF1);
+  sf.iff1 = sf.iff2 ? 0x04 : 0;
   pop16(PC);
 }
 
@@ -47,4 +44,22 @@ export function pop16(dest: number) {
   const valueHigh = get(sp++);
   set16(SP, sp & 0xFFFF);
   set88(dest, valueLow, valueHigh);
+}
+
+export function pushAF() {
+  const fByte = packF();
+  const aVal = get(A);
+  const sp = get16(SP);
+  const newSp = (sp - 2) & 0xFFFF;
+  set16(SP, newSp);
+  set88(newSp, fByte, aVal);
+}
+
+export function popAF() {
+  let sp = get16(SP);
+  const fByte = get(sp++);
+  const aVal = get(sp++);
+  set16(SP, sp & 0xFFFF);
+  unpackF(fByte);
+  set(A, aVal);
 }

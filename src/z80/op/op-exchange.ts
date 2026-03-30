@@ -1,14 +1,15 @@
 import { get, get16, set } from '../../common/utils';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HXY, L, La, LXY, SP } from '../registers';
+import { packF, unpackF } from '../flags';
+import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, Fa, H, Ha, HXY, L, La, LXY, SP } from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
   const a1 = get(A);
-  const f1 = get(F);
+  const f1 = packF();
   const a2 = get(Aa);
   const f2 = get(Fa);
   set(A, a2);
-  set(F, f2);
+  unpackF(f2);
   set(Aa, a1);
   set(Fa, f1);
 }

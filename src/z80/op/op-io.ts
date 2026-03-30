@@ -1,8 +1,8 @@
 import { readPort, writePort } from '../../common/ports';
 import { get, get16, set, set16 } from '../../common/utils';
-import { FHC, flagP, flagsSZ53P, FN, FS53, FZ } from '../flags';
-import { A, B, BC, C, F, HL } from '../registers';
-import { addPC, getFC, next } from '../utils';
+import { ff, flagP, setFSZ53P } from '../flags';
+import { A, B, BC, C, HL } from '../registers';
+import { addPC, next } from '../utils';
 
 const ED71_VALUE = 0; // NMOS: 0, CMOS: 255 (undocumented)
 
@@ -27,7 +27,9 @@ export function IN_c(reg: number) {
   const ioAddr = get16(BC);
   const value = readPort(ioAddr);
   if (reg) set(reg, value);
-  set(F, flagsSZ53P(value) | getFC());
+  setFSZ53P(value);
+  ff.h = 0;
+  ff.n = 0;
 }
 
 /** OUT (C),r | OUT (C),0 (undocumented) */
@@ -49,13 +51,16 @@ export function inx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   set16(HL, (memAddr + increment) & 0xFFFF);
 
   const k = value + ((c + increment) & 0xFF);
+  const kOverflow = k > 255;
 
-  set(F,
-    (count & FS53)
-    | (count ? 0 : FZ)
-    | (k > 255 ? FHC : 0)
-    | flagP((k & 7) ^ count)
-    | (value & 0x80 ? FN : 0));
+  ff.s  = count & 0x80;
+  ff.f5 = count & 0x20;
+  ff.f3 = count & 0x08;
+  ff.z  = count ? 0 : 0x40;
+  ff.h  = kOverflow ? 0x10 : 0;
+  ff.o  = flagP((k & 7) ^ count);
+  ff.n  = value & 0x80 ? 0x02 : 0;
+  ff.c  = kOverflow ? 0x01 : 0;
 
   if (repeat && count)
     addPC(-2);
@@ -74,13 +79,16 @@ export function outx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   set16(HL, newHL);
 
   const k = value + (newHL & 0xFF);
+  const kOverflow = k > 255;
 
-  set(F,
-    (count & FS53)
-    | (count ? 0 : FZ)
-    | (k > 255 ? FHC : 0)
-    | flagP((k & 7) ^ count)
-    | (value & 0x80 ? FN : 0));
+  ff.s  = count & 0x80;
+  ff.f5 = count & 0x20;
+  ff.f3 = count & 0x08;
+  ff.z  = count ? 0 : 0x40;
+  ff.h  = kOverflow ? 0x10 : 0;
+  ff.o  = flagP((k & 7) ^ count);
+  ff.n  = value & 0x80 ? 0x02 : 0;
+  ff.c  = kOverflow ? 0x01 : 0;
 
   if (repeat && count)
     addPC(-2);

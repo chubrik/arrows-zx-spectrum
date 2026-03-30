@@ -1,7 +1,6 @@
 import { get, set } from '../../common/utils';
-import { FO, IFF2, flagsSZ53 } from '../flags';
-import { A, F, I, R, SYS } from '../registers';
-import { getFC } from '../utils';
+import { ff, setFSZ53, sf } from '../flags';
+import { A, I, R } from '../registers';
 
 /** LD A,I */
 export function LD_A_I() {
@@ -17,5 +16,8 @@ export function LD_A_R() {
 
 function ld_A_IR(value: number) {
   set(A, value);
-  set(F, flagsSZ53(value) | ((get(SYS) & IFF2) ? FO : 0) | getFC());
+  setFSZ53(value);
+  ff.o = sf.iff2 ? 0x04 : 0;
+  ff.h = 0;
+  ff.n = 0;
 }

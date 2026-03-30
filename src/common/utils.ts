@@ -1,3 +1,5 @@
+import { packF, packSF, unpackF, unpackSF } from '../z80/flags.ts';
+import { F, SYS } from '../z80/registers.ts';
 import { getDirect, infos, setDirect } from './arrows.ts';
 
 export const values: number[] = [];
@@ -38,12 +40,34 @@ export function set(addr: number, value: number) {
   dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
 }
 
+export function markDirty(addr: number) {
+  dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
+}
+
 export function fetchAll() {
   for (let addr = 0; addr < infos.length; addr++)
     values[addr] = getDirect(addr);
+  
+    unpackF(values[F]);
+    unpackSF(values[SYS]);
 }
 
 export function commitUpdated() {
+  
+  const packedF = packF();
+
+  if (values[F] !== packedF) {
+    values[F] = packedF;
+    markDirty(F);
+  }
+
+  const packedSF = packSF();
+
+  if (values[SYS] !== packedSF) {
+    values[SYS] = packedSF;
+    markDirty(SYS);
+  }
+
   for (let i = ramMinAddr >> 5; i < 2049; i++) {
     let bits = dirtyBitmap[i];
     if (bits === 0) continue;
