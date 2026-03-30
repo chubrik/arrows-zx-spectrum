@@ -9,9 +9,9 @@ export const BIT0 = 0x01;
 
 export const FS = BIT7; // Sign
 export const FZ = BIT6; // Zero
-export const F5 = BIT5; // Bit 5 (undocumented)
+export const F5 = BIT5; // (undocumented)
 export const FH = BIT4; // Half-carry
-export const F3 = BIT3; // Bit 3 (undocumented)
+export const F3 = BIT3; // (undocumented)
 export const FO = BIT2; // Parity/Overflow
 export const FN = BIT1; // Subtract
 export const FC = BIT0; // Carry
@@ -31,54 +31,62 @@ export function flagP(value: number): number {
   return ~value & FO;
 }
 
-// --- Unpacked flag objects ---
+export let fs = 0, fz = 0, f5 = 0, fh = 0, f3 = 0, fo = 0, fn = 0, fc = 0;
+export let im2 = 0, im1 = 0, iff2 = 0, iff1 = 0, hlt = 0, int = 0;
 
-export const ff = {
-  s: 0, z: 0, f5: 0, h: 0, f3: 0, o: 0, n: 0, c: 0,
-};
-
-export const sf = {
-  im2: 0, im1: 0, iff2: 0, iff1: 0, hlt: 0, int: 0,
-};
+export function setFS(v: number) { fs = v; }
+export function setFZ(v: number) { fz = v; }
+export function setF5(v: number) { f5 = v; }
+export function setFH(v: number) { fh = v; }
+export function setF3(v: number) { f3 = v; }
+export function setFO(v: number) { fo = v; }
+export function setFN(v: number) { fn = v; }
+export function setFC(v: number) { fc = v; }
+export function setIM2(v: number) { im2 = v; }
+export function setIM1(v: number) { im1 = v; }
+export function setIFF2(v: number) { iff2 = v; }
+export function setIFF1(v: number) { iff1 = v; }
+export function setHLT(v: number) { hlt = v; }
+export function setINT(v: number) { int = v; }
 
 export function packF(): number {
-  return ff.s | ff.z | ff.f5 | ff.h | ff.f3 | ff.o | ff.n | ff.c;
+  return fs | fz | f5 | fh | f3 | fo | fn | fc;
 }
 
 export function unpackF(byte: number) {
-  ff.s = byte & FS;
-  ff.z = byte & FZ;
-  ff.f5 = byte & F5;
-  ff.h = byte & FH;
-  ff.f3 = byte & F3;
-  ff.o = byte & FO;
-  ff.n = byte & FN;
-  ff.c = byte & FC;
+  fs = byte & FS;
+  fz = byte & FZ;
+  f5 = byte & F5;
+  fh = byte & FH;
+  f3 = byte & F3;
+  fo = byte & FO;
+  fn = byte & FN;
+  fc = byte & FC;
 }
 
-export function packSF(): number {
-  return sf.im2 | sf.im1 | sf.iff2 | sf.iff1 | sf.hlt | sf.int;
+export function packSYS(): number {
+  return im2 | im1 | iff2 | iff1 | hlt | int;
 }
 
-export function unpackSF(byte: number) {
-  sf.im2 = byte & IM2;
-  sf.im1 = byte & IM1;
-  sf.iff2 = byte & IFF2;
-  sf.iff1 = byte & IFF1;
-  sf.hlt = byte & HLT;
-  sf.int = byte & INT;
+export function unpackSYS(byte: number) {
+  im2 = byte & IM2;
+  im1 = byte & IM1;
+  iff2 = byte & IFF2;
+  iff1 = byte & IFF1;
+  hlt = byte & HLT;
+  int = byte & INT;
 }
 
 /** Set S, Z, 5, 3 flags from 8-bit result */
 export function setFSZ53(value: number) {
-  ff.s = value & FS;
-  ff.z = value ? 0 : FZ;
-  ff.f5 = value & F5;
-  ff.f3 = value & F3;
+  fs = value & FS;
+  fz = value ? 0 : FZ;
+  f5 = value & F5;
+  f3 = value & F3;
 }
 
 /** Set S, Z, 5, 3, P flags from 8-bit result */
 export function setFSZ53P(value: number) {
   setFSZ53(value);
-  ff.o = flagP(value);
+  fo = flagP(value);
 }

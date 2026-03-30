@@ -1,14 +1,14 @@
 import { setRamMinAddrForTest, values } from '../src/common/utils';
 import { executeMain } from '../src/z80/execute-main';
-import { HLT, IFF1, IFF2, IM1, IM2, ff, packF, sf, unpackF } from '../src/z80/flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, setHLXY, setWZ, SPh, SPl, SYS } from '../src/z80/registers';
+import { HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, packF, setHLT, setIFF1, setIFF2, setIM1, setIM2, unpackF, unpackSYS } from '../src/z80/flags';
+import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, setHLXY, setWZ, SPh, SPl } from '../src/z80/registers';
 
 export function setupCpu() {
   setRamMinAddrForTest(0);
   for (let i = 0; i <= 0xFFFF; i++) values[i] = 0;
   for (let i = 0x10000; i <= 0x1001C; i++) values[i] = 0;
   unpackF(0);
-  sf.im2 = 0; sf.im1 = 0; sf.iff2 = 0; sf.iff1 = 0; sf.hlt = 0; sf.int = 0;
+  unpackSYS(0);
   setHLXY(HL);
   setWZ(0);
 }
@@ -57,12 +57,12 @@ export function setState(state: CpuState) {
   if (state.I !== undefined) values[I] = state.I;
   if (state.R !== undefined) values[R] = state.R;
   if (state.IM !== undefined) {
-    sf.im1 = state.IM === 1 ? IM1 : 0;
-    sf.im2 = state.IM === 2 ? IM2 : 0;
+    setIM1(state.IM === 1 ? IM1 : 0);
+    setIM2(state.IM === 2 ? IM2 : 0);
   }
-  if (state.IFF1 !== undefined) sf.iff1 = state.IFF1 ? IFF1 : 0;
-  if (state.IFF2 !== undefined) sf.iff2 = state.IFF2 ? IFF2 : 0;
-  if (state.halt !== undefined) sf.hlt = state.halt ? HLT : 0;
+  if (state.IFF1 !== undefined) setIFF1(state.IFF1 ? IFF1 : 0);
+  if (state.IFF2 !== undefined) setIFF2(state.IFF2 ? IFF2 : 0);
+  if (state.halt !== undefined) setHLT(state.halt ? HLT : 0);
   if (state.mem) {
     for (const [addr, value] of Object.entries(state.mem)) {
       values[Number(addr)] = value;
@@ -94,10 +94,10 @@ export function getState() {
     PC: (values[PCh] << 8) | values[PCl],
     I: values[I],
     R: values[R],
-    IM: (sf.im2 ? 2 : sf.im1 ? 1 : 0) as 0 | 1 | 2,
-    IFF1: (sf.iff1 ? 1 : 0) as 0 | 1,
-    IFF2: (sf.iff2 ? 1 : 0) as 0 | 1,
-    halt: (sf.hlt ? 1 : 0) as 0 | 1,
+    IM: (im2 ? 2 : im1 ? 1 : 0) as 0 | 1 | 2,
+    IFF1: (iff1 ? 1 : 0) as 0 | 1,
+    IFF2: (iff2 ? 1 : 0) as 0 | 1,
+    halt: (hlt ? 1 : 0) as 0 | 1,
   };
 }
 

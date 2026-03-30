@@ -1,11 +1,11 @@
 import { get, get16, set, set16, set88 } from '../../common/utils';
-import { IFF1, packF, sf, unpackF } from '../flags';
+import { IFF1, iff2, packF, setIFF1, unpackF } from '../flags';
 import { A, PC, PCh, PCl, SP } from '../registers';
 
 /** RETI | RETN */
 export function RETI_RETN() {
-  sf.iff1 = sf.iff2 ? IFF1 : 0;
   pop16(PC);
+  setIFF1(iff2 ? IFF1 : 0);
 }
 
 export function call88(addrLow: number, addrHigh: number = 0) {

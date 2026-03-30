@@ -1,6 +1,6 @@
 import { readPort, writePort } from '../../common/ports';
 import { get, get16, set, set16 } from '../../common/utils';
-import { F3, F5, FC, ff, FH, flagP, FN, FS, FZ, setFSZ53P } from '../flags';
+import { F3, F5, FC, FH, flagP, FN, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFO, setFS, setFSZ53P, setFZ } from '../flags';
 import { A, B, BC, C, HL } from '../registers';
 import { addPC, next } from '../utils';
 
@@ -27,9 +27,10 @@ export function IN_c(reg: number) {
   const ioAddr = get16(BC);
   const value = readPort(ioAddr);
   if (reg) set(reg, value);
+  
   setFSZ53P(value);
-  ff.h = 0;
-  ff.n = 0;
+  setFH(0);
+  setFN(0);
 }
 
 /** OUT (C),r | OUT (C),0 (undocumented) */
@@ -52,15 +53,14 @@ export function inx(increment: 1 | -1, repeat: 0 | 1 = 0) {
 
   const k = value + ((c + increment) & 0xFF);
   const kOverflow = k > 255;
-
-  ff.s = count & FS;
-  ff.f5 = count & F5;
-  ff.f3 = count & F3;
-  ff.z = count ? 0 : FZ;
-  ff.h = kOverflow ? FH : 0;
-  ff.o = flagP((k & 7) ^ count);
-  ff.n = value & FS ? FN : 0;
-  ff.c = kOverflow ? FC : 0;
+  setFS(count & FS);
+  setF5(count & F5);
+  setF3(count & F3);
+  setFZ(count ? 0 : FZ);
+  setFH(kOverflow ? FH : 0);
+  setFO(flagP((k & 7) ^ count));
+  setFN(value & FS ? FN : 0);
+  setFC(kOverflow ? FC : 0);
 
   if (repeat && count)
     addPC(-2);
@@ -80,15 +80,14 @@ export function outx(increment: 1 | -1, repeat: 0 | 1 = 0) {
 
   const k = value + (newHL & 0xFF);
   const kOverflow = k > 255;
-
-  ff.s = count & FS;
-  ff.f5 = count & F5;
-  ff.f3 = count & F3;
-  ff.z = count ? 0 : FZ;
-  ff.h = kOverflow ? FH : 0;
-  ff.o = flagP((k & 7) ^ count);
-  ff.n = value & FS ? FN : 0;
-  ff.c = kOverflow ? FC : 0;
+  setFS(count & FS);
+  setF5(count & F5);
+  setF3(count & F3);
+  setFZ(count ? 0 : FZ);
+  setFH(kOverflow ? FH : 0);
+  setFO(flagP((k & 7) ^ count));
+  setFN(value & FS ? FN : 0);
+  setFC(kOverflow ? FC : 0);
 
   if (repeat && count)
     addPC(-2);

@@ -1,4 +1,4 @@
-import { packF, packSF, unpackF, unpackSF } from '../z80/flags.ts';
+import { packF, packSYS, unpackF, unpackSYS } from '../z80/flags.ts';
 import { F, SYS } from '../z80/registers.ts';
 import { getDirect, infos, setDirect } from './arrows.ts';
 
@@ -49,7 +49,7 @@ export function fetchAll() {
     values[addr] = getDirect(addr);
 
   unpackF(values[F]);
-  unpackSF(values[SYS]);
+  unpackSYS(values[SYS]);
 }
 
 export function commitUpdated() {
@@ -61,7 +61,7 @@ export function commitUpdated() {
     markDirty(F);
   }
 
-  const packedSF = packSF();
+  const packedSF = packSYS();
 
   if (values[SYS] !== packedSF) {
     values[SYS] = packedSF;

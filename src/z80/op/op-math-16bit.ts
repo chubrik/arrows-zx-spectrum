@@ -1,5 +1,5 @@
 import { get, get16, set16, set88 } from '../../common/utils';
-import { F3, F5, FC, ff, FH, FN, FS, FZ } from '../flags';
+import { F3, F5, FC, fc, FH, FN, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFO, setFS, setFZ } from '../flags';
 import { HL, HLXY } from '../registers';
 import { next16 } from '../utils';
 
@@ -11,11 +11,11 @@ export function addHLXY(SS: number) {
   const result = sum & 0xFFFF;
   set16(HLXY, result);
 
-  ff.f5 = (result >> 8) & F5;
-  ff.f3 = (result >> 8) & F3;
-  ff.h = ((hl ^ ss ^ result) >> 8) & FH;
-  ff.n = 0;
-  ff.c = (sum >> 16) & FC;
+  setF5((result >> 8) & F5);
+  setF3((result >> 8) & F3);
+  setFH(((hl ^ ss ^ result) >> 8) & FH);
+  setFN(0);
+  setFC((sum >> 16) & FC);
 }
 
 /** LD (nn),dd */
@@ -38,36 +38,36 @@ export function LD_dd_nn(dest: number) {
 export function ADC_HL(src: number) {
   const hl = get16(HL);
   const ss = get16(src);
-  const sum = hl + ss + ff.c;
+  const sum = hl + ss + fc;
   const result = sum & 0xFFFF;
   set16(HL, result);
 
-  ff.s = (result >> 8) & FS;
-  ff.z = result ? 0 : FZ;
-  ff.f5 = (result >> 8) & F5;
-  ff.f3 = (result >> 8) & F3;
-  ff.h = ((hl ^ ss ^ result) >> 8) & FH;
-  ff.o = ((hl ^ ~ss) & (hl ^ result) & 0x8000) >> 13;
-  ff.n = 0;
-  ff.c = (sum >> 16) & FC;
+  setFS((result >> 8) & FS);
+  setFZ(result ? 0 : FZ);
+  setF5((result >> 8) & F5);
+  setF3((result >> 8) & F3);
+  setFH(((hl ^ ss ^ result) >> 8) & FH);
+  setFO(((hl ^ ~ss) & (hl ^ result) & 0x8000) >> 13);
+  setFN(0);
+  setFC((sum >> 16) & FC);
 }
 
 /** SBC HL,ss */
 export function SBC_HL(src: number) {
   const hl = get16(HL);
   const ss = get16(src);
-  const diff = hl - ss - ff.c;
+  const diff = hl - ss - fc;
   const result = diff & 0xFFFF;
   set16(HL, result);
 
-  ff.s = (result >> 8) & FS;
-  ff.z = result ? 0 : FZ;
-  ff.f5 = (result >> 8) & F5;
-  ff.f3 = (result >> 8) & F3;
-  ff.h = ((hl ^ ss ^ result) >> 8) & FH;
-  ff.o = ((hl ^ ss) & (hl ^ result) & 0x8000) >> 13;
-  ff.n = FN;
-  ff.c = (diff >> 16) & FC;
+  setFS((result >> 8) & FS);
+  setFZ(result ? 0 : FZ);
+  setF5((result >> 8) & F5);
+  setF3((result >> 8) & F3);
+  setFH(((hl ^ ss ^ result) >> 8) & FH);
+  setFO(((hl ^ ss) & (hl ^ result) & 0x8000) >> 13);
+  setFN(FN);
+  setFC((diff >> 16) & FC);
 }
 
 export function inc16(addr: number) {

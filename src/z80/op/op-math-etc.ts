@@ -1,50 +1,54 @@
 import { get, set } from '../../common/utils';
-import { BIT7, F3, F5, FC, ff, FH, FN, FO, setFSZ53, setFSZ53P } from '../flags';
+import { BIT7, F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FO, setF3, setF5, setFC, setFH, setFN, setFO, setFSZ53, setFSZ53P } from '../flags';
 import { A } from '../registers';
 
 /** DAA */
 export function DAA() {
   let a = get(A);
   const origA = a;
-  const wasN = ff.n;
+  const wasN = fn;
   let correction = 0;
-  if (ff.h || (a & 0x0F) > 9) correction |= 0x06;
-  if (ff.c || a > 0x99) { correction |= 0x60; ff.c = FC; }
+  if (fh || (a & 0x0F) > 9) correction |= 0x06;
+  if (fc || a > 0x99) { correction |= 0x60; setFC(FC); }
   a = (wasN ? a - correction : a + correction) & 0xFF;
-  setFSZ53P(a);
-  ff.h = (origA ^ correction ^ a) & FH;
   set(A, a);
+
+  setFSZ53P(a);
+  setFH((origA ^ correction ^ a) & FH);
 }
 
 /** CPL */
 export function CPL() {
   const a = get(A) ^ 0xFF;
   set(A, a);
-  ff.f5 = a & F5;
-  ff.f3 = a & F3;
-  ff.h = FH;
-  ff.n = FN;
+
+  setF5(a & F5);
+  setF3(a & F3);
+  setFH(FH);
+  setFN(FN);
 }
 
 /** CCF */
 export function CCF() {
   const a = get(A);
-  const oldC = ff.c;
-  ff.f5 = (a & F5) | ff.f5;
-  ff.f3 = (a & F3) | ff.f3;
-  ff.h = oldC ? FH : 0;
-  ff.n = 0;
-  ff.c = oldC ? 0 : FC;
+  const oldC = fc;
+
+  setF5((a & F5) | f5);
+  setF3((a & F3) | f3);
+  setFH(oldC ? FH : 0);
+  setFN(0);
+  setFC(oldC ? 0 : FC);
 }
 
 /** SCF */
 export function SCF() {
   const a = get(A);
-  ff.f5 = (a & F5) | ff.f5;
-  ff.f3 = (a & F3) | ff.f3;
-  ff.h = 0;
-  ff.n = 0;
-  ff.c = FC;
+  
+  setF5((a & F5) | f5);
+  setF3((a & F3) | f3);
+  setFH(0);
+  setFN(0);
+  setFC(FC);
 }
 
 /** NEG */
@@ -54,8 +58,8 @@ export function NEG() {
   set(A, result);
 
   setFSZ53(result);
-  ff.h = (a ^ result) & FH;
-  ff.o = a === BIT7 ? FO : 0;
-  ff.n = FN;
-  ff.c = a ? FC : 0;
+  setFH((a ^ result) & FH);
+  setFO(a === BIT7 ? FO : 0);
+  setFN(FN);
+  setFC(a ? FC : 0);
 }

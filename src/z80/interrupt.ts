@@ -1,5 +1,5 @@
 import { get } from '../common/utils';
-import { sf } from './flags';
+import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { call88 } from './op/op-stack';
 import { eiDelay, I, setEIDelay } from './registers';
 import { addPC, refresh } from './utils';
@@ -13,17 +13,17 @@ export function interrupt() {
     return;
   };
 
-  if (!(sf.iff1 && sf.int)) return;
+  if (!(iff1 && int)) return;
 
-  const wasHlt = sf.hlt;
-  sf.int = 0;
-  sf.iff1 = 0;
-  sf.iff2 = 0;
-  sf.hlt = 0;
+  const wasHlt = hlt;
+  setINT(0);
+  setIFF1(0);
+  setIFF2(0);
+  setHLT(0);
   if (wasHlt) addPC(1);
   refresh();
 
-  if (sf.im2) {
+  if (im2) {
     const vector = (get(I) << 8) | IM2_BUS_VALUE;
     const addrLow = get(vector);
     const addrHigh = get(vector + 1);

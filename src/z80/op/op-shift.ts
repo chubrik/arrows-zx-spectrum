@@ -1,5 +1,5 @@
 import { get, get16, set } from '../../common/utils';
-import { BIT7, F3, F5, FC, ff, setFSZ53P } from '../flags';
+import { BIT7, F3, F5, FC, fc, setF3, setF5, setFC, setFH, setFN, setFSZ53P } from '../flags';
 import { A, HL } from '../registers';
 
 /** RLCA */
@@ -23,7 +23,7 @@ export function RRCA() {
 /** RLA */
 export function RLA() {
   const a = get(A);
-  const oldCarry = ff.c;
+  const oldCarry = fc;
   const carry = (a >> 7) & FC;
   const result = ((a << 1) | oldCarry) & 0xFF;
   set(A, result);
@@ -33,7 +33,7 @@ export function RLA() {
 /** RRA */
 export function RRA() {
   const a = get(A);
-  const oldCarry = ff.c;
+  const oldCarry = fc;
   const carry = a & FC;
   const result = ((a >> 1) | (oldCarry << 7)) & 0xFF;
   set(A, result);
@@ -41,11 +41,11 @@ export function RRA() {
 }
 
 function setFRotA(result: number, carry: number) {
-  ff.f5 = result & F5;
-  ff.f3 = result & F3;
-  ff.h = 0;
-  ff.n = 0;
-  ff.c = carry;
+  setF5(result & F5);
+  setF3(result & F3);
+  setFH(0);
+  setFN(0);
+  setFC(carry);
 }
 
 /** RLD */
@@ -57,9 +57,10 @@ export function RLD() {
   const resultMem = ((mem << 4) | (a & 0x0F)) & 0xFF;
   set(A, resultA);
   set(addr, resultMem);
+
   setFSZ53P(resultA);
-  ff.h = 0;
-  ff.n = 0;
+  setFH(0);
+  setFN(0);
 }
 
 /** RRD */
@@ -71,16 +72,17 @@ export function RRD() {
   const resultMem = ((a << 4) | (mem >> 4)) & 0xFF;
   set(A, resultA);
   set(addr, resultMem);
+  
   setFSZ53P(resultA);
-  ff.h = 0;
-  ff.n = 0;
+  setFH(0);
+  setFN(0);
 }
 
 function setFShift(result: number, carry: number) {
   setFSZ53P(result);
-  ff.h = 0;
-  ff.n = 0;
-  ff.c = carry;
+  setFH(0);
+  setFN(0);
+  setFC(carry);
 }
 
 /** RLC r | RLC (HL) | RLC (IX+d) | RLC (IY+d) */
@@ -101,7 +103,7 @@ export function RRC_val(value: number): number {
 
 /** RL r | RL (HL) | RL (IX+d) | RL (IY+d) */
 export function RL_val(value: number): number {
-  const oldCarry = ff.c;
+  const oldCarry = fc;
   const carry = (value >> 7) & FC;
   const result = ((value << 1) | oldCarry) & 0xFF;
   setFShift(result, carry);
@@ -110,7 +112,7 @@ export function RL_val(value: number): number {
 
 /** RR r | RR (HL) | RR (IX+d) | RR (IY+d) */
 export function RR_val(value: number): number {
-  const oldCarry = ff.c;
+  const oldCarry = fc;
   const carry = value & FC;
   const result = ((value >> 1) | (oldCarry << 7)) & 0xFF;
   setFShift(result, carry);

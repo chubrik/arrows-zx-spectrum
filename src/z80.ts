@@ -1,7 +1,7 @@
 import { initMemory } from './common/memory';
 import { commitUpdated, fetchAll } from './common/utils';
 import { executeMain } from './z80/execute-main';
-import { INT, sf } from './z80/flags';
+import { setINT, INT } from './z80/flags';
 import { initCpu } from './z80/init';
 import { interrupt } from './z80/interrupt';
 
@@ -35,7 +35,7 @@ always(() => {
 
     if (opCount === opPerFrame) {
       opCount = 0;
-      sf.int = INT;
+      setINT(INT);
     }
 
     interrupt();
