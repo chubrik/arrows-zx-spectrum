@@ -1,8 +1,7 @@
 import { setRamMinAddrForTest, values } from '../src/common/utils';
 import { executeMain } from '../src/z80/execute-main';
-import { ff, packF, sf, unpackF } from '../src/z80/flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, setHLXY, SPh, SPl, SYS } from '../src/z80/registers';
-import { setWZ } from '../src/z80/utils';
+import { HLT, IFF1, IFF2, IM1, IM2, ff, packF, sf, unpackF } from '../src/z80/flags';
+import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, setHLXY, setWZ, SPh, SPl, SYS } from '../src/z80/registers';
 
 export function setupCpu() {
   setRamMinAddrForTest(0);
@@ -58,12 +57,12 @@ export function setState(state: CpuState) {
   if (state.I !== undefined) values[I] = state.I;
   if (state.R !== undefined) values[R] = state.R;
   if (state.IM !== undefined) {
-    sf.im1 = state.IM === 1 ? 0x10 : 0;
-    sf.im2 = state.IM === 2 ? 0x20 : 0;
+    sf.im1 = state.IM === 1 ? IM1 : 0;
+    sf.im2 = state.IM === 2 ? IM2 : 0;
   }
-  if (state.IFF1 !== undefined) sf.iff1 = state.IFF1 ? 0x04 : 0;
-  if (state.IFF2 !== undefined) sf.iff2 = state.IFF2 ? 0x08 : 0;
-  if (state.halt !== undefined) sf.hlt = state.halt ? 0x02 : 0;
+  if (state.IFF1 !== undefined) sf.iff1 = state.IFF1 ? IFF1 : 0;
+  if (state.IFF2 !== undefined) sf.iff2 = state.IFF2 ? IFF2 : 0;
+  if (state.halt !== undefined) sf.hlt = state.halt ? HLT : 0;
   if (state.mem) {
     for (const [addr, value] of Object.entries(state.mem)) {
       values[Number(addr)] = value;

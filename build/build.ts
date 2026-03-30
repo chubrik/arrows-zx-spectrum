@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from 'fs';
 import { basename } from 'path';
 import { asciiToUnicode, bytesToUnicode } from '../src/common/encode.ts';
 import { check } from '../src/common/utils.ts';
+import { IFF1, IFF2, IM1, IM2 } from '../src/z80/flags.ts';
 import { getResource } from './resources.ts';
 import { buildPath, buildTs, DIST_DIR, minifyJs, SRC_DIR, writeToPath } from './utils.ts';
 import { loadSnapshot, type Z80Snapshot } from './z80-snapshot.ts';
@@ -127,11 +128,10 @@ async function buildSnapshotCpu(gameName: string, snap: Z80Snapshot) {
   const fileName = 'snapshot-cpu';
   const rawCode = readFileSync(`${SRC_DIR}/snapshot-cpu.ts`, 'utf8');
 
-  // SYS byte: IM2=0x20, IM1=0x10, IFF2=0x08, IFF1=0x04, HLT=0x02
   const sys =
-    (snap.IM === 2 ? 0x20 : snap.IM === 1 ? 0x10 : 0) |
-    (snap.IFF2 ? 0x08 : 0) |
-    (snap.IFF1 ? 0x04 : 0);
+    (snap.IM === 2 ? IM2 : snap.IM === 1 ? IM1 : 0) |
+    (snap.IFF2 ? IFF2 : 0) |
+    (snap.IFF1 ? IFF1 : 0);
 
   const body = [
     `setDirect(A, ${snap.A})`,

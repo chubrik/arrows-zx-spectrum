@@ -47,13 +47,13 @@ export function markDirty(addr: number) {
 export function fetchAll() {
   for (let addr = 0; addr < infos.length; addr++)
     values[addr] = getDirect(addr);
-  
-    unpackF(values[F]);
-    unpackSF(values[SYS]);
+
+  unpackF(values[F]);
+  unpackSF(values[SYS]);
 }
 
 export function commitUpdated() {
-  
+
   const packedF = packF();
 
   if (values[F] !== packedF) {

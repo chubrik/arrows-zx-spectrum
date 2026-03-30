@@ -2,7 +2,7 @@ import { get, get16, set } from '../common/utils';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';
-import { FH, ff, sf } from './flags';
+import { ff, FH, HLT, IFF1, IFF2, sf } from './flags';
 import { EX_AF_AF, EX_DE_HL, EX_sp_HL, EXX } from './op/op-exchange';
 import { IN_A_n, OUT_n_A } from './op/op-io';
 import { DJNZ_e, JR_e } from './op/op-jump';
@@ -12,8 +12,8 @@ import { add, cp, dec, inc, logic, sub } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { RLA, RLCA, RRA, RRCA } from './op/op-shift';
 import { call88, callNext16, pop16, popAF, push16, pushAF } from './op/op-stack';
-import { A, B, BC, C, D, DE, E, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, setHLXY, SP, SPh, SPl } from './registers';
-import { addPC, getHLXYd, next, next16, nop, refresh, setEIDelay, setPCNext16 } from './utils';
+import { A, B, BC, C, D, DE, E, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, setEIDelay, setHLXY, SP, SPh, SPl } from './registers';
+import { addPC, getHLXYd, next, next16, nop, refresh, setPCNext16 } from './utils';
 
 export function executeMain() {
   refresh();
@@ -148,7 +148,7 @@ const opsMain = [
   /* 73 LD (HL),E  */ () => set(getHLXYd(), get(E)),
   /* 74 LD (HL),H  */ () => set(getHLXYd(), get(H)),
   /* 75 LD (HL),L  */ () => set(getHLXYd(), get(L)),
-  /* 76 HALT       */ () => { sf.hlt = 0x02; addPC(-1); },
+  /* 76 HALT       */ () => { sf.hlt = HLT; addPC(-1); },
   /* 77 LD (HL),A  */ () => set(getHLXYd(), get(A)),
   /* 78 LD A,B     */ () => set(A, get(B)),
   /* 79 LD A,C     */ () => set(A, get(C)),
@@ -289,7 +289,7 @@ const opsMain = [
   /* F8 RET M      */ () => ff.s ? pop16(PC) : {},
   /* F9 LD SP,HL   */ () => { set(SPl, get(LXY)); set(SPh, get(HXY)); },
   /* FA JP M,nn    */ () => ff.s ? setPCNext16() : addPC(2),
-  /* FB EI         */ () => { sf.iff1 = 0x04; sf.iff2 = 0x08; setEIDelay(1); },
+  /* FB EI         */ () => { sf.iff1 = IFF1; sf.iff2 = IFF2; setEIDelay(1); },
   /* FC CALL M,nn  */ () => ff.s ? callNext16() : addPC(2),
   /* FD --- IY --- */ () => { setHLXY(IY); executeMain(); setHLXY(HL); },
   /* FE CP n       */ () => cp(next()),

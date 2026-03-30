@@ -1,17 +1,8 @@
 import { get, get16, set, set16, set88 } from '../common/utils';
-import { ff } from './flags';
+import { BIT7 } from './flags';
 import { HL, HLXY, PC, R } from './registers';
 
 export function nop() { };
-
-export let eiDelay: 0 | 1 = 0;
-export function setEIDelay(value: 0 | 1) { eiDelay = value; }
-
-//todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
-let wzh = 0;
-let wzl = 0;
-export function getWZh(): number { return wzh; }
-export function setWZ(value: number) { wzl = value & 0xFF; wzh = value >> 8; }
 
 export function addPC(add: number) {
   const pc = get16(PC);
@@ -41,7 +32,7 @@ export function setPCNext16() {
 
 export function refresh() {
   const r = get(R);
-  const newR = (r & 0x80) | ((r + 1) & 0x7F);
+  const newR = (r & BIT7) | ((r + 1) & 0x7F);
   set(R, newR);
 }
 

@@ -1,5 +1,5 @@
 import { get, set } from '../common/utils';
-import { sf } from './flags';
+import { IM1, IM2, sf } from './flags';
 import { cpx, ldx } from './op/op-block';
 import { IN_c, inx, OUT_c, outx } from './op/op-io';
 import { LD_A_I, LD_A_R } from './op/op-load-8bit';
@@ -45,7 +45,7 @@ const opsMisc = [
   /* ED53 LD (nn),DE   */ () => LD_nn_dd(DE),
   /* ED54 NEG        * */ NEG,
   /* ED55 RETN       * */ RETI_RETN,
-  /* ED56 IM 1         */ () => { sf.im1 = 0x10; sf.im2 = 0; },
+  /* ED56 IM 1         */ () => { sf.im1 = IM1; sf.im2 = 0; },
   /* ED57 LD A,I       */ LD_A_I,
   /* ED58 IN E,(C)     */ () => IN_c(E),
   /* ED59 OUT (C),E    */ () => OUT_c(E),
@@ -53,7 +53,7 @@ const opsMisc = [
   /* ED5B LD DE,(nn)   */ () => LD_dd_nn(DE),
   /* ED5C NEG        * */ NEG,
   /* ED5D RETI       * */ RETI_RETN,
-  /* ED5E IM 2         */ () => { sf.im1 = 0; sf.im2 = 0x20; },
+  /* ED5E IM 2         */ () => { sf.im1 = 0; sf.im2 = IM2; },
   /* ED5F LD A,R       */ LD_A_R,
 
   /* ED60 IN H,(C)     */ () => IN_c(H),
@@ -79,7 +79,7 @@ const opsMisc = [
   /* ED73 LD (nn),SP   */ () => LD_nn_dd(SP),
   /* ED74 NEG        * */ NEG,
   /* ED75 RETN       * */ RETI_RETN,
-  /* ED76 IM 1       * */ () => { sf.im1 = 0x10; sf.im2 = 0; },
+  /* ED76 IM 1       * */ () => { sf.im1 = IM1; sf.im2 = 0; },
   /* ED77 ---          */ nop,
   /* ED78 IN A,(C)     */ () => IN_c(A),
   /* ED79 OUT (C),A    */ () => OUT_c(A),
@@ -87,7 +87,7 @@ const opsMisc = [
   /* ED7B LD SP,(nn)   */ () => LD_dd_nn(SP),
   /* ED7C NEG        * */ NEG,
   /* ED7D RETI       * */ RETI_RETN,
-  /* ED7E IM 2       * */ () => { sf.im1 = 0; sf.im2 = 0x20; },
+  /* ED7E IM 2       * */ () => { sf.im1 = 0; sf.im2 = IM2; },
   /* ED7F ---          */ nop,
 
   /* ED80 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,

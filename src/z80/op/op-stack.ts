@@ -1,10 +1,10 @@
 import { get, get16, set, set16, set88 } from '../../common/utils';
-import { packF, sf, unpackF } from '../flags';
+import { IFF1, packF, sf, unpackF } from '../flags';
 import { A, PC, PCh, PCl, SP } from '../registers';
 
 /** RETI | RETN */
 export function RETI_RETN() {
-  sf.iff1 = sf.iff2 ? 0x04 : 0;
+  sf.iff1 = sf.iff2 ? IFF1 : 0;
   pop16(PC);
 }
 

@@ -10,7 +10,7 @@ export function initMemory(chunkX: number, chunkY: number) {
 
   for (let addr = 0; addr <= 0xFFFF; addr++)
     initAddrInfo(addr, memoryX, memoryY);
-  
+
   infos[0x10000] = infos[0]; // Mirror 0x0000 address for easier access to byte pairs
 }
 

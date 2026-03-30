@@ -1,6 +1,6 @@
 import { readPort, writePort } from '../../common/ports';
 import { get, get16, set, set16 } from '../../common/utils';
-import { ff, flagP, setFSZ53P } from '../flags';
+import { F3, F5, FC, ff, FH, flagP, FN, FS, FZ, setFSZ53P } from '../flags';
 import { A, B, BC, C, HL } from '../registers';
 import { addPC, next } from '../utils';
 
@@ -53,14 +53,14 @@ export function inx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   const k = value + ((c + increment) & 0xFF);
   const kOverflow = k > 255;
 
-  ff.s  = count & 0x80;
-  ff.f5 = count & 0x20;
-  ff.f3 = count & 0x08;
-  ff.z  = count ? 0 : 0x40;
-  ff.h  = kOverflow ? 0x10 : 0;
-  ff.o  = flagP((k & 7) ^ count);
-  ff.n  = value & 0x80 ? 0x02 : 0;
-  ff.c  = kOverflow ? 0x01 : 0;
+  ff.s = count & FS;
+  ff.f5 = count & F5;
+  ff.f3 = count & F3;
+  ff.z = count ? 0 : FZ;
+  ff.h = kOverflow ? FH : 0;
+  ff.o = flagP((k & 7) ^ count);
+  ff.n = value & FS ? FN : 0;
+  ff.c = kOverflow ? FC : 0;
 
   if (repeat && count)
     addPC(-2);
@@ -81,14 +81,14 @@ export function outx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   const k = value + (newHL & 0xFF);
   const kOverflow = k > 255;
 
-  ff.s  = count & 0x80;
-  ff.f5 = count & 0x20;
-  ff.f3 = count & 0x08;
-  ff.z  = count ? 0 : 0x40;
-  ff.h  = kOverflow ? 0x10 : 0;
-  ff.o  = flagP((k & 7) ^ count);
-  ff.n  = value & 0x80 ? 0x02 : 0;
-  ff.c  = kOverflow ? 0x01 : 0;
+  ff.s = count & FS;
+  ff.f5 = count & F5;
+  ff.f3 = count & F3;
+  ff.z = count ? 0 : FZ;
+  ff.h = kOverflow ? FH : 0;
+  ff.o = flagP((k & 7) ^ count);
+  ff.n = value & FS ? FN : 0;
+  ff.c = kOverflow ? FC : 0;
 
   if (repeat && count)
     addPC(-2);

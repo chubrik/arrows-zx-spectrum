@@ -1,11 +1,34 @@
-export const FH = 0x10; // Half-carry
+export const BIT7 = 0x80;
+export const BIT6 = 0x40;
+export const BIT5 = 0x20;
+export const BIT4 = 0x10;
+export const BIT3 = 0x08;
+export const BIT2 = 0x04;
+export const BIT1 = 0x02;
+export const BIT0 = 0x01;
+
+export const FS = BIT7; // Sign
+export const FZ = BIT6; // Zero
+export const F5 = BIT5; // Bit 5 (undocumented)
+export const FH = BIT4; // Half-carry
+export const F3 = BIT3; // Bit 3 (undocumented)
+export const FO = BIT2; // Parity/Overflow
+export const FN = BIT1; // Subtract
+export const FC = BIT0; // Carry
+
+export const IM2 = BIT5;
+export const IM1 = BIT4;
+export const IFF2 = BIT3;
+export const IFF1 = BIT2;
+export const HLT = BIT1;
+export const INT = BIT0;
 
 /** P: 0x04 if parity is even */
 export function flagP(value: number): number {
   value ^= value >> 4;
   value ^= value << 2;
   value ^= value >> 1;
-  return ~value & 0x04;
+  return ~value & FO;
 }
 
 // --- Unpacked flag objects ---
@@ -23,14 +46,14 @@ export function packF(): number {
 }
 
 export function unpackF(byte: number) {
-  ff.s  = byte & 0x80;
-  ff.z  = byte & 0x40;
-  ff.f5 = byte & 0x20;
-  ff.h  = byte & 0x10;
-  ff.f3 = byte & 0x08;
-  ff.o  = byte & 0x04;
-  ff.n  = byte & 0x02;
-  ff.c  = byte & 0x01;
+  ff.s = byte & FS;
+  ff.z = byte & FZ;
+  ff.f5 = byte & F5;
+  ff.h = byte & FH;
+  ff.f3 = byte & F3;
+  ff.o = byte & FO;
+  ff.n = byte & FN;
+  ff.c = byte & FC;
 }
 
 export function packSF(): number {
@@ -38,20 +61,20 @@ export function packSF(): number {
 }
 
 export function unpackSF(byte: number) {
-  sf.im2  = byte & 0x20;
-  sf.im1  = byte & 0x10;
-  sf.iff2 = byte & 0x08;
-  sf.iff1 = byte & 0x04;
-  sf.hlt  = byte & 0x02;
-  sf.int  = byte & 0x01;
+  sf.im2 = byte & IM2;
+  sf.im1 = byte & IM1;
+  sf.iff2 = byte & IFF2;
+  sf.iff1 = byte & IFF1;
+  sf.hlt = byte & HLT;
+  sf.int = byte & INT;
 }
 
 /** Set S, Z, 5, 3 flags from 8-bit result */
 export function setFSZ53(value: number) {
-  ff.s  = value & 0x80;
-  ff.z  = value ? 0 : 0x40;
-  ff.f5 = value & 0x20;
-  ff.f3 = value & 0x08;
+  ff.s = value & FS;
+  ff.z = value ? 0 : FZ;
+  ff.f5 = value & F5;
+  ff.f3 = value & F3;
 }
 
 /** Set S, Z, 5, 3, P flags from 8-bit result */

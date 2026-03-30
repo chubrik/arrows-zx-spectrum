@@ -1,8 +1,8 @@
 import { get } from '../common/utils';
 import { sf } from './flags';
 import { call88 } from './op/op-stack';
-import { I } from './registers';
-import { addPC, eiDelay, refresh, setEIDelay } from './utils';
+import { eiDelay, I, setEIDelay } from './registers';
+import { addPC, refresh } from './utils';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = 0xFF;

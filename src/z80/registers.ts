@@ -34,4 +34,13 @@ export function setHLXY(hlxy: number) {
   HXY = hlxy + 1;
 }
 
+export let eiDelay: 0 | 1 = 0;
+export function setEIDelay(value: 0 | 1) { eiDelay = value; }
+
+//todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
+let wzh = 0;
+let wzl = 0;
+export function getWZh(): number { return wzh; }
+export function setWZ(value: number) { wzl = value & 0xFF; wzh = value >> 8; }
+
 export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY, PCl as PC, SPl as SP };

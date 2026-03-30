@@ -1,5 +1,5 @@
 import { get, get16, set, set16 } from '../../common/utils';
-import { ff } from '../flags';
+import { F3, ff, FH, FN, FO, FS, FZ } from '../flags';
 import { A, BC, DE, HLXY } from '../registers';
 import { addPC } from '../utils';
 
@@ -18,10 +18,10 @@ export function ldx(increment: 1 | -1, repeat: 0 | 1 = 0) {
 
   const n = (a + value) & 0xFF;
   ff.f5 = (n & 0x02) << 4;
-  ff.f3 = n & 0x08;
-  ff.h  = 0;
-  ff.o  = newCount ? 0x04 : 0;
-  ff.n  = 0;
+  ff.f3 = n & F3;
+  ff.h = 0;
+  ff.o = newCount ? FO : 0;
+  ff.n = 0;
 
   if (repeat && newCount)
     addPC(-2);
@@ -38,16 +38,16 @@ export function cpx(increment: 1 | -1, repeat: 0 | 1 = 0) {
   set16(BC, newCount);
   set16(HLXY, (srcAddr + increment) & 0xFFFF);
 
-  const halfCarry = (a ^ value ^ diff) & 0x10;
+  const halfCarry = (a ^ value ^ diff) & FH;
   const n = (diff - (halfCarry ? 1 : 0)) & 0xFF;
 
-  ff.s  = diff & 0x80;
-  ff.z  = diff ? 0 : 0x40;
+  ff.s = diff & FS;
+  ff.z = diff ? 0 : FZ;
   ff.f5 = (n & 0x02) << 4;
-  ff.h  = halfCarry;
-  ff.f3 = n & 0x08;
-  ff.o  = newCount ? 0x04 : 0;
-  ff.n  = 0x02;
+  ff.h = halfCarry;
+  ff.f3 = n & F3;
+  ff.o = newCount ? FO : 0;
+  ff.n = FN;
 
   if (repeat && newCount && diff)
     addPC(-2);

@@ -1,26 +1,9 @@
 import { get, get16, set } from '../common/utils';
+import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
 import { BIT_b_val } from './op/op-bit';
 import { RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
-import { A, B, C, D, E, H, HL, L } from './registers';
-import { getWZh, next, refresh } from './utils';
-
-export const BIT7 = 0x80;
-export const BIT6 = 0x40;
-export const BIT5 = 0x20;
-export const BIT4 = 0x10;
-export const BIT3 = 0x08;
-export const BIT2 = 0x04;
-export const BIT1 = 0x02;
-export const BIT0 = 0x01;
-
-export const _BIT7 = ~BIT7;
-export const _BIT6 = ~BIT6;
-export const _BIT5 = ~BIT5;
-export const _BIT4 = ~BIT4;
-export const _BIT3 = ~BIT3;
-export const _BIT2 = ~BIT2;
-export const _BIT1 = ~BIT1;
-export const _BIT0 = ~BIT0;
+import { A, B, C, D, E, getWZh, H, HL, L } from './registers';
+import { next, refresh } from './utils';
 
 /** Bit Instructions (CB) */
 export function executeBit() {
@@ -39,8 +22,8 @@ function testBitHL(bit: number) {
   BIT_b_val(bit, get(addr), getWZh());
 }
 
-function resBit(_bit: number, addr: number) {
-  set(addr, get(addr) & _bit);
+function resBit(bit: number, addr: number) {
+  set(addr, get(addr) & bit);
 }
 
 function setBit(bit: number, addr: number) {
@@ -184,73 +167,73 @@ const opsBit: (() => void)[] = [
   /* 7E BIT 7,(HL) */ () => testBitHL(BIT7),
   /* 7F BIT 7,A    */ () => testBit(BIT7, A),
 
-  /* 80 RES 0,B    */ () => resBit(_BIT0, B),
-  /* 81 RES 0,C    */ () => resBit(_BIT0, C),
-  /* 82 RES 0,D    */ () => resBit(_BIT0, D),
-  /* 83 RES 0,E    */ () => resBit(_BIT0, E),
-  /* 84 RES 0,H    */ () => resBit(_BIT0, H),
-  /* 85 RES 0,L    */ () => resBit(_BIT0, L),
-  /* 86 RES 0,(HL) */ () => resBit(_BIT0, get16(HL)),
-  /* 87 RES 0,A    */ () => resBit(_BIT0, A),
-  /* 88 RES 1,B    */ () => resBit(_BIT1, B),
-  /* 89 RES 1,C    */ () => resBit(_BIT1, C),
-  /* 8A RES 1,D    */ () => resBit(_BIT1, D),
-  /* 8B RES 1,E    */ () => resBit(_BIT1, E),
-  /* 8C RES 1,H    */ () => resBit(_BIT1, H),
-  /* 8D RES 1,L    */ () => resBit(_BIT1, L),
-  /* 8E RES 1,(HL) */ () => resBit(_BIT1, get16(HL)),
-  /* 8F RES 1,A    */ () => resBit(_BIT1, A),
+  /* 80 RES 0,B    */ () => resBit(~BIT0, B),
+  /* 81 RES 0,C    */ () => resBit(~BIT0, C),
+  /* 82 RES 0,D    */ () => resBit(~BIT0, D),
+  /* 83 RES 0,E    */ () => resBit(~BIT0, E),
+  /* 84 RES 0,H    */ () => resBit(~BIT0, H),
+  /* 85 RES 0,L    */ () => resBit(~BIT0, L),
+  /* 86 RES 0,(HL) */ () => resBit(~BIT0, get16(HL)),
+  /* 87 RES 0,A    */ () => resBit(~BIT0, A),
+  /* 88 RES 1,B    */ () => resBit(~BIT1, B),
+  /* 89 RES 1,C    */ () => resBit(~BIT1, C),
+  /* 8A RES 1,D    */ () => resBit(~BIT1, D),
+  /* 8B RES 1,E    */ () => resBit(~BIT1, E),
+  /* 8C RES 1,H    */ () => resBit(~BIT1, H),
+  /* 8D RES 1,L    */ () => resBit(~BIT1, L),
+  /* 8E RES 1,(HL) */ () => resBit(~BIT1, get16(HL)),
+  /* 8F RES 1,A    */ () => resBit(~BIT1, A),
 
-  /* 90 RES 2,B    */ () => resBit(_BIT2, B),
-  /* 91 RES 2,C    */ () => resBit(_BIT2, C),
-  /* 92 RES 2,D    */ () => resBit(_BIT2, D),
-  /* 93 RES 2,E    */ () => resBit(_BIT2, E),
-  /* 94 RES 2,H    */ () => resBit(_BIT2, H),
-  /* 95 RES 2,L    */ () => resBit(_BIT2, L),
-  /* 96 RES 2,(HL) */ () => resBit(_BIT2, get16(HL)),
-  /* 97 RES 2,A    */ () => resBit(_BIT2, A),
-  /* 98 RES 3,B    */ () => resBit(_BIT3, B),
-  /* 99 RES 3,C    */ () => resBit(_BIT3, C),
-  /* 9A RES 3,D    */ () => resBit(_BIT3, D),
-  /* 9B RES 3,E    */ () => resBit(_BIT3, E),
-  /* 9C RES 3,H    */ () => resBit(_BIT3, H),
-  /* 9D RES 3,L    */ () => resBit(_BIT3, L),
-  /* 9E RES 3,(HL) */ () => resBit(_BIT3, get16(HL)),
-  /* 9F RES 3,A    */ () => resBit(_BIT3, A),
+  /* 90 RES 2,B    */ () => resBit(~BIT2, B),
+  /* 91 RES 2,C    */ () => resBit(~BIT2, C),
+  /* 92 RES 2,D    */ () => resBit(~BIT2, D),
+  /* 93 RES 2,E    */ () => resBit(~BIT2, E),
+  /* 94 RES 2,H    */ () => resBit(~BIT2, H),
+  /* 95 RES 2,L    */ () => resBit(~BIT2, L),
+  /* 96 RES 2,(HL) */ () => resBit(~BIT2, get16(HL)),
+  /* 97 RES 2,A    */ () => resBit(~BIT2, A),
+  /* 98 RES 3,B    */ () => resBit(~BIT3, B),
+  /* 99 RES 3,C    */ () => resBit(~BIT3, C),
+  /* 9A RES 3,D    */ () => resBit(~BIT3, D),
+  /* 9B RES 3,E    */ () => resBit(~BIT3, E),
+  /* 9C RES 3,H    */ () => resBit(~BIT3, H),
+  /* 9D RES 3,L    */ () => resBit(~BIT3, L),
+  /* 9E RES 3,(HL) */ () => resBit(~BIT3, get16(HL)),
+  /* 9F RES 3,A    */ () => resBit(~BIT3, A),
 
-  /* A0 RES 4,B    */ () => resBit(_BIT4, B),
-  /* A1 RES 4,C    */ () => resBit(_BIT4, C),
-  /* A2 RES 4,D    */ () => resBit(_BIT4, D),
-  /* A3 RES 4,E    */ () => resBit(_BIT4, E),
-  /* A4 RES 4,H    */ () => resBit(_BIT4, H),
-  /* A5 RES 4,L    */ () => resBit(_BIT4, L),
-  /* A6 RES 4,(HL) */ () => resBit(_BIT4, get16(HL)),
-  /* A7 RES 4,A    */ () => resBit(_BIT4, A),
-  /* A8 RES 5,B    */ () => resBit(_BIT5, B),
-  /* A9 RES 5,C    */ () => resBit(_BIT5, C),
-  /* AA RES 5,D    */ () => resBit(_BIT5, D),
-  /* AB RES 5,E    */ () => resBit(_BIT5, E),
-  /* AC RES 5,H    */ () => resBit(_BIT5, H),
-  /* AD RES 5,L    */ () => resBit(_BIT5, L),
-  /* AE RES 5,(HL) */ () => resBit(_BIT5, get16(HL)),
-  /* AF RES 5,A    */ () => resBit(_BIT5, A),
+  /* A0 RES 4,B    */ () => resBit(~BIT4, B),
+  /* A1 RES 4,C    */ () => resBit(~BIT4, C),
+  /* A2 RES 4,D    */ () => resBit(~BIT4, D),
+  /* A3 RES 4,E    */ () => resBit(~BIT4, E),
+  /* A4 RES 4,H    */ () => resBit(~BIT4, H),
+  /* A5 RES 4,L    */ () => resBit(~BIT4, L),
+  /* A6 RES 4,(HL) */ () => resBit(~BIT4, get16(HL)),
+  /* A7 RES 4,A    */ () => resBit(~BIT4, A),
+  /* A8 RES 5,B    */ () => resBit(~BIT5, B),
+  /* A9 RES 5,C    */ () => resBit(~BIT5, C),
+  /* AA RES 5,D    */ () => resBit(~BIT5, D),
+  /* AB RES 5,E    */ () => resBit(~BIT5, E),
+  /* AC RES 5,H    */ () => resBit(~BIT5, H),
+  /* AD RES 5,L    */ () => resBit(~BIT5, L),
+  /* AE RES 5,(HL) */ () => resBit(~BIT5, get16(HL)),
+  /* AF RES 5,A    */ () => resBit(~BIT5, A),
 
-  /* B0 RES 6,B    */ () => resBit(_BIT6, B),
-  /* B1 RES 6,C    */ () => resBit(_BIT6, C),
-  /* B2 RES 6,D    */ () => resBit(_BIT6, D),
-  /* B3 RES 6,E    */ () => resBit(_BIT6, E),
-  /* B4 RES 6,H    */ () => resBit(_BIT6, H),
-  /* B5 RES 6,L    */ () => resBit(_BIT6, L),
-  /* B6 RES 6,(HL) */ () => resBit(_BIT6, get16(HL)),
-  /* B7 RES 6,A    */ () => resBit(_BIT6, A),
-  /* B8 RES 7,B    */ () => resBit(_BIT7, B),
-  /* B9 RES 7,C    */ () => resBit(_BIT7, C),
-  /* BA RES 7,D    */ () => resBit(_BIT7, D),
-  /* BB RES 7,E    */ () => resBit(_BIT7, E),
-  /* BC RES 7,H    */ () => resBit(_BIT7, H),
-  /* BD RES 7,L    */ () => resBit(_BIT7, L),
-  /* BE RES 7,(HL) */ () => resBit(_BIT7, get16(HL)),
-  /* BF RES 7,A    */ () => resBit(_BIT7, A),
+  /* B0 RES 6,B    */ () => resBit(~BIT6, B),
+  /* B1 RES 6,C    */ () => resBit(~BIT6, C),
+  /* B2 RES 6,D    */ () => resBit(~BIT6, D),
+  /* B3 RES 6,E    */ () => resBit(~BIT6, E),
+  /* B4 RES 6,H    */ () => resBit(~BIT6, H),
+  /* B5 RES 6,L    */ () => resBit(~BIT6, L),
+  /* B6 RES 6,(HL) */ () => resBit(~BIT6, get16(HL)),
+  /* B7 RES 6,A    */ () => resBit(~BIT6, A),
+  /* B8 RES 7,B    */ () => resBit(~BIT7, B),
+  /* B9 RES 7,C    */ () => resBit(~BIT7, C),
+  /* BA RES 7,D    */ () => resBit(~BIT7, D),
+  /* BB RES 7,E    */ () => resBit(~BIT7, E),
+  /* BC RES 7,H    */ () => resBit(~BIT7, H),
+  /* BD RES 7,L    */ () => resBit(~BIT7, L),
+  /* BE RES 7,(HL) */ () => resBit(~BIT7, get16(HL)),
+  /* BF RES 7,A    */ () => resBit(~BIT7, A),
 
   /* C0 SET 0,B    */ () => setBit(BIT0, B),
   /* C1 SET 0,C    */ () => setBit(BIT0, C),

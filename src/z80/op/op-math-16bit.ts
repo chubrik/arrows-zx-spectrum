@@ -1,5 +1,5 @@
 import { get, get16, set16, set88 } from '../../common/utils';
-import { ff } from '../flags';
+import { F3, F5, FC, ff, FH, FN, FS, FZ } from '../flags';
 import { HL, HLXY } from '../registers';
 import { next16 } from '../utils';
 
@@ -11,11 +11,11 @@ export function addHLXY(SS: number) {
   const result = sum & 0xFFFF;
   set16(HLXY, result);
 
-  ff.f5 = (result >> 8) & 0x20;
-  ff.f3 = (result >> 8) & 0x08;
-  ff.h  = ((hl ^ ss ^ result) >> 8) & 0x10;
-  ff.n  = 0;
-  ff.c  = (sum >> 16) & 0x01;
+  ff.f5 = (result >> 8) & F5;
+  ff.f3 = (result >> 8) & F3;
+  ff.h = ((hl ^ ss ^ result) >> 8) & FH;
+  ff.n = 0;
+  ff.c = (sum >> 16) & FC;
 }
 
 /** LD (nn),dd */
@@ -42,14 +42,14 @@ export function ADC_HL(src: number) {
   const result = sum & 0xFFFF;
   set16(HL, result);
 
-  ff.s  = (result >> 8) & 0x80;
-  ff.z  = result ? 0 : 0x40;
-  ff.f5 = (result >> 8) & 0x20;
-  ff.f3 = (result >> 8) & 0x08;
-  ff.h  = ((hl ^ ss ^ result) >> 8) & 0x10;
-  ff.o  = ((hl ^ ~ss) & (hl ^ result) & 0x8000) >> 13;
-  ff.n  = 0;
-  ff.c  = (sum >> 16) & 0x01;
+  ff.s = (result >> 8) & FS;
+  ff.z = result ? 0 : FZ;
+  ff.f5 = (result >> 8) & F5;
+  ff.f3 = (result >> 8) & F3;
+  ff.h = ((hl ^ ss ^ result) >> 8) & FH;
+  ff.o = ((hl ^ ~ss) & (hl ^ result) & 0x8000) >> 13;
+  ff.n = 0;
+  ff.c = (sum >> 16) & FC;
 }
 
 /** SBC HL,ss */
@@ -60,14 +60,14 @@ export function SBC_HL(src: number) {
   const result = diff & 0xFFFF;
   set16(HL, result);
 
-  ff.s  = (result >> 8) & 0x80;
-  ff.z  = result ? 0 : 0x40;
-  ff.f5 = (result >> 8) & 0x20;
-  ff.f3 = (result >> 8) & 0x08;
-  ff.h  = ((hl ^ ss ^ result) >> 8) & 0x10;
-  ff.o  = ((hl ^ ss) & (hl ^ result) & 0x8000) >> 13;
-  ff.n  = 0x02;
-  ff.c  = (diff >> 16) & 0x01;
+  ff.s = (result >> 8) & FS;
+  ff.z = result ? 0 : FZ;
+  ff.f5 = (result >> 8) & F5;
+  ff.f3 = (result >> 8) & F3;
+  ff.h = ((hl ^ ss ^ result) >> 8) & FH;
+  ff.o = ((hl ^ ss) & (hl ^ result) & 0x8000) >> 13;
+  ff.n = FN;
+  ff.c = (diff >> 16) & FC;
 }
 
 export function inc16(addr: number) {
