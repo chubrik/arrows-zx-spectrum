@@ -1,4 +1,4 @@
-import { read, write } from '../../common/memory';
+import { mems, write } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { calcFP, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { A, B, BC, C, DE, get16, HL, HLXY, regs, set16 } from '../registers';
@@ -11,7 +11,7 @@ export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const de = get16(DE);
   const hlxy = get16(HLXY);
   const count = (bc - 1) & 0xFFFF;
-  const value = read(hlxy);
+  const value = mems[hlxy];
   set16(BC, count);
   set16(DE, (de + inc) & 0xFFFF);
   set16(HLXY, (hlxy + inc) & 0xFFFF);
@@ -34,7 +34,7 @@ export function CP_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const bc = get16(BC);
   const hlxy = get16(HLXY);
   const count = (bc - 1) & 0xFFFF;
-  const value = read(hlxy);
+  const value = mems[hlxy];
   set16(BC, count);
   set16(HLXY, (hlxy + inc) & 0xFFFF);
 
@@ -89,7 +89,7 @@ export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const count = (b - 1) & 0xFF;
   const newHL = (hl + inc) & 0xFFFF;
   const ioAddr = (count << 8) | c;
-  const value = read(hl);
+  const value = mems[hl];
   regs[B] = count;
   set16(HL, newHL);
   writePort(ioAddr, value);

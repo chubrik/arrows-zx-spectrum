@@ -1,16 +1,16 @@
-import { read, write } from '../common/memory';
+import { mems, write } from '../common/memory';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
 import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
-import { A, B, C, D, E, H, L, regs } from './registers';
-import { getXYd, next } from './utils';
+import { A, B, C, D, E, H, HXY, L, LXY, regs } from './registers';
+import { getHLXYd, next } from './utils';
 
 let xydAddr = 0;
 let xydVal = 0;
 
 /** IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
 export function executeBitXYd() {
-  xydAddr = getXYd();
-  xydVal = read(xydAddr);
+  xydAddr = getHLXYd();
+  xydVal = mems[xydAddr];
   const op = next();
   opsBitXY[op]();
 }

@@ -1,8 +1,8 @@
-import { read, write, write88 } from '../common/memory';
+import { mems, write, write88 } from '../common/memory';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';
-import { fc, FH, fp, fs, fz, HLT, hlt, IFF1, IFF2, setHLT, setIFF1, setIFF2 } from './flags';
+import { BIT7, fc, FH, fp, fs, fz, HLT, hlt, IFF1, IFF2, setHLT, setIFF1, setIFF2 } from './flags';
 import { RLA, RLCA, RRA, RRCA } from './op/op-bit';
 import { DJNZ_e, IN_A_n, JR_e, LD_dd_nn, OUT_n_A } from './op/op-etc';
 import { EX_AF_AF, EX_DE_HL, EX_sp_HL, EXX } from './op/op-exchange';
@@ -10,13 +10,31 @@ import { ADD_HL } from './op/op-math-16bit';
 import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { CALL_cc_nn, CALL_nn, POP_AF, POP_QQ, PUSH_AF, PUSH_QQ } from './op/op-stack';
-import { A, B, BC, C, D, DE, E, get16, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, regs, set16, set88, setEIDelay, setHLXY, SP, SPh, SPl } from './registers';
-import { getHLXYd, incPC, next, next16, nop, refresh, setPCNext16 } from './utils';
+import { A, B, BC, C, D, DE, E, get16, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, R, regs, set16, set88, setEIDelay, setHLXY, SP, SPh, SPl } from './registers';
+import { getHLXYd, incPC, next, next16, nop, setPCNext16 } from './utils';
 
 export function executeMain() {
-  refresh();
+
+  //#region Inline refresh()
+  const r = regs[R];
+  regs[R] = (r & BIT7) | ((r + 1) & 0x7F);
+  //#endregion
+
   if (hlt) return;
-  const op = next();
+
+  //#region Inline next()
+  const pcl = regs[PCl];
+  const pch = regs[PCh];
+  const pc = (pch << 8) | pcl;
+  if (pcl === 0xFF) {
+    regs[PCl] = 0;
+    regs[PCh] = (pch + 1) & 0xFF;
+  } else {
+    regs[PCl] = pcl + 1;
+  }
+  const op = mems[pc];
+  //#endregion
+
   opsMain[op]();
 }
 
@@ -31,7 +49,7 @@ const opsMain = [
   /* 07 RLCA       */ RLCA,
   /* 08 EX AF,AF'  */ EX_AF_AF,
   /* 09 ADD HL,BC  */ () => ADD_HL(BC),
-  /* 0A LD A,(BC)  */ () => regs[A] = read(get16(BC)),
+  /* 0A LD A,(BC)  */ () => regs[A] = mems[get16(BC)],
   /* 0B DEC BC     */ () => set16(BC, (get16(BC) - 1) & 0xFFFF),
   /* 0C INC C      */ () => INC_r(C),
   /* 0D DEC C      */ () => DEC_r(C),
@@ -48,7 +66,7 @@ const opsMain = [
   /* 17 RLA        */ RLA,
   /* 18 JR e       */ JR_e,
   /* 19 ADD HL,DE  */ () => ADD_HL(DE),
-  /* 1A LD A,(DE)  */ () => regs[A] = read(get16(DE)),
+  /* 1A LD A,(DE)  */ () => regs[A] = mems[get16(DE)],
   /* 1B DEC DE     */ () => set16(DE, (get16(DE) - 1) & 0xFFFF),
   /* 1C INC E      */ () => INC_r(E),
   /* 1D DEC E      */ () => DEC_r(E),
@@ -65,7 +83,7 @@ const opsMain = [
   /* 27 DAA        */ DAA,
   /* 28 JR Z,e     */ () => fz ? JR_e() : incPC(1),
   /* 29 ADD HL,HL  */ () => ADD_HL(HLXY),
-  /* 2A LD HL,(nn) */ () => { const addr = next16(); set88(HLXY, read(addr), read(addr + 1)); },
+  /* 2A LD HL,(nn) */ () => { const addr = next16(); set88(HLXY, mems[addr], mems[addr + 1]); },
   /* 2B DEC HL     */ () => set16(HLXY, (get16(HLXY) - 1) & 0xFFFF),
   /* 2C INC L      */ () => INC_r(LXY),
   /* 2D DEC L      */ () => DEC_r(LXY),
@@ -82,7 +100,7 @@ const opsMain = [
   /* 37 SCF        */ SCF,
   /* 38 JR C,e     */ () => fc ? JR_e() : incPC(1),
   /* 39 ADD HL,SP  */ () => ADD_HL(SP),
-  /* 3A LD A,(nn)  */ () => regs[A] = read(next16()),
+  /* 3A LD A,(nn)  */ () => regs[A] = mems[next16()],
   /* 3B DEC SP     */ () => set16(SP, (get16(SP) - 1) & 0xFFFF),
   /* 3C INC A      */ () => INC_r(A),
   /* 3D DEC A      */ () => DEC_r(A),
@@ -95,7 +113,7 @@ const opsMain = [
   /* 43 LD B,E     */ () => regs[B] = regs[E],
   /* 44 LD B,H     */ () => regs[B] = regs[HXY],
   /* 45 LD B,L     */ () => regs[B] = regs[LXY],
-  /* 46 LD B,(HL)  */ () => regs[B] = read(getHLXYd()),
+  /* 46 LD B,(HL)  */ () => regs[B] = mems[getHLXYd()],
   /* 47 LD B,A     */ () => regs[B] = regs[A],
   /* 48 LD C,B     */ () => regs[C] = regs[B],
   /* 49 LD C,C     */ nop,
@@ -103,7 +121,7 @@ const opsMain = [
   /* 4B LD C,E     */ () => regs[C] = regs[E],
   /* 4C LD C,H     */ () => regs[C] = regs[HXY],
   /* 4D LD C,L     */ () => regs[C] = regs[LXY],
-  /* 4E LD C,(HL)  */ () => regs[C] = read(getHLXYd()),
+  /* 4E LD C,(HL)  */ () => regs[C] = mems[getHLXYd()],
   /* 4F LD C,A     */ () => regs[C] = regs[A],
 
   /* 50 LD D,B     */ () => regs[D] = regs[B],
@@ -112,7 +130,7 @@ const opsMain = [
   /* 53 LD D,E     */ () => regs[D] = regs[E],
   /* 54 LD D,H     */ () => regs[D] = regs[HXY],
   /* 55 LD D,L     */ () => regs[D] = regs[LXY],
-  /* 56 LD D,(HL)  */ () => regs[D] = read(getHLXYd()),
+  /* 56 LD D,(HL)  */ () => regs[D] = mems[getHLXYd()],
   /* 57 LD D,A     */ () => regs[D] = regs[A],
   /* 58 LD E,B     */ () => regs[E] = regs[B],
   /* 59 LD E,C     */ () => regs[E] = regs[C],
@@ -120,7 +138,7 @@ const opsMain = [
   /* 5B LD E,E     */ nop,
   /* 5C LD E,H     */ () => regs[E] = regs[HXY],
   /* 5D LD E,L     */ () => regs[E] = regs[LXY],
-  /* 5E LD E,(HL)  */ () => regs[E] = read(getHLXYd()),
+  /* 5E LD E,(HL)  */ () => regs[E] = mems[getHLXYd()],
   /* 5F LD E,A     */ () => regs[E] = regs[A],
 
   /* 60 LD H,B     */ () => regs[HXY] = regs[B],
@@ -129,7 +147,7 @@ const opsMain = [
   /* 63 LD H,E     */ () => regs[HXY] = regs[E],
   /* 64 LD H,H     */ nop,
   /* 65 LD H,L     */ () => regs[HXY] = regs[LXY],
-  /* 66 LD H,(HL)  */ () => regs[H] = read(getHLXYd()),
+  /* 66 LD H,(HL)  */ () => regs[H] = mems[getHLXYd()],
   /* 67 LD H,A     */ () => regs[HXY] = regs[A],
   /* 68 LD L,B     */ () => regs[LXY] = regs[B],
   /* 69 LD L,C     */ () => regs[LXY] = regs[C],
@@ -137,7 +155,7 @@ const opsMain = [
   /* 6B LD L,E     */ () => regs[LXY] = regs[E],
   /* 6C LD L,H     */ () => regs[LXY] = regs[HXY],
   /* 6D LD L,L     */ nop,
-  /* 6E LD L,(HL)  */ () => regs[L] = read(getHLXYd()),
+  /* 6E LD L,(HL)  */ () => regs[L] = mems[getHLXYd()],
   /* 6F LD L,A     */ () => regs[LXY] = regs[A],
 
   /* 70 LD (HL),B  */ () => write(getHLXYd(), regs[B]),
@@ -154,7 +172,7 @@ const opsMain = [
   /* 7B LD A,E     */ () => regs[A] = regs[E],
   /* 7C LD A,H     */ () => regs[A] = regs[HXY],
   /* 7D LD A,L     */ () => regs[A] = regs[LXY],
-  /* 7E LD A,(HL)  */ () => regs[A] = read(getHLXYd()),
+  /* 7E LD A,(HL)  */ () => regs[A] = mems[getHLXYd()],
   /* 7F LD A,A     */ nop,
 
   /* 80 ADD A,B    */ () => ADD_ADC(regs[B]),
@@ -163,7 +181,7 @@ const opsMain = [
   /* 83 ADD A,E    */ () => ADD_ADC(regs[E]),
   /* 84 ADD A,H    */ () => ADD_ADC(regs[HXY]),
   /* 85 ADD A,L    */ () => ADD_ADC(regs[LXY]),
-  /* 86 ADD A,(HL) */ () => ADD_ADC(read(getHLXYd())),
+  /* 86 ADD A,(HL) */ () => ADD_ADC(mems[getHLXYd()]),
   /* 87 ADD A,A    */ () => ADD_ADC(regs[A]),
   /* 88 ADC A,B    */ () => ADD_ADC(regs[B], fc),
   /* 89 ADC A,C    */ () => ADD_ADC(regs[C], fc),
@@ -171,7 +189,7 @@ const opsMain = [
   /* 8B ADC A,E    */ () => ADD_ADC(regs[E], fc),
   /* 8C ADC A,H    */ () => ADD_ADC(regs[HXY], fc),
   /* 8D ADC A,L    */ () => ADD_ADC(regs[LXY], fc),
-  /* 8E ADC A,(HL) */ () => ADD_ADC(read(getHLXYd()), fc),
+  /* 8E ADC A,(HL) */ () => ADD_ADC(mems[getHLXYd()], fc),
   /* 8F ADC A,A    */ () => ADD_ADC(regs[A], fc),
 
   /* 90 SUB B      */ () => SUB_SBC(regs[B]),
@@ -180,7 +198,7 @@ const opsMain = [
   /* 93 SUB E      */ () => SUB_SBC(regs[E]),
   /* 94 SUB H      */ () => SUB_SBC(regs[HXY]),
   /* 95 SUB L      */ () => SUB_SBC(regs[LXY]),
-  /* 96 SUB (HL)   */ () => SUB_SBC(read(getHLXYd())),
+  /* 96 SUB (HL)   */ () => SUB_SBC(mems[getHLXYd()]),
   /* 97 SUB A      */ () => SUB_SBC(regs[A]),
   /* 98 SBC A,B    */ () => SUB_SBC(regs[B], fc),
   /* 99 SBC A,C    */ () => SUB_SBC(regs[C], fc),
@@ -188,7 +206,7 @@ const opsMain = [
   /* 9B SBC A,E    */ () => SUB_SBC(regs[E], fc),
   /* 9C SBC A,H    */ () => SUB_SBC(regs[HXY], fc),
   /* 9D SBC A,L    */ () => SUB_SBC(regs[LXY], fc),
-  /* 9E SBC A,(HL) */ () => SUB_SBC(read(getHLXYd()), fc),
+  /* 9E SBC A,(HL) */ () => SUB_SBC(mems[getHLXYd()], fc),
   /* 9F SBC A,A    */ () => SUB_SBC(regs[A], fc),
 
   /* A0 AND B      */ () => AND_XOR_OR(regs[A] & regs[B], FH),
@@ -197,7 +215,7 @@ const opsMain = [
   /* A3 AND E      */ () => AND_XOR_OR(regs[A] & regs[E], FH),
   /* A4 AND H      */ () => AND_XOR_OR(regs[A] & regs[HXY], FH),
   /* A5 AND L      */ () => AND_XOR_OR(regs[A] & regs[LXY], FH),
-  /* A6 AND (HL)   */ () => AND_XOR_OR(regs[A] & read(getHLXYd()), FH),
+  /* A6 AND (HL)   */ () => AND_XOR_OR(regs[A] & mems[getHLXYd()], FH),
   /* A7 AND A      */ () => AND_XOR_OR(regs[A], FH),
   /* A8 XOR B      */ () => AND_XOR_OR(regs[A] ^ regs[B]),
   /* A9 XOR C      */ () => AND_XOR_OR(regs[A] ^ regs[C]),
@@ -205,7 +223,7 @@ const opsMain = [
   /* AB XOR E      */ () => AND_XOR_OR(regs[A] ^ regs[E]),
   /* AC XOR H      */ () => AND_XOR_OR(regs[A] ^ regs[HXY]),
   /* AD XOR L      */ () => AND_XOR_OR(regs[A] ^ regs[LXY]),
-  /* AE XOR (HL)   */ () => AND_XOR_OR(regs[A] ^ read(getHLXYd())),
+  /* AE XOR (HL)   */ () => AND_XOR_OR(regs[A] ^ mems[getHLXYd()]),
   /* AF XOR A      */ () => AND_XOR_OR(0),
 
   /* B0 OR B       */ () => AND_XOR_OR(regs[A] | regs[B]),
@@ -214,7 +232,7 @@ const opsMain = [
   /* B3 OR E       */ () => AND_XOR_OR(regs[A] | regs[E]),
   /* B4 OR H       */ () => AND_XOR_OR(regs[A] | regs[HXY]),
   /* B5 OR L       */ () => AND_XOR_OR(regs[A] | regs[LXY]),
-  /* B6 OR (HL)    */ () => AND_XOR_OR(regs[A] | read(getHLXYd())),
+  /* B6 OR (HL)    */ () => AND_XOR_OR(regs[A] | mems[getHLXYd()]),
   /* B7 OR A       */ () => AND_XOR_OR(regs[A]),
   /* B8 CP B       */ () => CP(regs[B]),
   /* B9 CP C       */ () => CP(regs[C]),
@@ -222,7 +240,7 @@ const opsMain = [
   /* BB CP E       */ () => CP(regs[E]),
   /* BC CP H       */ () => CP(regs[HXY]),
   /* BD CP L       */ () => CP(regs[LXY]),
-  /* BE CP (HL)    */ () => CP(read(getHLXYd())),
+  /* BE CP (HL)    */ () => CP(mems[getHLXYd()]),
   /* BF CP A       */ () => CP(regs[A]),
 
   /* C0 RET NZ     */ () => fz ? {} : POP_QQ(PC),

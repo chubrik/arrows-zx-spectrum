@@ -1,4 +1,4 @@
-import { read, write } from '../common/memory';
+import { mems, write } from '../common/memory';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
 import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
 import { A, B, C, D, E, get16, getWZh, H, HL, L, regs } from './registers';
@@ -18,7 +18,7 @@ function testBitReg(bit: number, reg: number) {
 
 function testBit(bit: number) {
   const addr = get16(HL);
-  const value = read(addr);
+  const value = mems[addr];
   BIT_b_r(bit, value, getWZh());
 }
 
@@ -27,7 +27,7 @@ function resBitReg(bit: number, reg: number) {
 }
 
 function resBitMem(bit: number, addr: number) {
-  write(addr, read(addr) & bit);
+  write(addr, mems[addr] & bit);
 }
 
 function setBitReg(bit: number, reg: number) {
@@ -35,7 +35,7 @@ function setBitReg(bit: number, reg: number) {
 }
 
 function setBitMem(bit: number, addr: number) {
-  write(addr, read(addr) | bit);
+  write(addr, mems[addr] | bit);
 }
 
 const opsBit: (() => void)[] = [
@@ -45,7 +45,7 @@ const opsBit: (() => void)[] = [
   /* 03 RLC E      */ () => regs[E] = RLC_val(regs[E]),
   /* 04 RLC H      */ () => regs[H] = RLC_val(regs[H]),
   /* 05 RLC L      */ () => regs[L] = RLC_val(regs[L]),
-  /* 06 RLC (HL)   */ () => { const addr = get16(HL); write(addr, RLC_val(read(addr))); },
+  /* 06 RLC (HL)   */ () => { const addr = get16(HL); write(addr, RLC_val(mems[addr])); },
   /* 07 RLC A      */ () => regs[A] = RLC_val(regs[A]),
   /* 08 RRC B      */ () => regs[B] = RRC_val(regs[B]),
   /* 09 RRC C      */ () => regs[C] = RRC_val(regs[C]),
@@ -53,7 +53,7 @@ const opsBit: (() => void)[] = [
   /* 0B RRC E      */ () => regs[E] = RRC_val(regs[E]),
   /* 0C RRC H      */ () => regs[H] = RRC_val(regs[H]),
   /* 0D RRC L      */ () => regs[L] = RRC_val(regs[L]),
-  /* 0E RRC (HL)   */ () => { const addr = get16(HL); write(addr, RRC_val(read(addr))); },
+  /* 0E RRC (HL)   */ () => { const addr = get16(HL); write(addr, RRC_val(mems[addr])); },
   /* 0F RRC A      */ () => regs[A] = RRC_val(regs[A]),
 
   /* 10 RL B       */ () => regs[B] = RL_val(regs[B]),
@@ -62,7 +62,7 @@ const opsBit: (() => void)[] = [
   /* 13 RL E       */ () => regs[E] = RL_val(regs[E]),
   /* 14 RL H       */ () => regs[H] = RL_val(regs[H]),
   /* 15 RL L       */ () => regs[L] = RL_val(regs[L]),
-  /* 16 RL (HL)    */ () => { const addr = get16(HL); write(addr, RL_val(read(addr))); },
+  /* 16 RL (HL)    */ () => { const addr = get16(HL); write(addr, RL_val(mems[addr])); },
   /* 17 RL A       */ () => regs[A] = RL_val(regs[A]),
   /* 18 RR B       */ () => regs[B] = RR_val(regs[B]),
   /* 19 RR C       */ () => regs[C] = RR_val(regs[C]),
@@ -70,7 +70,7 @@ const opsBit: (() => void)[] = [
   /* 1B RR E       */ () => regs[E] = RR_val(regs[E]),
   /* 1C RR H       */ () => regs[H] = RR_val(regs[H]),
   /* 1D RR L       */ () => regs[L] = RR_val(regs[L]),
-  /* 1E RR (HL)    */ () => { const addr = get16(HL); write(addr, RR_val(read(addr))); },
+  /* 1E RR (HL)    */ () => { const addr = get16(HL); write(addr, RR_val(mems[addr])); },
   /* 1F RR A       */ () => regs[A] = RR_val(regs[A]),
 
   /* 20 SLA B      */ () => regs[B] = SLA_val(regs[B]),
@@ -79,7 +79,7 @@ const opsBit: (() => void)[] = [
   /* 23 SLA E      */ () => regs[E] = SLA_val(regs[E]),
   /* 24 SLA H      */ () => regs[H] = SLA_val(regs[H]),
   /* 25 SLA L      */ () => regs[L] = SLA_val(regs[L]),
-  /* 26 SLA (HL)   */ () => { const addr = get16(HL); write(addr, SLA_val(read(addr))); },
+  /* 26 SLA (HL)   */ () => { const addr = get16(HL); write(addr, SLA_val(mems[addr])); },
   /* 27 SLA A      */ () => regs[A] = SLA_val(regs[A]),
   /* 28 SRA B      */ () => regs[B] = SRA_val(regs[B]),
   /* 29 SRA C      */ () => regs[C] = SRA_val(regs[C]),
@@ -87,7 +87,7 @@ const opsBit: (() => void)[] = [
   /* 2B SRA E      */ () => regs[E] = SRA_val(regs[E]),
   /* 2C SRA H      */ () => regs[H] = SRA_val(regs[H]),
   /* 2D SRA L      */ () => regs[L] = SRA_val(regs[L]),
-  /* 2E SRA (HL)   */ () => { const addr = get16(HL); write(addr, SRA_val(read(addr))); },
+  /* 2E SRA (HL)   */ () => { const addr = get16(HL); write(addr, SRA_val(mems[addr])); },
   /* 2F SRA A      */ () => regs[A] = SRA_val(regs[A]),
 
   /* 30 SLL B    * */ () => regs[B] = SLL_val(regs[B]),
@@ -96,7 +96,7 @@ const opsBit: (() => void)[] = [
   /* 33 SLL E    * */ () => regs[E] = SLL_val(regs[E]),
   /* 34 SLL H    * */ () => regs[H] = SLL_val(regs[H]),
   /* 35 SLL L    * */ () => regs[L] = SLL_val(regs[L]),
-  /* 36 SLL (HL) * */ () => { const addr = get16(HL); write(addr, SLL_val(read(addr))); },
+  /* 36 SLL (HL) * */ () => { const addr = get16(HL); write(addr, SLL_val(mems[addr])); },
   /* 37 SLL A    * */ () => regs[A] = SLL_val(regs[A]),
   /* 38 SRL B      */ () => regs[B] = SRL_val(regs[B]),
   /* 39 SRL C      */ () => regs[C] = SRL_val(regs[C]),
@@ -104,7 +104,7 @@ const opsBit: (() => void)[] = [
   /* 3B SRL E      */ () => regs[E] = SRL_val(regs[E]),
   /* 3C SRL H      */ () => regs[H] = SRL_val(regs[H]),
   /* 3D SRL L      */ () => regs[L] = SRL_val(regs[L]),
-  /* 3E SRL (HL)   */ () => { const addr = get16(HL); write(addr, SRL_val(read(addr))); },
+  /* 3E SRL (HL)   */ () => { const addr = get16(HL); write(addr, SRL_val(mems[addr])); },
   /* 3F SRL A      */ () => regs[A] = SRL_val(regs[A]),
 
   /* 40 BIT 0,B    */ () => testBitReg(BIT0, B),

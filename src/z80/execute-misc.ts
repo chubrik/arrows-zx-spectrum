@@ -1,4 +1,4 @@
-import { read, write88 } from '../common/memory';
+import { mems, write88 } from '../common/memory';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
 import { RLD, RRD } from './op/op-bit';
 import { CP_block, IN_block, LD_block, OUT_block } from './op/op-block';
@@ -32,7 +32,7 @@ const opsMisc = [
   /* ED48 IN C,(C)     */ () => IN_c(C),
   /* ED49 OUT (C),C    */ () => OUT_c(C),
   /* ED4A ADC HL,BC    */ () => ADC_HL(BC),
-  /* ED4B LD BC,(nn)   */ () => { const addr = next16(); set88(BC, read(addr), read(addr + 1)); },
+  /* ED4B LD BC,(nn)   */ () => { const addr = next16(); set88(BC, mems[addr], mems[addr + 1]); },
   /* ED4C NEG        * */ NEG,
   /* ED4D RETI         */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED4E IM 0       * */ () => { setIM1(0); setIM2(0); },
@@ -49,7 +49,7 @@ const opsMisc = [
   /* ED58 IN E,(C)     */ () => IN_c(E),
   /* ED59 OUT (C),E    */ () => OUT_c(E),
   /* ED5A ADC HL,DE    */ () => ADC_HL(DE),
-  /* ED5B LD DE,(nn)   */ () => { const addr = next16(); set88(DE, read(addr), read(addr + 1)); },
+  /* ED5B LD DE,(nn)   */ () => { const addr = next16(); set88(DE, mems[addr], mems[addr + 1]); },
   /* ED5C NEG        * */ NEG,
   /* ED5D RETI       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED5E IM 2         */ () => { setIM1(0); setIM2(IM2); },
@@ -66,7 +66,7 @@ const opsMisc = [
   /* ED68 IN L,(C)     */ () => IN_c(L),
   /* ED69 OUT (C),L    */ () => OUT_c(L),
   /* ED6A ADC HL,HL    */ () => ADC_HL(HL),
-  /* ED6B LD HL,(nn) * */ () => { const addr = next16(); set88(HL, read(addr), read(addr + 1)); },
+  /* ED6B LD HL,(nn) * */ () => { const addr = next16(); set88(HL, mems[addr], mems[addr + 1]); },
   /* ED6C NEG        * */ NEG,
   /* ED6D RETI       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED6E IM 0       * */ () => { setIM1(0); setIM2(0); },
@@ -83,7 +83,7 @@ const opsMisc = [
   /* ED78 IN A,(C)     */ () => IN_c(A),
   /* ED79 OUT (C),A    */ () => OUT_c(A),
   /* ED7A ADC HL,SP    */ () => ADC_HL(SP),
-  /* ED7B LD SP,(nn)   */ () => { const addr = next16(); set88(SP, read(addr), read(addr + 1)); },
+  /* ED7B LD SP,(nn)   */ () => { const addr = next16(); set88(SP, mems[addr], mems[addr + 1]); },
   /* ED7C NEG        * */ NEG,
   /* ED7D RETI       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED7E IM 2       * */ () => { setIM1(0); setIM2(IM2); },

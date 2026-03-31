@@ -1,4 +1,4 @@
-import { read, write } from '../../common/memory';
+import { mems, write } from '../../common/memory';
 import { BIT7, F3, F5, FC, fc, FH, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFSZ53P, setFZ } from '../flags';
 import { A, get16, HL, regs } from '../registers';
 
@@ -87,7 +87,7 @@ export function RR_val(value: number): number {
 export function RLD() {
   const a = regs[A];
   const hl = get16(HL);
-  const value = read(hl);
+  const value = mems[hl];
   const resultA = (a & 0xF0) | (value >> 4);
   const resultMem = ((value << 4) | (a & 0x0F)) & 0xFF;
   regs[A] = resultA;
@@ -102,7 +102,7 @@ export function RLD() {
 export function RRD() {
   const a = regs[A];
   const hl = get16(HL);
-  const value = read(hl);
+  const value = mems[hl];
   const resultA = (a & 0xF0) | (value & 0x0F);
   const resultMem = ((a << 4) | (value >> 4)) & 0xFF;
   regs[A] = resultA;

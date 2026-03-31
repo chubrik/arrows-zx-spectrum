@@ -1,4 +1,4 @@
-import { read } from '../common/memory';
+import { mems } from '../common/memory';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { CALL_nn } from './op/op-stack';
 import { I, regs } from './registers';
@@ -20,8 +20,8 @@ export function interrupt() {
 
   if (im2) {
     const vector = (regs[I] << 8) | IM2_BUS_VALUE;
-    const addrLow = read(vector);
-    const addrHigh = read(vector + 1);
+    const addrLow = mems[vector];
+    const addrHigh = mems[vector + 1];
     CALL_nn(addrLow, addrHigh);
   }
   else {

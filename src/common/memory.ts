@@ -1,6 +1,6 @@
 import { type ArrowCtx, getDirect, setDirect } from './arrows.ts';
 
-// This is hot code. The repeated code is intentional.
+// Hot code!
 // Any attempt to extract common parts leads to slowdown.
 
 export const mems: number[] = [];
@@ -10,22 +10,6 @@ const dirtyBitmap = new Uint32Array(DIRTY_BITMAP_SIZE);
 
 let ramMinAddr = 0x4000;
 export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
-
-export function read16(addr: number): number {
-  const low = mems[addr];
-  const high = mems[addr + 1];
-  return (high << 8) | low;
-}
-
-export function read(addr: number): number {
-  return mems[addr];
-}
-
-export function write16(addr: number, value: number) {
-  const low = value & 0xFF;
-  const high = value >> 8;
-  write88(addr, low, high);
-}
 
 export function write88(addr: number, low: number, high: number) {
   if (addr < ramMinAddr) return;

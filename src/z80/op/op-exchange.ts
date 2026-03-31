@@ -1,4 +1,4 @@
-import { read, write } from '../../common/memory';
+import { mems, write } from '../../common/memory';
 import { packF, unpackF } from '../flags';
 import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, Fa, get16, H, Ha, HXY, L, La, LXY, regs, SP } from '../registers';
 
@@ -45,8 +45,8 @@ export function EXX() {
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
 export function EX_sp_HL() {
   const sp = get16(SP);
-  const spl = read(sp);
-  const sph = read(sp + 1);
+  const spl = mems[sp];
+  const sph = mems[sp + 1];
   const lxy = regs[LXY];
   const hxy = regs[HXY];
   write(sp, lxy);

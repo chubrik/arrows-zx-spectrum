@@ -1,4 +1,4 @@
-import { read } from '../../common/memory';
+import { mems } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { FP, iff2, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
 import { A, B, BC, get16, PC, regs, set16, set88 } from '../registers';
@@ -17,8 +17,8 @@ export function ld_A_IR(value: number) {
 /** LD dd,nn | LD IX,nn | LD IY,nn */
 export function LD_dd_nn(reg: number) {
   let pc = get16(PC);
-  const low = read(pc++);
-  const high = read(pc++);
+  const low = mems[pc++];
+  const high = mems[pc++];
   set16(PC, pc & 0xFFFF);
   set88(reg, low, high);
 }

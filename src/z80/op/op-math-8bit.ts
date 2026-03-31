@@ -1,4 +1,4 @@
-import { read, write } from '../../common/memory';
+import { mems, write } from '../../common/memory';
 import { BIT7, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFSZ53, setFSZ53P, setFZ } from '../flags';
 import { A, regs } from '../registers';
 import { getHLXYd } from '../utils';
@@ -18,7 +18,7 @@ export function INC_r(reg: number) {
 /** INC (HL) | INC (IX+d) | INC (IY+d) */
 export function INC_hl() {
   const addr = getHLXYd();
-  const value = read(addr);
+  const value = mems[addr];
   const result = (value + 1) & 0xFF;
   write(addr, result);
 
@@ -43,7 +43,7 @@ export function DEC_r(reg: number) {
 /** DEC (HL) | DEC (IX+d) | DEC (IY+d) */
 export function DEC_hl() {
   const addr = getHLXYd();
-  const value = read(addr);
+  const value = mems[addr];
   const result = (value - 1) & 0xFF;
   write(addr, result);
 
