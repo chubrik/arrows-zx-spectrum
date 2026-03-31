@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'fs';
 import { basename } from 'path';
+import { xFF } from '../src/common/constants.ts';
 import { asciiToUnicode, bytesToUnicode } from '../src/common/encode.ts';
 import { check } from '../src/common/utils.ts';
 import { IFF1, IFF2, IM1, IM2 } from '../src/z80/flags.ts';
@@ -134,33 +135,33 @@ async function buildSnapshotCpu(gameName: string, snap: Z80Snapshot) {
     (snap.IFF1 ? IFF1 : 0);
 
   const body = [
-    `setDirect(regsCtx[A], ${snap.A})`,
-    `setDirect(regsCtx[F], ${snap.F})`,
-    `setDirect(regsCtx[B], ${snap.B})`,
-    `setDirect(regsCtx[C], ${snap.C})`,
-    `setDirect(regsCtx[D], ${snap.D})`,
-    `setDirect(regsCtx[E], ${snap.E})`,
-    `setDirect(regsCtx[H], ${snap.H})`,
-    `setDirect(regsCtx[L], ${snap.L})`,
-    `setDirect(regsCtx[Aa], ${snap.Aa})`,
-    `setDirect(regsCtx[Fa], ${snap.Fa})`,
-    `setDirect(regsCtx[Ba], ${snap.Ba})`,
-    `setDirect(regsCtx[Ca], ${snap.Ca})`,
-    `setDirect(regsCtx[Da], ${snap.Da})`,
-    `setDirect(regsCtx[Ea], ${snap.Ea})`,
-    `setDirect(regsCtx[Ha], ${snap.Ha})`,
-    `setDirect(regsCtx[La], ${snap.La})`,
-    `setDirect(regsCtx[IXh], ${snap.IX >> 8})`,
-    `setDirect(regsCtx[IXl], ${snap.IX & 0xFF})`,
-    `setDirect(regsCtx[IYh], ${snap.IY >> 8})`,
-    `setDirect(regsCtx[IYl], ${snap.IY & 0xFF})`,
-    `setDirect(regsCtx[SPh], ${snap.SP >> 8})`,
-    `setDirect(regsCtx[SPl], ${snap.SP & 0xFF})`,
-    `setDirect(regsCtx[PCh], ${snap.PC >> 8})`,
-    `setDirect(regsCtx[PCl], ${snap.PC & 0xFF})`,
-    `setDirect(regsCtx[I], ${snap.I})`,
-    `setDirect(regsCtx[R], ${snap.R})`,
-    `setDirect(regsCtx[SYS], ${sys})`,
+    `setDirect(cpuCtx[A], ${snap.A})`,
+    `setDirect(cpuCtx[F], ${snap.F})`,
+    `setDirect(cpuCtx[B], ${snap.B})`,
+    `setDirect(cpuCtx[C], ${snap.C})`,
+    `setDirect(cpuCtx[D], ${snap.D})`,
+    `setDirect(cpuCtx[E], ${snap.E})`,
+    `setDirect(cpuCtx[H], ${snap.H})`,
+    `setDirect(cpuCtx[L], ${snap.L})`,
+    `setDirect(cpuCtx[Aa], ${snap.Aa})`,
+    `setDirect(cpuCtx[Fa], ${snap.Fa})`,
+    `setDirect(cpuCtx[Ba], ${snap.Ba})`,
+    `setDirect(cpuCtx[Ca], ${snap.Ca})`,
+    `setDirect(cpuCtx[Da], ${snap.Da})`,
+    `setDirect(cpuCtx[Ea], ${snap.Ea})`,
+    `setDirect(cpuCtx[Ha], ${snap.Ha})`,
+    `setDirect(cpuCtx[La], ${snap.La})`,
+    `setDirect(cpuCtx[IXh], ${snap.IX >> 8})`,
+    `setDirect(cpuCtx[IXl], ${snap.IX & xFF})`,
+    `setDirect(cpuCtx[IYh], ${snap.IY >> 8})`,
+    `setDirect(cpuCtx[IYl], ${snap.IY & xFF})`,
+    `setDirect(cpuCtx[SPh], ${snap.SP >> 8})`,
+    `setDirect(cpuCtx[SPl], ${snap.SP & xFF})`,
+    `setDirect(cpuCtx[PCh], ${snap.PC >> 8})`,
+    `setDirect(cpuCtx[PCl], ${snap.PC & xFF})`,
+    `setDirect(cpuCtx[I], ${snap.I})`,
+    `setDirect(cpuCtx[R], ${snap.R})`,
+    `setDirect(cpuCtx[SYS], ${sys})`,
   ].join('; ');
 
   const code = rawCode.replace(

@@ -1,12 +1,13 @@
-import { setRamMinAddrForTest, mems } from '../src/common/memory';
+import { xFF, xFFFF } from '../src/common/constants';
+import { setRamMinAddrForTest, mem } from '../src/common/memory';
 import { executeMain } from '../src/z80/execute-main';
 import { HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, packF, setHLT, setIFF1, setIFF2, setIM1, setIM2, unpackF, unpackSYS } from '../src/z80/flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, regs, setHLXY, setWZ, SPh, SPl } from '../src/z80/registers';
+import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, cpu, setHLXY, setWZ, SPh, SPl } from '../src/z80/registers';
 
 export function setupCpu() {
   setRamMinAddrForTest(0);
-  for (let i = 0; i <= 0xFFFF; i++) mems[i] = 0;
-  for (let i = 0; i < 32; i++) regs[i] = 0;
+  for (let i = 0; i <= xFFFF; i++) mem[i] = 0;
+  for (let i = 0; i < 32; i++) cpu[i] = 0;
   unpackF(0);
   unpackSYS(0);
   setHLXY(HL);
@@ -33,29 +34,29 @@ export interface CpuState {
 }
 
 export function setState(state: CpuState) {
-  if (state.A !== undefined) regs[A] = state.A;
-  if (state.F !== undefined) { regs[F] = state.F; unpackF(state.F); }
-  if (state.B !== undefined) regs[B] = state.B;
-  if (state.C !== undefined) regs[C] = state.C;
-  if (state.D !== undefined) regs[D] = state.D;
-  if (state.E !== undefined) regs[E] = state.E;
-  if (state.H !== undefined) regs[H] = state.H;
-  if (state.L !== undefined) regs[L] = state.L;
-  if (state.Aa !== undefined) regs[Aa] = state.Aa;
-  if (state.Fa !== undefined) regs[Fa] = state.Fa;
-  if (state.Ba !== undefined) regs[Ba] = state.Ba;
-  if (state.Ca !== undefined) regs[Ca] = state.Ca;
-  if (state.Da !== undefined) regs[Da] = state.Da;
-  if (state.Ea !== undefined) regs[Ea] = state.Ea;
-  if (state.Ha !== undefined) regs[Ha] = state.Ha;
-  if (state.La !== undefined) regs[La] = state.La;
-  if (state.IX !== undefined) { regs[IXl] = state.IX & 0xFF; regs[IXh] = (state.IX >> 8) & 0xFF; }
-  if (state.IY !== undefined) { regs[IYl] = state.IY & 0xFF; regs[IYh] = (state.IY >> 8) & 0xFF; }
-  if (state.SP !== undefined) { regs[SPl] = state.SP & 0xFF; regs[SPh] = (state.SP >> 8) & 0xFF; }
-  if (state.PC !== undefined) { regs[PCl] = state.PC & 0xFF; regs[PCh] = (state.PC >> 8) & 0xFF; }
+  if (state.A !== undefined) cpu[A] = state.A;
+  if (state.F !== undefined) { cpu[F] = state.F; unpackF(state.F); }
+  if (state.B !== undefined) cpu[B] = state.B;
+  if (state.C !== undefined) cpu[C] = state.C;
+  if (state.D !== undefined) cpu[D] = state.D;
+  if (state.E !== undefined) cpu[E] = state.E;
+  if (state.H !== undefined) cpu[H] = state.H;
+  if (state.L !== undefined) cpu[L] = state.L;
+  if (state.Aa !== undefined) cpu[Aa] = state.Aa;
+  if (state.Fa !== undefined) cpu[Fa] = state.Fa;
+  if (state.Ba !== undefined) cpu[Ba] = state.Ba;
+  if (state.Ca !== undefined) cpu[Ca] = state.Ca;
+  if (state.Da !== undefined) cpu[Da] = state.Da;
+  if (state.Ea !== undefined) cpu[Ea] = state.Ea;
+  if (state.Ha !== undefined) cpu[Ha] = state.Ha;
+  if (state.La !== undefined) cpu[La] = state.La;
+  if (state.IX !== undefined) { cpu[IXl] = state.IX & xFF; cpu[IXh] = (state.IX >> 8) & xFF; }
+  if (state.IY !== undefined) { cpu[IYl] = state.IY & xFF; cpu[IYh] = (state.IY >> 8) & xFF; }
+  if (state.SP !== undefined) { cpu[SPl] = state.SP & xFF; cpu[SPh] = (state.SP >> 8) & xFF; }
+  if (state.PC !== undefined) { cpu[PCl] = state.PC & xFF; cpu[PCh] = (state.PC >> 8) & xFF; }
   if (state.WZ !== undefined) setWZ(state.WZ);
-  if (state.I !== undefined) regs[I] = state.I;
-  if (state.R !== undefined) regs[R] = state.R;
+  if (state.I !== undefined) cpu[I] = state.I;
+  if (state.R !== undefined) cpu[R] = state.R;
   if (state.IM !== undefined) {
     setIM1(state.IM === 1 ? IM1 : 0);
     setIM2(state.IM === 2 ? IM2 : 0);
@@ -65,35 +66,35 @@ export function setState(state: CpuState) {
   if (state.halt !== undefined) setHLT(state.halt ? HLT : 0);
   if (state.mem) {
     for (const [addr, value] of Object.entries(state.mem)) {
-      mems[Number(addr)] = value;
+      mem[Number(addr)] = value;
     }
   }
 }
 
 export function getState() {
   return {
-    A: regs[A],
+    A: cpu[A],
     F: packF(),
-    B: regs[B],
-    C: regs[C],
-    D: regs[D],
-    E: regs[E],
-    H: regs[H],
-    L: regs[L],
-    Aa: regs[Aa],
-    Fa: regs[Fa],
-    Ba: regs[Ba],
-    Ca: regs[Ca],
-    Da: regs[Da],
-    Ea: regs[Ea],
-    Ha: regs[Ha],
-    La: regs[La],
-    IX: (regs[IXh] << 8) | regs[IXl],
-    IY: (regs[IYh] << 8) | regs[IYl],
-    SP: (regs[SPh] << 8) | regs[SPl],
-    PC: (regs[PCh] << 8) | regs[PCl],
-    I: regs[I],
-    R: regs[R],
+    B: cpu[B],
+    C: cpu[C],
+    D: cpu[D],
+    E: cpu[E],
+    H: cpu[H],
+    L: cpu[L],
+    Aa: cpu[Aa],
+    Fa: cpu[Fa],
+    Ba: cpu[Ba],
+    Ca: cpu[Ca],
+    Da: cpu[Da],
+    Ea: cpu[Ea],
+    Ha: cpu[Ha],
+    La: cpu[La],
+    IX: (cpu[IXh] << 8) | cpu[IXl],
+    IY: (cpu[IYh] << 8) | cpu[IYl],
+    SP: (cpu[SPh] << 8) | cpu[SPl],
+    PC: (cpu[PCh] << 8) | cpu[PCl],
+    I: cpu[I],
+    R: cpu[R],
     IM: (im2 ? 2 : im1 ? 1 : 0) as 0 | 1 | 2,
     IFF1: (iff1 ? 1 : 0) as 0 | 1,
     IFF2: (iff2 ? 1 : 0) as 0 | 1,
@@ -103,7 +104,7 @@ export function getState() {
 
 export function loadProgram(addr: number, bytes: number[]) {
   for (let i = 0; i < bytes.length; i++) {
-    mems[(addr + i) & 0xFFFF] = bytes[i];
+    mem[(addr + i) & xFFFF] = bytes[i];
   }
 }
 

@@ -1,7 +1,8 @@
 import { ArrowCtx } from '../common/arrows';
+import { xFF } from '../common/constants';
 
-export const regs: number[] = [];
-export const regsCtx: ArrowCtx[] = [];
+export const cpu: number[] = [];
+export const cpuCtx: ArrowCtx[] = [];
 
 export const F = 0;
 export const A = 1;
@@ -48,20 +49,20 @@ export function setEIDelay(value: 0 | 1) { eiDelay = value; }
 let wzh = 0;
 let wzl = 0;
 export function getWZh(): number { return wzh; }
-export function setWZ(value: number) { wzl = value & 0xFF; wzh = value >> 8; }
+export function setWZ(value: number) { wzl = value & xFF; wzh = value >> 8; }
 
 export function get16(reg: number): number {
-  return (regs[reg + 1] << 8) | regs[reg];
+  return (cpu[reg + 1] << 8) | cpu[reg];
 }
 
 export function set16(reg: number, value: number) {
-  regs[reg] = value & 0xFF;
-  regs[reg + 1] = value >> 8;
+  cpu[reg] = value & xFF;
+  cpu[reg + 1] = value >> 8;
 }
 
 export function set88(reg: number, valueLow: number, valueHigh: number) {
-  regs[reg] = valueLow;
-  regs[reg + 1] = valueHigh;
+  cpu[reg] = valueLow;
+  cpu[reg + 1] = valueHigh;
 }
 
 export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY, PCl as PC, SPl as SP };

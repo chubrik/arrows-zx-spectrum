@@ -1,7 +1,7 @@
-import { mems, write } from '../common/memory';
-import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
+import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../common/constants';
+import { mem, write } from '../common/memory';
 import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
-import { A, B, C, D, E, get16, getWZh, H, HL, L, regs } from './registers';
+import { A, B, C, cpu, D, E, get16, getWZh, H, HL, L } from './registers';
 import { next, refresh } from './utils';
 
 /** Bit Instructions (CB) */
@@ -12,100 +12,100 @@ export function executeBit() {
 }
 
 function testBitReg(bit: number, reg: number) {
-  const value = regs[reg];
+  const value = cpu[reg];
   BIT_b_r(bit, value, value);
 }
 
 function testBit(bit: number) {
   const addr = get16(HL);
-  const value = mems[addr];
+  const value = mem[addr];
   BIT_b_r(bit, value, getWZh());
 }
 
 function resBitReg(bit: number, reg: number) {
-  regs[reg] = regs[reg] & bit;
+  cpu[reg] = cpu[reg] & bit;
 }
 
 function resBitMem(bit: number, addr: number) {
-  write(addr, mems[addr] & bit);
+  write(addr, mem[addr] & bit);
 }
 
 function setBitReg(bit: number, reg: number) {
-  regs[reg] = regs[reg] | bit;
+  cpu[reg] = cpu[reg] | bit;
 }
 
 function setBitMem(bit: number, addr: number) {
-  write(addr, mems[addr] | bit);
+  write(addr, mem[addr] | bit);
 }
 
 const opsBit: (() => void)[] = [
-  /* 00 RLC B      */ () => regs[B] = RLC_val(regs[B]),
-  /* 01 RLC C      */ () => regs[C] = RLC_val(regs[C]),
-  /* 02 RLC D      */ () => regs[D] = RLC_val(regs[D]),
-  /* 03 RLC E      */ () => regs[E] = RLC_val(regs[E]),
-  /* 04 RLC H      */ () => regs[H] = RLC_val(regs[H]),
-  /* 05 RLC L      */ () => regs[L] = RLC_val(regs[L]),
-  /* 06 RLC (HL)   */ () => { const addr = get16(HL); write(addr, RLC_val(mems[addr])); },
-  /* 07 RLC A      */ () => regs[A] = RLC_val(regs[A]),
-  /* 08 RRC B      */ () => regs[B] = RRC_val(regs[B]),
-  /* 09 RRC C      */ () => regs[C] = RRC_val(regs[C]),
-  /* 0A RRC D      */ () => regs[D] = RRC_val(regs[D]),
-  /* 0B RRC E      */ () => regs[E] = RRC_val(regs[E]),
-  /* 0C RRC H      */ () => regs[H] = RRC_val(regs[H]),
-  /* 0D RRC L      */ () => regs[L] = RRC_val(regs[L]),
-  /* 0E RRC (HL)   */ () => { const addr = get16(HL); write(addr, RRC_val(mems[addr])); },
-  /* 0F RRC A      */ () => regs[A] = RRC_val(regs[A]),
+  /* 00 RLC B      */ () => cpu[B] = RLC_val(cpu[B]),
+  /* 01 RLC C      */ () => cpu[C] = RLC_val(cpu[C]),
+  /* 02 RLC D      */ () => cpu[D] = RLC_val(cpu[D]),
+  /* 03 RLC E      */ () => cpu[E] = RLC_val(cpu[E]),
+  /* 04 RLC H      */ () => cpu[H] = RLC_val(cpu[H]),
+  /* 05 RLC L      */ () => cpu[L] = RLC_val(cpu[L]),
+  /* 06 RLC (HL)   */ () => { const addr = get16(HL); write(addr, RLC_val(mem[addr])); },
+  /* 07 RLC A      */ () => cpu[A] = RLC_val(cpu[A]),
+  /* 08 RRC B      */ () => cpu[B] = RRC_val(cpu[B]),
+  /* 09 RRC C      */ () => cpu[C] = RRC_val(cpu[C]),
+  /* 0A RRC D      */ () => cpu[D] = RRC_val(cpu[D]),
+  /* 0B RRC E      */ () => cpu[E] = RRC_val(cpu[E]),
+  /* 0C RRC H      */ () => cpu[H] = RRC_val(cpu[H]),
+  /* 0D RRC L      */ () => cpu[L] = RRC_val(cpu[L]),
+  /* 0E RRC (HL)   */ () => { const addr = get16(HL); write(addr, RRC_val(mem[addr])); },
+  /* 0F RRC A      */ () => cpu[A] = RRC_val(cpu[A]),
 
-  /* 10 RL B       */ () => regs[B] = RL_val(regs[B]),
-  /* 11 RL C       */ () => regs[C] = RL_val(regs[C]),
-  /* 12 RL D       */ () => regs[D] = RL_val(regs[D]),
-  /* 13 RL E       */ () => regs[E] = RL_val(regs[E]),
-  /* 14 RL H       */ () => regs[H] = RL_val(regs[H]),
-  /* 15 RL L       */ () => regs[L] = RL_val(regs[L]),
-  /* 16 RL (HL)    */ () => { const addr = get16(HL); write(addr, RL_val(mems[addr])); },
-  /* 17 RL A       */ () => regs[A] = RL_val(regs[A]),
-  /* 18 RR B       */ () => regs[B] = RR_val(regs[B]),
-  /* 19 RR C       */ () => regs[C] = RR_val(regs[C]),
-  /* 1A RR D       */ () => regs[D] = RR_val(regs[D]),
-  /* 1B RR E       */ () => regs[E] = RR_val(regs[E]),
-  /* 1C RR H       */ () => regs[H] = RR_val(regs[H]),
-  /* 1D RR L       */ () => regs[L] = RR_val(regs[L]),
-  /* 1E RR (HL)    */ () => { const addr = get16(HL); write(addr, RR_val(mems[addr])); },
-  /* 1F RR A       */ () => regs[A] = RR_val(regs[A]),
+  /* 10 RL B       */ () => cpu[B] = RL_val(cpu[B]),
+  /* 11 RL C       */ () => cpu[C] = RL_val(cpu[C]),
+  /* 12 RL D       */ () => cpu[D] = RL_val(cpu[D]),
+  /* 13 RL E       */ () => cpu[E] = RL_val(cpu[E]),
+  /* 14 RL H       */ () => cpu[H] = RL_val(cpu[H]),
+  /* 15 RL L       */ () => cpu[L] = RL_val(cpu[L]),
+  /* 16 RL (HL)    */ () => { const addr = get16(HL); write(addr, RL_val(mem[addr])); },
+  /* 17 RL A       */ () => cpu[A] = RL_val(cpu[A]),
+  /* 18 RR B       */ () => cpu[B] = RR_val(cpu[B]),
+  /* 19 RR C       */ () => cpu[C] = RR_val(cpu[C]),
+  /* 1A RR D       */ () => cpu[D] = RR_val(cpu[D]),
+  /* 1B RR E       */ () => cpu[E] = RR_val(cpu[E]),
+  /* 1C RR H       */ () => cpu[H] = RR_val(cpu[H]),
+  /* 1D RR L       */ () => cpu[L] = RR_val(cpu[L]),
+  /* 1E RR (HL)    */ () => { const addr = get16(HL); write(addr, RR_val(mem[addr])); },
+  /* 1F RR A       */ () => cpu[A] = RR_val(cpu[A]),
 
-  /* 20 SLA B      */ () => regs[B] = SLA_val(regs[B]),
-  /* 21 SLA C      */ () => regs[C] = SLA_val(regs[C]),
-  /* 22 SLA D      */ () => regs[D] = SLA_val(regs[D]),
-  /* 23 SLA E      */ () => regs[E] = SLA_val(regs[E]),
-  /* 24 SLA H      */ () => regs[H] = SLA_val(regs[H]),
-  /* 25 SLA L      */ () => regs[L] = SLA_val(regs[L]),
-  /* 26 SLA (HL)   */ () => { const addr = get16(HL); write(addr, SLA_val(mems[addr])); },
-  /* 27 SLA A      */ () => regs[A] = SLA_val(regs[A]),
-  /* 28 SRA B      */ () => regs[B] = SRA_val(regs[B]),
-  /* 29 SRA C      */ () => regs[C] = SRA_val(regs[C]),
-  /* 2A SRA D      */ () => regs[D] = SRA_val(regs[D]),
-  /* 2B SRA E      */ () => regs[E] = SRA_val(regs[E]),
-  /* 2C SRA H      */ () => regs[H] = SRA_val(regs[H]),
-  /* 2D SRA L      */ () => regs[L] = SRA_val(regs[L]),
-  /* 2E SRA (HL)   */ () => { const addr = get16(HL); write(addr, SRA_val(mems[addr])); },
-  /* 2F SRA A      */ () => regs[A] = SRA_val(regs[A]),
+  /* 20 SLA B      */ () => cpu[B] = SLA_val(cpu[B]),
+  /* 21 SLA C      */ () => cpu[C] = SLA_val(cpu[C]),
+  /* 22 SLA D      */ () => cpu[D] = SLA_val(cpu[D]),
+  /* 23 SLA E      */ () => cpu[E] = SLA_val(cpu[E]),
+  /* 24 SLA H      */ () => cpu[H] = SLA_val(cpu[H]),
+  /* 25 SLA L      */ () => cpu[L] = SLA_val(cpu[L]),
+  /* 26 SLA (HL)   */ () => { const addr = get16(HL); write(addr, SLA_val(mem[addr])); },
+  /* 27 SLA A      */ () => cpu[A] = SLA_val(cpu[A]),
+  /* 28 SRA B      */ () => cpu[B] = SRA_val(cpu[B]),
+  /* 29 SRA C      */ () => cpu[C] = SRA_val(cpu[C]),
+  /* 2A SRA D      */ () => cpu[D] = SRA_val(cpu[D]),
+  /* 2B SRA E      */ () => cpu[E] = SRA_val(cpu[E]),
+  /* 2C SRA H      */ () => cpu[H] = SRA_val(cpu[H]),
+  /* 2D SRA L      */ () => cpu[L] = SRA_val(cpu[L]),
+  /* 2E SRA (HL)   */ () => { const addr = get16(HL); write(addr, SRA_val(mem[addr])); },
+  /* 2F SRA A      */ () => cpu[A] = SRA_val(cpu[A]),
 
-  /* 30 SLL B    * */ () => regs[B] = SLL_val(regs[B]),
-  /* 31 SLL C    * */ () => regs[C] = SLL_val(regs[C]),
-  /* 32 SLL D    * */ () => regs[D] = SLL_val(regs[D]),
-  /* 33 SLL E    * */ () => regs[E] = SLL_val(regs[E]),
-  /* 34 SLL H    * */ () => regs[H] = SLL_val(regs[H]),
-  /* 35 SLL L    * */ () => regs[L] = SLL_val(regs[L]),
-  /* 36 SLL (HL) * */ () => { const addr = get16(HL); write(addr, SLL_val(mems[addr])); },
-  /* 37 SLL A    * */ () => regs[A] = SLL_val(regs[A]),
-  /* 38 SRL B      */ () => regs[B] = SRL_val(regs[B]),
-  /* 39 SRL C      */ () => regs[C] = SRL_val(regs[C]),
-  /* 3A SRL D      */ () => regs[D] = SRL_val(regs[D]),
-  /* 3B SRL E      */ () => regs[E] = SRL_val(regs[E]),
-  /* 3C SRL H      */ () => regs[H] = SRL_val(regs[H]),
-  /* 3D SRL L      */ () => regs[L] = SRL_val(regs[L]),
-  /* 3E SRL (HL)   */ () => { const addr = get16(HL); write(addr, SRL_val(mems[addr])); },
-  /* 3F SRL A      */ () => regs[A] = SRL_val(regs[A]),
+  /* 30 SLL B    * */ () => cpu[B] = SLL_val(cpu[B]),
+  /* 31 SLL C    * */ () => cpu[C] = SLL_val(cpu[C]),
+  /* 32 SLL D    * */ () => cpu[D] = SLL_val(cpu[D]),
+  /* 33 SLL E    * */ () => cpu[E] = SLL_val(cpu[E]),
+  /* 34 SLL H    * */ () => cpu[H] = SLL_val(cpu[H]),
+  /* 35 SLL L    * */ () => cpu[L] = SLL_val(cpu[L]),
+  /* 36 SLL (HL) * */ () => { const addr = get16(HL); write(addr, SLL_val(mem[addr])); },
+  /* 37 SLL A    * */ () => cpu[A] = SLL_val(cpu[A]),
+  /* 38 SRL B      */ () => cpu[B] = SRL_val(cpu[B]),
+  /* 39 SRL C      */ () => cpu[C] = SRL_val(cpu[C]),
+  /* 3A SRL D      */ () => cpu[D] = SRL_val(cpu[D]),
+  /* 3B SRL E      */ () => cpu[E] = SRL_val(cpu[E]),
+  /* 3C SRL H      */ () => cpu[H] = SRL_val(cpu[H]),
+  /* 3D SRL L      */ () => cpu[L] = SRL_val(cpu[L]),
+  /* 3E SRL (HL)   */ () => { const addr = get16(HL); write(addr, SRL_val(mem[addr])); },
+  /* 3F SRL A      */ () => cpu[A] = SRL_val(cpu[A]),
 
   /* 40 BIT 0,B    */ () => testBitReg(BIT0, B),
   /* 41 BIT 0,C    */ () => testBitReg(BIT0, C),

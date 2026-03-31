@@ -1,67 +1,67 @@
 import { createCtx, getDirect, setDirect } from '../common/arrows';
 import { packF, packSYS, unpackF, unpackSYS } from './flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, REG_COUNT, regs, regsCtx, SPh, SPl, SYS } from './registers';
+import { A, Aa, B, Ba, C, Ca, cpu, cpuCtx, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, PCh, PCl, R, REG_COUNT, SPh, SPl, SYS } from './registers';
 
 export function initCpu(chunkX: number, chunkY: number) {
-  let x = chunkX + 16;
-  let y = chunkY - 16;
+  let x = chunkX + 32;
+  let y = chunkY;
 
-  regsCtx[A] = createCtx(x, y);
-  regsCtx[F] = createCtx(x, ++y);
-  regsCtx[B] = createCtx(x, ++y);
-  regsCtx[C] = createCtx(x, ++y);
-  regsCtx[D] = createCtx(x, ++y);
-  regsCtx[E] = createCtx(x, ++y);
-  regsCtx[H] = createCtx(x, ++y);
-  regsCtx[L] = createCtx(x, ++y);
-  regsCtx[IXh] = createCtx(x, ++y);
-  regsCtx[IXl] = createCtx(x, ++y);
+  cpuCtx[A] = createCtx(x, y);
+  cpuCtx[F] = createCtx(x, ++y);
+  cpuCtx[B] = createCtx(x, ++y);
+  cpuCtx[C] = createCtx(x, ++y);
+  cpuCtx[D] = createCtx(x, ++y);
+  cpuCtx[E] = createCtx(x, ++y);
+  cpuCtx[H] = createCtx(x, ++y);
+  cpuCtx[L] = createCtx(x, ++y);
+  cpuCtx[IXh] = createCtx(x, ++y);
+  cpuCtx[IXl] = createCtx(x, ++y);
 
-  regsCtx[SPh] = createCtx(x, y += 2);
-  regsCtx[SPl] = createCtx(x, ++y);
-  regsCtx[PCh] = createCtx(x, ++y);
-  regsCtx[PCl] = createCtx(x, ++y);
+  cpuCtx[SPh] = createCtx(x, y += 2);
+  cpuCtx[SPl] = createCtx(x, ++y);
+  cpuCtx[PCh] = createCtx(x, ++y);
+  cpuCtx[PCl] = createCtx(x, ++y);
 
-  regsCtx[Aa] = createCtx(x += 8, y = chunkY - 16);
-  regsCtx[Fa] = createCtx(x, ++y);
-  regsCtx[Ba] = createCtx(x, ++y);
-  regsCtx[Ca] = createCtx(x, ++y);
-  regsCtx[Da] = createCtx(x, ++y);
-  regsCtx[Ea] = createCtx(x, ++y);
-  regsCtx[Ha] = createCtx(x, ++y);
-  regsCtx[La] = createCtx(x, ++y);
-  regsCtx[IYh] = createCtx(x, ++y);
-  regsCtx[IYl] = createCtx(x, ++y);
+  cpuCtx[Aa] = createCtx(x += 8, y = chunkY);
+  cpuCtx[Fa] = createCtx(x, ++y);
+  cpuCtx[Ba] = createCtx(x, ++y);
+  cpuCtx[Ca] = createCtx(x, ++y);
+  cpuCtx[Da] = createCtx(x, ++y);
+  cpuCtx[Ea] = createCtx(x, ++y);
+  cpuCtx[Ha] = createCtx(x, ++y);
+  cpuCtx[La] = createCtx(x, ++y);
+  cpuCtx[IYh] = createCtx(x, ++y);
+  cpuCtx[IYl] = createCtx(x, ++y);
 
-  regsCtx[I] = createCtx(x, y += 2);
-  regsCtx[R] = createCtx(x, ++y);
+  cpuCtx[I] = createCtx(x, y += 2);
+  cpuCtx[R] = createCtx(x, ++y);
 
-  regsCtx[SYS] = createCtx(x, y + 2);
+  cpuCtx[SYS] = createCtx(x, y + 2);
 }
 
 export function fetchCpu() {
   for (let i = 0; i < REG_COUNT; i++) {
-    const ctx = regsCtx[i];
-    regs[i] = getDirect(ctx);
+    const ctx = cpuCtx[i];
+    cpu[i] = getDirect(ctx);
   }
 
-  unpackF(regs[F]);
-  unpackSYS(regs[SYS]);
+  unpackF(cpu[F]);
+  unpackSYS(cpu[SYS]);
 }
 
 export function commitCpu() {
-  regs[F] = packF();
-  regs[SYS] = packSYS();
+  cpu[F] = packF();
+  cpu[SYS] = packSYS();
 
   for (let i = 0; i < REG_COUNT; i++) {
-    const ctx = regsCtx[i];
-    setDirect(ctx, regs[i]);
+    const ctx = cpuCtx[i];
+    setDirect(ctx, cpu[i]);
   }
 }
 
 export function resetCpu() {
   for (let i = 0; i < REG_COUNT; i++) {
-    const ctx = regsCtx[i];
+    const ctx = cpuCtx[i];
     setDirect(ctx, 0);
   }
 }

@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getResource } from '../build/resources';
-import { mems } from '../src/common/memory';
+import { mem } from '../src/common/memory';
 import { FuseTestExpected, parseTestsExpected, parseTestsIn } from './fuse-parse';
 import { getState, loadProgram, setState, setupCpu, step } from './helpers';
+import { xFF, xFFFF } from '../src/common/constants';
 
 // ---------------------------------------------------------------------------
 // Port mocking — queue-based for multiple reads per instruction
@@ -15,7 +16,7 @@ const mockPorts = vi.hoisted(() => ({
 }));
 
 vi.mock('../src/common/ports', () => ({
-  readPort: () => mockPorts.readQueue[mockPorts.readIndex++] ?? 0xFF,
+  readPort: () => mockPorts.readQueue[mockPorts.readIndex++] ?? xFF,
   writePort: (addr: number, value: number) => { mockPorts.writes.push({ addr, value }); },
 }));
 
@@ -51,8 +52,8 @@ const REG_NAMES_16: Array<[keyof ReturnType<typeof getState>, keyof ReturnType<t
 
 const REG_NAMES_SINGLE = ['IX', 'IY', 'SP', 'PC', 'I', 'R', 'IM', 'IFF1', 'IFF2', 'halt'] as const;
 
-function splitHigh(val16: number): number { return (val16 >> 8) & 0xFF; }
-function splitLow(val16: number): number { return val16 & 0xFF; }
+function splitHigh(val16: number): number { return (val16 >> 8) & xFF; }
+function splitLow(val16: number): number { return val16 & xFF; }
 
 // ---------------------------------------------------------------------------
 // Test suite
@@ -171,8 +172,8 @@ describe('FUSE Z80 tests', () => {
       // 7. Compare memory
       for (const block of expected.memBlocks) {
         for (let j = 0; j < block.bytes.length; j++) {
-          const addr = (block.addr + j) & 0xFFFF;
-          const gotByte = mems[addr];
+          const addr = (block.addr + j) & xFFFF;
+          const gotByte = mem[addr];
           const expByte = block.bytes[j];
           if (gotByte !== expByte) {
             mismatches.push(`  mem[0x${addr.toString(16).padStart(4, '0')}]: got 0x${gotByte.toString(16).padStart(2, '0')}, expected 0x${expByte.toString(16).padStart(2, '0')}`);

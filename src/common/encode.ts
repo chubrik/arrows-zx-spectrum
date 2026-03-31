@@ -1,3 +1,4 @@
+import { xFF } from './constants.ts';
 import { check } from './utils.ts';
 
 const bits = 20;
@@ -74,7 +75,7 @@ export function unicodeToBytes(str: string): number[] {
     n += bits;
     while (n >= 8) {
       n -= 8;
-      bytes.push((acc >> n) & 0xFF);
+      bytes.push((acc >> n) & xFF);
       acc &= (1 << n) - 1;
     }
   }

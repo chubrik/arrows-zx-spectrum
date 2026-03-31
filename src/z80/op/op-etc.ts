@@ -1,12 +1,13 @@
-import { mems } from '../../common/memory';
+import { xFF, xFFFF } from '../../common/constants';
+import { mem } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { FP, iff2, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
-import { A, B, BC, get16, PC, regs, set16, set88 } from '../registers';
+import { A, B, BC, cpu, get16, PC, set16, set88 } from '../registers';
 import { incPC, next } from '../utils';
 
 /** LD A,I | LD A,R */
 export function ld_A_IR(value: number) {
-  regs[A] = value;
+  cpu[A] = value;
 
   setFSZ53(value);
   setFP(iff2 ? FP : 0);
@@ -17,17 +18,17 @@ export function ld_A_IR(value: number) {
 /** LD dd,nn | LD IX,nn | LD IY,nn */
 export function LD_dd_nn(reg: number) {
   let pc = get16(PC);
-  const low = mems[pc++];
-  const high = mems[pc++];
-  set16(PC, pc & 0xFFFF);
+  const low = mem[pc++];
+  const high = mem[pc++];
+  set16(PC, pc & xFFFF);
   set88(reg, low, high);
 }
 
 /** DJNZ e */
 export function DJNZ_e() {
-  const b = regs[B];
-  const newB = (b - 1) & 0xFF;
-  regs[B] = newB;
+  const b = cpu[B];
+  const newB = (b - 1) & xFF;
+  cpu[B] = newB;
   if (newB) JR_e();
   else incPC(1);
 }
@@ -41,15 +42,15 @@ export function JR_e() {
 
 /** IN A,(n) */
 export function IN_A_n() {
-  const a = regs[A];
+  const a = cpu[A];
   const n = next();
   const ioAddr = (a << 8) | n;
-  regs[A] = readPort(ioAddr);
+  cpu[A] = readPort(ioAddr);
 }
 
 /** OUT (n),A */
 export function OUT_n_A() {
-  const a = regs[A];
+  const a = cpu[A];
   const n = next();
   const ioAddr = (a << 8) | n;
   writePort(ioAddr, a);
@@ -59,7 +60,7 @@ export function OUT_n_A() {
 export function IN_c(reg: number = 0) {
   const ioAddr = get16(BC);
   const result = readPort(ioAddr);
-  if (reg) regs[reg] = result;
+  if (reg) cpu[reg] = result;
 
   setFSZ53P(result);
   setFH(0);
@@ -69,6 +70,6 @@ export function IN_c(reg: number = 0) {
 /** OUT (C),r | OUT (C),0 (undocumented) */
 export function OUT_c(reg: number = 0) {
   const ioAddr = get16(BC);
-  const value = reg ? regs[reg] : 0; // NMOS: 0, CMOS: 255 (undocumented)
+  const value = reg ? cpu[reg] : 0; // NMOS: 0, CMOS: 255 (undocumented)
   writePort(ioAddr, value);
 }

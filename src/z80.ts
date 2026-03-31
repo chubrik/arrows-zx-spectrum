@@ -1,3 +1,4 @@
+import { OP_PER_FRAME } from './common/constants';
 import { commitMemory, fetchMemory } from './common/memory';
 import { initMemory } from './common/utils';
 import { executeMain } from './z80/execute-main';
@@ -7,13 +8,12 @@ import { interrupt } from './z80/interrupt';
 import { eiDelay, setEIDelay } from './z80/registers';
 
 const pos = getPosition();
-const chunkX = pos.x & ~0xF;
-const chunkY = pos.y & ~0xF;
+const chunkX = pos.x & ~15;
+const chunkY = pos.y & ~15;
 initCpu(chunkX, chunkY);
 initMemory(chunkX, chunkY);
 
-const opPerFrame = 10000;
-const opBeforeFrame = opPerFrame - 1;
+const opBeforeFrame = OP_PER_FRAME - 1;
 let opPerTick = 0;
 let opCount = 0;
 
@@ -24,7 +24,7 @@ onActive(() => {
     opPerTick = 1;
   }
   else if (opPerTick === 1)
-    opPerTick = opPerFrame;
+    opPerTick = OP_PER_FRAME;
   else
     opPerTick = 0;
 });
@@ -39,7 +39,7 @@ always(() => {
     // Hack: we call interrupt only once per frame
     if (opCount < opBeforeFrame) continue;
 
-    if (opCount === opPerFrame) {
+    if (opCount === OP_PER_FRAME) {
       opCount = 0;
       setINT(INT);
     }

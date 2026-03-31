@@ -1,7 +1,7 @@
-import { mems, write } from '../common/memory';
-import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
+import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../common/constants';
+import { mem, write } from '../common/memory';
 import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
-import { A, B, C, D, E, H, HXY, L, LXY, regs } from './registers';
+import { A, B, C, cpu, D, E, H, L } from './registers';
 import { getHLXYd, next } from './utils';
 
 let xydAddr = 0;
@@ -10,7 +10,7 @@ let xydVal = 0;
 /** IX Bit Instructions (DDCB) | IY Bit Instructions (FDCB) */
 export function executeBitXYd() {
   xydAddr = getHLXYd();
-  xydVal = mems[xydAddr];
+  xydVal = mem[xydAddr];
   const op = next();
   opsBitXY[op]();
 }
@@ -25,7 +25,7 @@ function setXYd(value: number) {
 
 function setXYdReg(value: number, reg: number) {
   write(xydAddr, value);
-  regs[reg] = value;
+  cpu[reg] = value;
 }
 
 const opsBitXY: (() => void)[] = [

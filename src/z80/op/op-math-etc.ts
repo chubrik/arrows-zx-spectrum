@@ -1,16 +1,16 @@
-import { BIT7, F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FP, setF3, setF5, setFC, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
-import { A, regs } from '../registers';
+import { BIT7, xFF } from '../../common/constants';
+import { F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FP, setF3, setF5, setFC, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
+import { A, cpu } from '../registers';
 
 /** DAA */
 export function DAA() {
-  const a = regs[A];
+  const a = cpu[A];
   let newA = a;
-  const wasN = fn;
   let correction = 0;
   if (fh || (newA & 0x0F) > 9) correction |= 0x06;
   if (fc || newA > 0x99) { correction |= 0x60; setFC(FC); }
-  newA = (wasN ? newA - correction : newA + correction) & 0xFF;
-  regs[A] = newA;
+  newA = (fn ? newA - correction : newA + correction) & xFF;
+  cpu[A] = newA;
 
   setFSZ53P(newA);
   setFH((a ^ correction ^ newA) & FH);
@@ -18,8 +18,8 @@ export function DAA() {
 
 /** CPL */
 export function CPL() {
-  const newA = regs[A] ^ 0xFF;
-  regs[A] = newA;
+  const newA = cpu[A] ^ xFF;
+  cpu[A] = newA;
 
   setF5(newA & F5);
   setF3(newA & F3);
@@ -29,7 +29,7 @@ export function CPL() {
 
 /** CCF */
 export function CCF() {
-  const a = regs[A];
+  const a = cpu[A];
 
   setF5((a & F5) | f5);
   setF3((a & F3) | f3);
@@ -40,7 +40,7 @@ export function CCF() {
 
 /** SCF */
 export function SCF() {
-  const a = regs[A];
+  const a = cpu[A];
 
   setF5((a & F5) | f5);
   setF3((a & F3) | f3);
@@ -51,9 +51,9 @@ export function SCF() {
 
 /** NEG */
 export function NEG() {
-  const a = regs[A];
-  const newA = -a & 0xFF;
-  regs[A] = newA;
+  const a = cpu[A];
+  const newA = -a & xFF;
+  cpu[A] = newA;
 
   setFSZ53(newA);
   setFH((a ^ newA) & FH);

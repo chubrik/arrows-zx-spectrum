@@ -2,8 +2,8 @@ import { unicodeToBytes } from './common/encode';
 import { deployMemoryBlock, initMemory } from './common/utils';
 
 const pos = getPosition();
-const chunkX = pos.x & ~0xF;
-const chunkY = pos.y & ~0xF;
+const chunkX = pos.x & ~15;
+const chunkY = pos.y & ~15;
 initMemory(chunkX, chunkY);
 
 onActive(() => {

@@ -1,16 +1,17 @@
-import { mems, write } from '../../common/memory';
-import { BIT7, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFSZ53, setFSZ53P, setFZ } from '../flags';
-import { A, regs } from '../registers';
+import { BIT7, xFF } from '../../common/constants';
+import { mem, write } from '../../common/memory';
+import { F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFSZ53, setFSZ53P, setFZ } from '../flags';
+import { A, cpu } from '../registers';
 import { getHLXYd } from '../utils';
 
 /** INC r */
 export function INC_r(reg: number) {
-  const r = regs[reg];
-  const result = (r + 1) & 0xFF;
-  regs[reg] = result;
+  const r = cpu[reg];
+  const result = (r + 1) & xFF;
+  cpu[reg] = result;
 
   setFSZ53(result);
-  setFH(!(result & 0x0F) ? FH : 0);
+  setFH(result & 0x0F ? 0 : FH);
   setFP(r === 0x7F ? FP : 0);
   setFN(0);
 }
@@ -18,24 +19,24 @@ export function INC_r(reg: number) {
 /** INC (HL) | INC (IX+d) | INC (IY+d) */
 export function INC_hl() {
   const addr = getHLXYd();
-  const value = mems[addr];
-  const result = (value + 1) & 0xFF;
+  const value = mem[addr];
+  const result = (value + 1) & xFF;
   write(addr, result);
 
   setFSZ53(result);
-  setFH(!(result & 0x0F) ? FH : 0);
+  setFH(result & 0x0F ? 0 : FH);
   setFP(value === 0x7F ? FP : 0);
   setFN(0);
 }
 
 /** DEC r */
 export function DEC_r(reg: number) {
-  const r = regs[reg];
-  const result = (r - 1) & 0xFF;
-  regs[reg] = result;
+  const r = cpu[reg];
+  const result = (r - 1) & xFF;
+  cpu[reg] = result;
 
   setFSZ53(result);
-  setFH(!(r & 0x0F) ? FH : 0);
+  setFH(r & 0x0F ? 0 : FH);
   setFP(r === BIT7 ? FP : 0);
   setFN(FN);
 }
@@ -43,12 +44,12 @@ export function DEC_r(reg: number) {
 /** DEC (HL) | DEC (IX+d) | DEC (IY+d) */
 export function DEC_hl() {
   const addr = getHLXYd();
-  const value = mems[addr];
-  const result = (value - 1) & 0xFF;
+  const value = mem[addr];
+  const result = (value - 1) & xFF;
   write(addr, result);
 
   setFSZ53(result);
-  setFH(!(value & 0x0F) ? FH : 0);
+  setFH(value & 0x0F ? 0 : FH);
   setFP(value === BIT7 ? FP : 0);
   setFN(FN);
 }
@@ -58,10 +59,10 @@ export function DEC_hl() {
  * ADC A,n | ADC A,r | ADC A,(HL) | ADC A,(IX+d) | ADC A,(IY+d)
  */
 export function ADD_ADC(operand: number, fc: number = 0) {
-  const a = regs[A];
+  const a = cpu[A];
   const sum = a + operand + fc;
-  const result = sum & 0xFF;
-  regs[A] = result;
+  const result = sum & xFF;
+  cpu[A] = result;
 
   setFSZ53(result);
   setFH((a ^ operand ^ result) & FH);
@@ -75,10 +76,10 @@ export function ADD_ADC(operand: number, fc: number = 0) {
  * SBC A,n | SBC A,r | SBC A,(HL) | SBC A,(IX+d) | SBC A,(IY+d)
  */
 export function SUB_SBC(operand: number, fc: number = 0) {
-  const a = regs[A];
+  const a = cpu[A];
   const diff = a - operand - fc;
-  const result = diff & 0xFF;
-  regs[A] = result;
+  const result = diff & xFF;
+  cpu[A] = result;
 
   setFSZ53(result);
   setFH((a ^ operand ^ result) & FH);
@@ -89,9 +90,9 @@ export function SUB_SBC(operand: number, fc: number = 0) {
 
 /** CP n | CP r | CP (HL) | CP (IX+d) | CP (IY+d) */
 export function CP(operand: number) {
-  const a = regs[A];
+  const a = cpu[A];
   const diff = a - operand;
-  const result = diff & 0xFF;
+  const result = diff & xFF;
 
   setFS(result & FS);
   setFZ(result ? 0 : FZ);
@@ -109,7 +110,7 @@ export function CP(operand: number) {
  * OR n  | OR r  | OR (HL)  | OR (IX+d)  | OR (IY+d)
  */
 export function AND_XOR_OR(result: number, fh: number = 0) {
-  regs[A] = result;
+  cpu[A] = result;
 
   setFSZ53P(result);
   setFH(fh);

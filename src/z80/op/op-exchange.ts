@@ -1,68 +1,68 @@
-import { mems, write } from '../../common/memory';
+import { mem, write } from '../../common/memory';
 import { packF, unpackF } from '../flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, Fa, get16, H, Ha, HXY, L, La, LXY, regs, SP } from '../registers';
+import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, Fa, get16, H, Ha, HXY, L, La, LXY, SP } from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
-  const a1 = regs[A];
+  const a1 = cpu[A];
   const f1 = packF();
-  const a2 = regs[Aa];
-  const f2 = regs[Fa];
-  regs[A] = a2;
+  const a2 = cpu[Aa];
+  const f2 = cpu[Fa];
+  cpu[A] = a2;
   unpackF(f2);
-  regs[Aa] = a1;
-  regs[Fa] = f1;
+  cpu[Aa] = a1;
+  cpu[Fa] = f1;
 }
 
 /** EXX */
 export function EXX() {
-  const b1 = regs[B];
-  const c1 = regs[C];
-  const d1 = regs[D];
-  const e1 = regs[E];
-  const h1 = regs[H];
-  const l1 = regs[L];
-  const b2 = regs[Ba];
-  const c2 = regs[Ca];
-  const d2 = regs[Da];
-  const e2 = regs[Ea];
-  const h2 = regs[Ha];
-  const l2 = regs[La];
-  regs[B] = b2;
-  regs[C] = c2;
-  regs[D] = d2;
-  regs[E] = e2;
-  regs[H] = h2;
-  regs[L] = l2;
-  regs[Ba] = b1;
-  regs[Ca] = c1;
-  regs[Da] = d1;
-  regs[Ea] = e1;
-  regs[Ha] = h1;
-  regs[La] = l1;
+  const b1 = cpu[B];
+  const c1 = cpu[C];
+  const d1 = cpu[D];
+  const e1 = cpu[E];
+  const h1 = cpu[H];
+  const l1 = cpu[L];
+  const b2 = cpu[Ba];
+  const c2 = cpu[Ca];
+  const d2 = cpu[Da];
+  const e2 = cpu[Ea];
+  const h2 = cpu[Ha];
+  const l2 = cpu[La];
+  cpu[B] = b2;
+  cpu[C] = c2;
+  cpu[D] = d2;
+  cpu[E] = e2;
+  cpu[H] = h2;
+  cpu[L] = l2;
+  cpu[Ba] = b1;
+  cpu[Ca] = c1;
+  cpu[Da] = d1;
+  cpu[Ea] = e1;
+  cpu[Ha] = h1;
+  cpu[La] = l1;
 }
 
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
 export function EX_sp_HL() {
   const sp = get16(SP);
-  const spl = mems[sp];
-  const sph = mems[sp + 1];
-  const lxy = regs[LXY];
-  const hxy = regs[HXY];
+  const spl = mem[sp];
+  const sph = mem[sp + 1];
+  const lxy = cpu[LXY];
+  const hxy = cpu[HXY];
   write(sp, lxy);
   write(sp + 1, hxy);
-  regs[LXY] = spl;
-  regs[HXY] = sph;
+  cpu[LXY] = spl;
+  cpu[HXY] = sph;
 }
 
 /** EX DE,HL */
 export function EX_DE_HL() {
-  const d1 = regs[D];
-  const e1 = regs[E];
-  const h1 = regs[H];
-  const l1 = regs[L];
-  regs[D] = h1;
-  regs[E] = l1;
-  regs[H] = d1;
-  regs[L] = e1;
+  const d1 = cpu[D];
+  const e1 = cpu[E];
+  const h1 = cpu[H];
+  const l1 = cpu[L];
+  cpu[D] = h1;
+  cpu[E] = l1;
+  cpu[H] = d1;
+  cpu[L] = e1;
 }

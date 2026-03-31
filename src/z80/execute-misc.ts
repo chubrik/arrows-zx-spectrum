@@ -1,4 +1,4 @@
-import { mems, write88 } from '../common/memory';
+import { mem, write88 } from '../common/memory';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
 import { RLD, RRD } from './op/op-bit';
 import { CP_block, IN_block, LD_block, OUT_block } from './op/op-block';
@@ -6,7 +6,7 @@ import { IN_c, ld_A_IR, OUT_c } from './op/op-etc';
 import { ADC_HL, SBC_HL } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
 import { POP_QQ } from './op/op-stack';
-import { A, B, BC, C, D, DE, E, H, HL, I, L, PC, R, regs, set88, SP, SPh, SPl } from './registers';
+import { A, B, BC, C, cpu, D, DE, E, H, HL, I, L, PC, R, set88, SP, SPh, SPl } from './registers';
 import { nop as _, next, next16, nop, refresh } from './utils';
 
 export function executeMisc() {
@@ -24,41 +24,41 @@ const opsMisc = [
   /* ED40 IN B,(C)     */ () => IN_c(B),
   /* ED41 OUT (C),B    */ () => OUT_c(B),
   /* ED42 SBC HL,BC    */ () => SBC_HL(BC),
-  /* ED43 LD (nn),BC   */ () => write88(next16(), regs[C], regs[B]),
+  /* ED43 LD (nn),BC   */ () => write88(next16(), cpu[C], cpu[B]),
   /* ED44 NEG          */ NEG,
   /* ED45 RETN         */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED46 IM 0         */ () => { setIM1(0); setIM2(0); },
-  /* ED47 LD I,A       */ () => regs[I] = regs[A],
+  /* ED47 LD I,A       */ () => cpu[I] = cpu[A],
   /* ED48 IN C,(C)     */ () => IN_c(C),
   /* ED49 OUT (C),C    */ () => OUT_c(C),
   /* ED4A ADC HL,BC    */ () => ADC_HL(BC),
-  /* ED4B LD BC,(nn)   */ () => { const addr = next16(); set88(BC, mems[addr], mems[addr + 1]); },
+  /* ED4B LD BC,(nn)   */ () => { const addr = next16(); set88(BC, mem[addr], mem[addr + 1]); },
   /* ED4C NEG        * */ NEG,
   /* ED4D RETI         */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED4E IM 0       * */ () => { setIM1(0); setIM2(0); },
-  /* ED4F LD R,A       */ () => regs[R] = regs[A],
+  /* ED4F LD R,A       */ () => cpu[R] = cpu[A],
 
   /* ED50 IN D,(C)     */ () => IN_c(D),
   /* ED51 OUT (C),D    */ () => OUT_c(D),
   /* ED52 SBC HL,DE    */ () => SBC_HL(DE),
-  /* ED53 LD (nn),DE   */ () => write88(next16(), regs[E], regs[D]),
+  /* ED53 LD (nn),DE   */ () => write88(next16(), cpu[E], cpu[D]),
   /* ED54 NEG        * */ NEG,
   /* ED55 RETN       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED56 IM 1         */ () => { setIM1(IM1); setIM2(0); },
-  /* ED57 LD A,I       */ () => ld_A_IR(regs[I]),
+  /* ED57 LD A,I       */ () => ld_A_IR(cpu[I]),
   /* ED58 IN E,(C)     */ () => IN_c(E),
   /* ED59 OUT (C),E    */ () => OUT_c(E),
   /* ED5A ADC HL,DE    */ () => ADC_HL(DE),
-  /* ED5B LD DE,(nn)   */ () => { const addr = next16(); set88(DE, mems[addr], mems[addr + 1]); },
+  /* ED5B LD DE,(nn)   */ () => { const addr = next16(); set88(DE, mem[addr], mem[addr + 1]); },
   /* ED5C NEG        * */ NEG,
   /* ED5D RETI       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED5E IM 2         */ () => { setIM1(0); setIM2(IM2); },
-  /* ED5F LD A,R       */ () => ld_A_IR(regs[R]),
+  /* ED5F LD A,R       */ () => ld_A_IR(cpu[R]),
 
   /* ED60 IN H,(C)     */ () => IN_c(H),
   /* ED61 OUT (C),H    */ () => OUT_c(H),
   /* ED62 SBC HL,HL    */ () => SBC_HL(HL),
-  /* ED63 LD (nn),HL * */ () => write88(next16(), regs[L], regs[H]),
+  /* ED63 LD (nn),HL * */ () => write88(next16(), cpu[L], cpu[H]),
   /* ED64 NEG        * */ NEG,
   /* ED65 RETN       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED66 IM 0       * */ () => { setIM1(0); setIM2(0); },
@@ -66,7 +66,7 @@ const opsMisc = [
   /* ED68 IN L,(C)     */ () => IN_c(L),
   /* ED69 OUT (C),L    */ () => OUT_c(L),
   /* ED6A ADC HL,HL    */ () => ADC_HL(HL),
-  /* ED6B LD HL,(nn) * */ () => { const addr = next16(); set88(HL, mems[addr], mems[addr + 1]); },
+  /* ED6B LD HL,(nn) * */ () => { const addr = next16(); set88(HL, mem[addr], mem[addr + 1]); },
   /* ED6C NEG        * */ NEG,
   /* ED6D RETI       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED6E IM 0       * */ () => { setIM1(0); setIM2(0); },
@@ -75,7 +75,7 @@ const opsMisc = [
   /* ED70 IN (C)     * */ () => IN_c(),
   /* ED71 OUT (C),0  * */ () => OUT_c(),
   /* ED72 SBC HL,SP    */ () => SBC_HL(SP),
-  /* ED73 LD (nn),SP   */ () => write88(next16(), regs[SPl], regs[SPh]),
+  /* ED73 LD (nn),SP   */ () => write88(next16(), cpu[SPl], cpu[SPh]),
   /* ED74 NEG        * */ NEG,
   /* ED75 RETN       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED76 IM 1       * */ () => { setIM1(IM1); setIM2(0); },
@@ -83,7 +83,7 @@ const opsMisc = [
   /* ED78 IN A,(C)     */ () => IN_c(A),
   /* ED79 OUT (C),A    */ () => OUT_c(A),
   /* ED7A ADC HL,SP    */ () => ADC_HL(SP),
-  /* ED7B LD SP,(nn)   */ () => { const addr = next16(); set88(SP, mems[addr], mems[addr + 1]); },
+  /* ED7B LD SP,(nn)   */ () => { const addr = next16(); set88(SP, mem[addr], mem[addr + 1]); },
   /* ED7C NEG        * */ NEG,
   /* ED7D RETI       * */ () => { POP_QQ(PC); setIFF1(iff2 ? IFF1 : 0); },
   /* ED7E IM 2       * */ () => { setIM1(0); setIM2(IM2); },

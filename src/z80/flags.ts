@@ -1,11 +1,4 @@
-export const BIT7 = 0x80;
-export const BIT6 = 0x40;
-export const BIT5 = 0x20;
-export const BIT4 = 0x10;
-export const BIT3 = 0x08;
-export const BIT2 = 0x04;
-export const BIT1 = 0x02;
-export const BIT0 = 0x01;
+import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../common/constants.ts';
 
 export const FS = BIT7; // Sign
 export const FZ = BIT6; // Zero

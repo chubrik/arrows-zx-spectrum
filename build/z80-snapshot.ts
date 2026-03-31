@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import { xFFFF } from '../src/common/constants.ts';
 import { check } from '../src/common/utils.ts';
 
 const PAGE_SIZE = 16384;
@@ -94,12 +95,12 @@ function parseZ80(buf: Buffer): Z80Snapshot {
     const baseAddr = PAGE_TO_ADDR[page];
     if (baseAddr === undefined) {
       // Skip unknown pages (e.g. 128K pages)
-      offset += blockLen === 0xFFFF ? PAGE_SIZE : blockLen;
+      offset += blockLen === xFFFF ? PAGE_SIZE : blockLen;
       continue;
     }
 
     let decompressed: Buffer;
-    if (blockLen === 0xFFFF) {
+    if (blockLen === xFFFF) {
       // Uncompressed block
       check(offset + PAGE_SIZE <= buf.length, `.z80: truncated uncompressed block for page ${page}`);
       decompressed = Buffer.from(buf.subarray(offset, offset + PAGE_SIZE));

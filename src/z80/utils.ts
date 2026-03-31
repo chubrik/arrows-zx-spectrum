@@ -1,6 +1,6 @@
-import { mems } from '../common/memory';
-import { BIT7 } from './flags';
-import { HL, HLXY, HXY, LXY, PCh, PCl, R, regs } from './registers';
+import { BIT7, xFF, xFFFF } from '../common/constants';
+import { mem } from '../common/memory';
+import { HL, HLXY, HXY, LXY, PCh, PCl, R, cpu } from './registers';
 
 // Hot code!
 // Any attempt to extract common parts leads to slowdown.
@@ -8,58 +8,58 @@ import { HL, HLXY, HXY, LXY, PCh, PCl, R, regs } from './registers';
 export function nop() { };
 
 export function incPC(inc: number) {
-  const pc = (regs[PCh] << 8) | regs[PCl];
-  const newPc = (pc + inc) & 0xFFFF;
-  regs[PCl] = newPc & 0xFF;
-  regs[PCh] = newPc >> 8;
+  const pc = (cpu[PCh] << 8) | cpu[PCl];
+  const newPc = (pc + inc) & xFFFF;
+  cpu[PCl] = newPc & xFF;
+  cpu[PCh] = newPc >> 8;
 }
 
 export function next16(): number {
-  const pc = (regs[PCh] << 8) | regs[PCl];
-  const newPc = (pc + 2) & 0xFFFF;
-  regs[PCl] = newPc & 0xFF;
-  regs[PCh] = newPc >> 8;
-  const low = mems[pc];
-  const high = mems[pc + 1];
+  const pc = (cpu[PCh] << 8) | cpu[PCl];
+  const newPc = (pc + 2) & xFFFF;
+  cpu[PCl] = newPc & xFF;
+  cpu[PCh] = newPc >> 8;
+  const low = mem[pc];
+  const high = mem[pc + 1];
   return (high << 8) | low;
 }
 
 export function next(): number {
-  const pcl = regs[PCl];
-  const pch = regs[PCh];
+  const pcl = cpu[PCl];
+  const pch = cpu[PCh];
   const pc = (pch << 8) | pcl;
-  if (pcl === 0xFF) {
-    regs[PCl] = 0;
-    regs[PCh] = (pch + 1) & 0xFF;
+  if (pcl === xFF) {
+    cpu[PCl] = 0;
+    cpu[PCh] = (pch + 1) & xFF;
   } else {
-    regs[PCl] = pcl + 1;
+    cpu[PCl] = pcl + 1;
   }
-  const value = mems[pc];
+  const value = mem[pc];
   return value;
 }
 
 export function setPCNext16() {
-  const pc = (regs[PCh] << 8) | regs[PCl];
-  const low = mems[pc];
-  const high = mems[pc + 1];
-  regs[PCl] = low;
-  regs[PCh] = high;
+  const pc = (cpu[PCh] << 8) | cpu[PCl];
+  const low = mem[pc];
+  const high = mem[pc + 1];
+  cpu[PCl] = low;
+  cpu[PCh] = high;
 }
 
 export function refresh() {
-  const r = regs[R];
+  const r = cpu[R];
   const newR = (r & BIT7) | ((r + 1) & 0x7F);
-  regs[R] = newR;
+  cpu[R] = newR;
 }
 
 /** (HL/IX+d/IY+d) */
 export function getHLXYd() {
-  let hlxyd = (regs[HXY] << 8) | regs[LXY];
+  let hlxyd = (cpu[HXY] << 8) | cpu[LXY];
 
   if (HLXY !== HL) {
     const rawD = next();
     const d = rawD >= 128 ? rawD - 256 : rawD; // -128...+127
-    hlxyd = (hlxyd + d) & 0xFFFF;
+    hlxyd = (hlxyd + d) & xFFFF;
   }
 
   return hlxyd;

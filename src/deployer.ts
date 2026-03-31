@@ -1,18 +1,17 @@
+import { RAM_MIN_ADDR, xFFFF } from './common/constants';
 import { unicodeToBytes } from './common/encode';
 import { deployMemoryBlock, initMemory, resetMemoryBlock } from './common/utils';
 import { initCpu, resetCpu } from './z80/init';
 
 const pos = getPosition();
-const chunkX = pos.x & ~0xF;
-const chunkY = pos.y & ~0xF;
-initMemory(chunkX, chunkY);
+const chunkX = pos.x & ~15;
+const chunkY = pos.y & ~15;
 initCpu(chunkX, chunkY);
+initMemory(chunkX, chunkY);
 
 onActive(() => {
   const rom = unicodeToBytes(''); // Replaced during build
-  const ram: number[] = [];
-  ram.length = 0xC000;
   deployMemoryBlock(0x0000, rom);
-  resetMemoryBlock(0x4000, 0xFFFF);
+  resetMemoryBlock(RAM_MIN_ADDR, xFFFF);
   resetCpu();
 });
