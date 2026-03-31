@@ -2,6 +2,7 @@ import { build } from 'esbuild';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
 import { minify, type MinifyOptions } from 'terser';
+import { remangleTopLevel } from './remangle.ts';
 
 export const SRC_DIR = 'src';
 export const DIST_DIR = 'dist';
@@ -34,16 +35,20 @@ export async function buildTs(code: string): Promise<string> {
 }
 
 export async function minifyJs(code: string): Promise<string> {
-  // Pass 1: Terser single pass with collapse_vars (multi-pass collapse_vars has a bug
-  //         that incorrectly folds variables used in both inline assignments and IIFE args)
-  // Pass 2: Terser remaining passes without collapse_vars
+  // Pass 1: Compress with collapse_vars (single pass — multi-pass collapse_vars has a bug)
+  // Pass 2: Compress without collapse_vars (3 passes)
   // Pass 3: Convert function declarations/expressions to arrow functions
-  // Pass 4: Terser again - optimizes arrow bodies ({return expr} → expr), inlines IIFEs
+  //         (also removes braces from single-expression arrow bodies)
+  // Pass 4: Compress - optimizes arrow bodies ({return expr} → expr), inlines IIFEs
+  // Pass 5: Mangle - terser assigns initial names
+  // Pass 6: Remangle - optimal top-level name assignment via acorn scope analysis
+  // Pass 7: Post-processing - const → let, === → ==, !== → !=
   const min1 = (await minify(code, terserOptsCollapse)).code!;
-  const min = (await minify(min1, terserOptsNoCollapse)).code!;
+  const min = (await minify(min1, terserOptsCompressOnly)).code!;
   const min2 = convertFunctions(min);
-  const final = (await minify(min2, terserOptsNoCollapse)).code!;
-  return final;
+  const min3 = (await minify(min2, terserOptsCompressOnly)).code!;
+  const final = (await minify(min3, terserOptsMangleOnly)).code!;
+  return postProcess(remangleTopLevel(final));
 }
 
 export function writeToPath(path: string, content: string | NodeJS.ArrayBufferView) {
@@ -76,22 +81,34 @@ const terserCompress = {
   booleans_as_integers: true,
 };
 
+const terserFormat = { ecma: 2020 as const, semicolons: true };
+const terserMangle = { toplevel: true, eval: true };
+
 const terserOptsCollapse: MinifyOptions = {
   module: true,
   toplevel: true,
   ecma: 2020,
   compress: { ...terserCompress, passes: 1, collapse_vars: true },
-  mangle: { toplevel: true, eval: true },
-  format: { ecma: 2020, semicolons: true },
+  mangle: terserMangle,
+  format: terserFormat,
 };
 
-const terserOptsNoCollapse: MinifyOptions = {
+const terserOptsCompressOnly: MinifyOptions = {
   module: true,
   toplevel: true,
   ecma: 2020,
   compress: terserCompress,
-  mangle: { toplevel: true, eval: true },
-  format: { ecma: 2020, semicolons: true },
+  mangle: false,
+  format: terserFormat,
+};
+
+const terserOptsMangleOnly: MinifyOptions = {
+  module: true,
+  toplevel: true,
+  ecma: 2020,
+  compress: false,
+  mangle: terserMangle,
+  format: terserFormat,
 };
 
 // ── Convert all function declarations/expressions to arrow functions ──
@@ -121,16 +138,13 @@ function convertFunctions(code: string): string {
         const params = fmtParams(info.params);
         const isIIFE = info.end < code.length && code[info.end] === '(';
 
+        const arrow = `${params}=>${fmtArrowBody(body)}`;
         if (isNamed) {
-          // function name(p){body} → var name=p=>{body};
           result += isIIFE
-            ? `var ${info.name}=(${params}=>{${body}})`
-            : `var ${info.name}=${params}=>{${body}};`;
+            ? `var ${info.name}=(${arrow})`
+            : `var ${info.name}=${arrow};`;
         } else {
-          // function(p){body} → p=>{body}  (wrapped in parens if IIFE)
-          result += isIIFE
-            ? `(${params}=>{${body}})`
-            : `${params}=>{${body}}`;
+          result += isIIFE ? `(${arrow})` : arrow;
         }
         i = info.end;
         continue;
@@ -199,4 +213,41 @@ function fmtParams(params: string): string {
   // Single simple param → no parens needed (saves 2 chars)
   if (!/[,={\[]/.test(params)) return params;
   return `(${params})`;
+}
+
+// ── Format arrow body: remove braces for single-expression bodies ──
+
+function fmtArrowBody(body: string): string {
+  if (!body || body[0] === '{') return `{${body}}`;
+  // Bodies starting with statement keywords must keep braces
+  if (/^(?:return|if|for|while|do|switch|try|throw|let |const |var |break|continue)\b/.test(body)) return `{${body}}`;
+  // Check for semicolons at top nesting level — multi-statement bodies keep braces
+  if (hasTopLevel(body, ';')) return `{${body}}`;
+  // Single expression — wrap in parens if has top-level comma, else bare
+  return hasTopLevel(body, ',') ? `(${body})` : body;
+}
+
+function hasTopLevel(code: string, target: string): boolean {
+  let depth = 0;
+  for (let i = 0; i < code.length; i++) {
+    const ch = code[i];
+    if (ch === '"' || ch === "'" || ch === '`') {
+      i++;
+      while (i < code.length && code[i] !== ch) {
+        if (code[i] === '\\') i++;
+        i++;
+      }
+      continue;
+    }
+    if (ch === '(' || ch === '[' || ch === '{') depth++;
+    else if (ch === ')' || ch === ']' || ch === '}') depth--;
+    else if (ch === target && depth === 0) return true;
+  }
+  return false;
+}
+
+// ── Post-processing: const → let, === → ==, !== → != ──
+
+function postProcess(code: string): string {
+  return code.replaceAll('const ', 'let ').replaceAll('!==', '!=').replaceAll('===', '==');
 }

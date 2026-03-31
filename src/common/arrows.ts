@@ -17,7 +17,7 @@ export function getDirect(ctx: ArrowCtx): number {
 export function setDirect(ctx: ArrowCtx, value: number) {
   for (let i = 7; i >= 0; i--) {
     const arrowType = ctx.a[value & 1];
-    world.setArrow(ctx.x + i, ctx.y, arrowType, 1, false);
+    world.setArrow(ctx.x + i, ctx.y, arrowType, 1);
     value >>= 1;
   }
 }

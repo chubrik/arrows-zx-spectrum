@@ -18,7 +18,7 @@ declare const world: {
   getArrow(x: number, y: number): Arrow | null;
 
   // Set an arrow
-  setArrow(x: number, y: number, arrowType: number, rotation: number, flipped: boolean): void;
+  setArrow(x: number, y: number, arrowType: number, rotation?: number, flipped?: boolean): void;
 
   // Read a signal
   getSignal(x: number, y: number): number | null;
