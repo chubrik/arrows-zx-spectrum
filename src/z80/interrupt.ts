@@ -1,6 +1,6 @@
 import { read } from '../common/memory';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
-import { call88 } from './op/op-stack';
+import { CALL_nn } from './op/op-stack';
 import { I, regs } from './registers';
 import { incPC, refresh } from './utils';
 
@@ -22,10 +22,10 @@ export function interrupt() {
     const vector = (regs[I] << 8) | IM2_BUS_VALUE;
     const addrLow = read(vector);
     const addrHigh = read(vector + 1);
-    call88(addrLow, addrHigh);
+    CALL_nn(addrLow, addrHigh);
   }
   else {
     // On ZX Spectrum IM 0 is equivalent to IM 1 (bus = 0xFF = RST 38h)
-    call88(IM01_VECTOR);
+    CALL_nn(IM01_VECTOR);
   }
 }

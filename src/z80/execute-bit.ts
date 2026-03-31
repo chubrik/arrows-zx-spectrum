@@ -1,6 +1,6 @@
 import { read, write } from '../common/memory';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
-import { BIT_b_val, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
+import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
 import { A, B, C, D, E, get16, getWZh, H, HL, L, regs } from './registers';
 import { next, refresh } from './utils';
 
@@ -13,13 +13,13 @@ export function executeBit() {
 
 function testBitReg(bit: number, reg: number) {
   const value = regs[reg];
-  BIT_b_val(bit, value, value);
+  BIT_b_r(bit, value, value);
 }
 
 function testBit(bit: number) {
   const addr = get16(HL);
   const value = read(addr);
-  BIT_b_val(bit, value, getWZh());
+  BIT_b_r(bit, value, getWZh());
 }
 
 function resBitReg(bit: number, reg: number) {

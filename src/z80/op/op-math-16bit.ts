@@ -2,7 +2,7 @@ import { F3, F5, FC, fc, FH, FN, FS, FZ, setF3, setF5, setFC, setFH, setFN, setF
 import { get16, HL, HLXY, set16 } from '../registers';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
-export function addHLXY(reg: number) {
+export function ADD_HL(reg: number) {
   const hlxy = get16(HLXY);
   const r = get16(reg);
   const sum = hlxy + r;

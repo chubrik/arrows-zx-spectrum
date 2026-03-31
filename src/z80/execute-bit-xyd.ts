@@ -1,6 +1,6 @@
 import { read, write } from '../common/memory';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from './flags';
-import { BIT_b_val, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-shift';
+import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
 import { A, B, C, D, E, H, L, regs } from './registers';
 import { getXYd, next } from './utils';
 
@@ -16,7 +16,7 @@ export function executeBitXYd() {
 }
 
 function testBitXYd(bit: number) {
-  BIT_b_val(bit, xydVal, xydAddr >> 8);
+  BIT_b_r(bit, xydVal, xydAddr >> 8);
 }
 
 function setXYd(value: number) {

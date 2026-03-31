@@ -1,9 +1,10 @@
 import { read, write } from '../../common/memory';
 import { BIT7, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFSZ53, setFSZ53P, setFZ } from '../flags';
 import { A, regs } from '../registers';
+import { getHLXYd } from '../utils';
 
 /** INC r */
-export function incReg(reg: number) {
+export function INC_r(reg: number) {
   const r = regs[reg];
   const result = (r + 1) & 0xFF;
   regs[reg] = result;
@@ -15,7 +16,8 @@ export function incReg(reg: number) {
 }
 
 /** INC (HL) | INC (IX+d) | INC (IY+d) */
-export function inc(addr: number) {
+export function INC_hl() {
+  const addr = getHLXYd();
   const value = read(addr);
   const result = (value + 1) & 0xFF;
   write(addr, result);
@@ -27,10 +29,10 @@ export function inc(addr: number) {
 }
 
 /** DEC r */
-export function decReg(addr: number) {
-  const r = regs[addr];
+export function DEC_r(reg: number) {
+  const r = regs[reg];
   const result = (r - 1) & 0xFF;
-  regs[addr] = result;
+  regs[reg] = result;
 
   setFSZ53(result);
   setFH(!(r & 0x0F) ? FH : 0);
@@ -39,7 +41,8 @@ export function decReg(addr: number) {
 }
 
 /** DEC (HL) | DEC (IX+d) | DEC (IY+d) */
-export function dec(addr: number) {
+export function DEC_hl() {
+  const addr = getHLXYd();
   const value = read(addr);
   const result = (value - 1) & 0xFF;
   write(addr, result);
@@ -50,7 +53,11 @@ export function dec(addr: number) {
   setFN(FN);
 }
 
-export function add(operand: number, fc: number = 0) {
+/**
+ * ADD A,n | ADD A,r | ADD A,(HL) | ADD A,(IX+d) | ADD A,(IY+d)
+ * ADC A,n | ADC A,r | ADC A,(HL) | ADC A,(IX+d) | ADC A,(IY+d)
+ */
+export function ADD_ADC(operand: number, fc: number = 0) {
   const a = regs[A];
   const sum = a + operand + fc;
   const result = sum & 0xFF;
@@ -63,7 +70,11 @@ export function add(operand: number, fc: number = 0) {
   setFC((sum >> 8) & FC);
 }
 
-export function sub(operand: number, fc: number = 0) {
+/**
+ * SUB A,n | SUB A,r | SUB A,(HL) | SUB A,(IX+d) | SUB A,(IY+d)
+ * SBC A,n | SBC A,r | SBC A,(HL) | SBC A,(IX+d) | SBC A,(IY+d)
+ */
+export function SUB_SBC(operand: number, fc: number = 0) {
   const a = regs[A];
   const diff = a - operand - fc;
   const result = diff & 0xFF;
@@ -76,7 +87,8 @@ export function sub(operand: number, fc: number = 0) {
   setFC((diff >> 8) & FC);
 }
 
-export function cp(operand: number) {
+/** CP n | CP r | CP (HL) | CP (IX+d) | CP (IY+d) */
+export function CP(operand: number) {
   const a = regs[A];
   const diff = a - operand;
   const result = diff & 0xFF;
@@ -91,7 +103,12 @@ export function cp(operand: number) {
   setFC((diff >> 8) & FC);
 }
 
-export function logic(result: number, fh: number = 0) {
+/**
+ * AND n | AND r | AND (HL) | AND (IX+d) | AND (IY+d)
+ * XOR n | XOR r | XOR (HL) | XOR (IX+d) | XOR (IY+d)
+ * OR n  | OR r  | OR (HL)  | OR (IX+d)  | OR (IY+d)
+ */
+export function AND_XOR_OR(result: number, fh: number = 0) {
   regs[A] = result;
 
   setFSZ53P(result);

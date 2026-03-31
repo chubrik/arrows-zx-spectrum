@@ -4,7 +4,8 @@ import { calcFP, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, set
 import { A, B, BC, C, DE, get16, HL, HLXY, regs, set16 } from '../registers';
 import { incPC } from '../utils';
 
-export function ldBlock(inc: 1 | -1, repeat: 0 | 1 = 0) {
+/** LDI | LDD | LDIR | LDDR */
+export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const a = regs[A];
   const bc = get16(BC);
   const de = get16(DE);
@@ -27,7 +28,8 @@ export function ldBlock(inc: 1 | -1, repeat: 0 | 1 = 0) {
     incPC(-2);
 }
 
-export function cpBlock(inc: 1 | -1, repeat: 0 | 1 = 0) {
+/** CPI | CPD | CPIR | CPDR */
+export function CP_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const a = regs[A];
   const bc = get16(BC);
   const hlxy = get16(HLXY);
@@ -51,7 +53,8 @@ export function cpBlock(inc: 1 | -1, repeat: 0 | 1 = 0) {
     incPC(-2);
 }
 
-export function inBlock(inc: 1 | -1, repeat: 0 | 1 = 0) {
+/** INI | IND | INIR | INDR */
+export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const b = regs[B];
   const c = regs[C];
   const hl = get16(HL);
@@ -78,7 +81,8 @@ export function inBlock(inc: 1 | -1, repeat: 0 | 1 = 0) {
     incPC(-2);
 }
 
-export function outBlock(inc: 1 | -1, repeat: 0 | 1 = 0) {
+/** OUTI | OUTD | OTIR | OTDR */
+export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const b = regs[B];
   const c = regs[C];
   const hl = get16(HL);

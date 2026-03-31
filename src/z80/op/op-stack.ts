@@ -2,7 +2,8 @@ import { read, write16, write88 } from '../../common/memory';
 import { packF, unpackF } from '../flags';
 import { A, get16, PC, PCh, PCl, regs, set16, set88, SP } from '../registers';
 
-export function call88(addrLow: number, addrHigh: number = 0) {
+/** CALL nn */
+export function CALL_nn(addrLow: number, addrHigh: number = 0) {
   const pcl = regs[PCl];
   const pch = regs[PCh];
   const sp = get16(SP);
@@ -12,7 +13,8 @@ export function call88(addrLow: number, addrHigh: number = 0) {
   write88(newSp, pcl, pch);
 }
 
-export function callNext16() {
+/** CALL cc,nn */
+export function CALL_cc_nn() {
   let pc = get16(PC);
   const newPcl = read(pc++);
   const newPch = read(pc++);
@@ -23,7 +25,8 @@ export function callNext16() {
   write16(newSp, pc & 0xFFFF);
 }
 
-export function push16(reg: number) {
+/** PUSH qq | PUSH IX | PUSH IY */
+export function PUSH_QQ(reg: number) {
   const rLow = regs[reg];
   const rHigh = regs[reg + 1];
   const sp = get16(SP);
@@ -32,7 +35,8 @@ export function push16(reg: number) {
   write88(newSp, rLow, rHigh);
 }
 
-export function pushAF() {
+/** PUSH AF */
+export function PUSH_AF() {
   const f = packF();
   const a = regs[A];
   const sp = get16(SP);
@@ -41,7 +45,8 @@ export function pushAF() {
   write88(newSp, f, a);
 }
 
-export function pop16(reg: number) {
+/** POP qq | POP IX | POP IY */
+export function POP_QQ(reg: number) {
   let sp = get16(SP);
   const rLow = read(sp++);
   const rHigh = read(sp++);
@@ -49,7 +54,8 @@ export function pop16(reg: number) {
   set88(reg, rLow, rHigh);
 }
 
-export function popAF() {
+/** POP AF */
+export function POP_AF() {
   let sp = get16(SP);
   const f = read(sp++);
   const a = read(sp++);

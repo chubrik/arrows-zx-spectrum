@@ -4,6 +4,7 @@ import { FP, iff2, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
 import { A, B, BC, get16, PC, regs, set16, set88 } from '../registers';
 import { incPC, next } from '../utils';
 
+/** LD A,I | LD A,R */
 export function ld_A_IR(value: number) {
   regs[A] = value;
 
@@ -14,7 +15,7 @@ export function ld_A_IR(value: number) {
 }
 
 /** LD dd,nn | LD IX,nn | LD IY,nn */
-export function ld16Next(reg: number) {
+export function LD_dd_nn(reg: number) {
   let pc = get16(PC);
   const low = read(pc++);
   const high = read(pc++);
@@ -68,8 +69,6 @@ export function IN_c(reg: number = 0) {
 /** OUT (C),r | OUT (C),0 (undocumented) */
 export function OUT_c(reg: number = 0) {
   const ioAddr = get16(BC);
-  const value = reg ? regs[reg] : ED71_VALUE;
+  const value = reg ? regs[reg] : 0; // NMOS: 0, CMOS: 255 (undocumented)
   writePort(ioAddr, value);
 }
-
-const ED71_VALUE = 0; // NMOS: 0, CMOS: 255 (undocumented)
