@@ -3,13 +3,13 @@ import { unicodeToBytes } from './common/encode';
 import { deployMemoryBlock, initMemory, resetMemoryBlock } from './common/utils';
 import { initCpu, resetCpu } from './z80/init';
 
-const pos = getPosition();
-const chunkX = pos.x & ~15;
-const chunkY = pos.y & ~15;
-initCpu(chunkX, chunkY);
-initMemory(chunkX, chunkY);
-
 onActive(() => {
+  const pos = getPosition();
+  const chunkX = pos.x & ~15;
+  const chunkY = pos.y & ~15;
+  initCpu(chunkX, chunkY);
+  initMemory(chunkX, chunkY);
+
   const rom = unicodeToBytes(''); // Replaced during build
   deployMemoryBlock(0x0000, rom);
   resetMemoryBlock(RAM_MIN_ADDR, xFFFF);

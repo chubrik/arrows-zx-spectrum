@@ -7,18 +7,31 @@ declare function always(callback: () => void): void;
 // Command block coordinates
 declare function getPosition(): Position;
 
+// Current tick count
+declare function getTick(): number;
+
 // Print log
 declare function log(...values: string[]): void;
 
 // Display text on screen
 declare function showText(text: string): void;
 
+// Shared state between command blocks
+declare const state: Record<string, any>;
+
 declare const world: {
+
+  // All existing chunks
+  getChunks(): Position[];
+
   // Read an arrow
   getArrow(x: number, y: number): Arrow | null;
 
   // Set an arrow
-  setArrow(x: number, y: number, arrowType: number, rotation?: number, flipped?: boolean): void;
+  setArrow(x: number, y: number, arrowType: number, rotation?: number, flip?: boolean, extra?: number): void;
+
+  // Remove an arrow
+  removeArrow(x: number, y: number): void;
 
   // Read a signal
   getSignal(x: number, y: number): number | null;
@@ -26,11 +39,11 @@ declare const world: {
   // Set a signal
   setSignal(x: number, y: number, signal: number): void;
 
-  // Remove an arrow
-  removeArrow(x: number, y: number): void;
-
   // Clear all signals
   clearSignals(): void;
+
+  // Set the code of a command block
+  setCommandBlockCode(x: number, y: number, code: string): void;
 
   // Copy an arrow from coordinates (xSrc, ySrc) to coordinates (xDst, yDst)
   copy(xSrc: number, ySrc: number, xDst: number, yDst: number): void;
@@ -43,6 +56,8 @@ declare type Arrow = {
   type: number;
   rotation: number;
   flip: boolean;
+  extra: number; /* Light:          000b0ccc (brightness, color)
+                    Music: 000iiiii oooonnnn (instrument, octave, note) */
 };
 
 declare type Position = {

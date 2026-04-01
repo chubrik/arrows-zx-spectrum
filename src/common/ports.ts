@@ -4,8 +4,8 @@ let keysX: number;
 let keysY: number;
 
 export function initPorts(chunkX: number, chunkY: number) {
-  keysX = chunkX - 16;
-  keysY = chunkY;
+  keysX = chunkX + 32;
+  keysY = chunkY - 16;
 }
 
 export function readPort(low: number, high: number): number {
@@ -13,13 +13,13 @@ export function readPort(low: number, high: number): number {
 
   for (let i = 0; i < 8; i++) {
     if (high & (1 << i)) continue;
-    let x = keysX;
-    const y = keysY + i;
+    const x = keysX + i;
+    let y = keysY;
     if (world.getSignal(x, y)) result &= ~BIT0;
-    if (world.getSignal(++x, y)) result &= ~BIT1;
-    if (world.getSignal(++x, y)) result &= ~BIT2;
-    if (world.getSignal(++x, y)) result &= ~BIT3;
-    if (world.getSignal(++x, y)) result &= ~BIT4;
+    if (world.getSignal(x, ++y)) result &= ~BIT1;
+    if (world.getSignal(x, ++y)) result &= ~BIT2;
+    if (world.getSignal(x, ++y)) result &= ~BIT3;
+    if (world.getSignal(x, ++y)) result &= ~BIT4;
   }
 
   return result;

@@ -9,19 +9,23 @@ import { interrupt } from './z80/interrupt';
 import { fetchOptions, initOptions, OPTS_LIMITED_SPEED, OPTS_OP_PER_TICK } from './z80/options';
 import { eiDelay, setEIDelay } from './z80/registers';
 
-const pos = getPosition();
-const chunkX = pos.x & ~15;
-const chunkY = pos.y & ~15;
-initOptions(chunkX, chunkY);
-initCpu(chunkX, chunkY);
-initMemory(chunkX, chunkY);
-initPorts(chunkX, chunkY);
-
+let inited = false;
 let enabled = false;
 let opCount = 0;
 let lastFrameTime = 0;
 
 onActive(() => {
+  if (!inited) {
+    inited = true;
+    const pos = getPosition();
+    const chunkX = pos.x & ~15;
+    const chunkY = pos.y & ~15;
+    initOptions(chunkX, chunkY);
+    initCpu(chunkX, chunkY);
+    initMemory(chunkX, chunkY);
+    initPorts(chunkX, chunkY);
+  }
+
   if (enabled = !enabled) {
     fetchCpu();
     fetchMemory();
