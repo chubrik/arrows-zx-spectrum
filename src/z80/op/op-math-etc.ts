@@ -1,5 +1,5 @@
 import { BIT7, xFF } from '../../common/constants';
-import { F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FP, setF3, setF5, setFC, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
+import { calcFP, calcFSZ53, F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FP, setF3, setF5, setFC, setFH, setFN, setFP } from '../flags';
 import { A, cpu } from '../registers';
 
 /** DAA */
@@ -12,7 +12,8 @@ export function DAA() {
   newA = (fn ? newA - correction : newA + correction) & xFF;
   cpu[A] = newA;
 
-  setFSZ53P(newA);
+  calcFSZ53(newA);
+  calcFP(newA);
   setFH((a ^ correction ^ newA) & FH);
 }
 
@@ -55,7 +56,7 @@ export function NEG() {
   const newA = -a & xFF;
   cpu[A] = newA;
 
-  setFSZ53(newA);
+  calcFSZ53(newA);
   setFH((a ^ newA) & FH);
   setFP(a === BIT7 ? FP : 0);
   setFN(FN);

@@ -19,21 +19,21 @@ export const INT = BIT0;
 export let fs = 0, fz = 0, f5 = 0, fh = 0, f3 = 0, fp = 0, fn = 0, fc = 0;
 export let im2 = 0, im1 = 0, iff2 = 0, iff1 = 0, hlt = 0, int = 0;
 
-export function setFS(v: number) { fs = v; }
-export function setFZ(v: number) { fz = v; }
-export function setF5(v: number) { f5 = v; }
-export function setFH(v: number) { fh = v; }
-export function setF3(v: number) { f3 = v; }
-export function setFP(v: number) { fp = v; }
-export function setFN(v: number) { fn = v; }
-export function setFC(v: number) { fc = v; }
+export function setFS(value: number) { fs = value; }
+export function setFZ(value: number) { fz = value; }
+export function setF5(value: number) { f5 = value; }
+export function setFH(value: number) { fh = value; }
+export function setF3(value: number) { f3 = value; }
+export function setFP(value: number) { fp = value; }
+export function setFN(value: number) { fn = value; }
+export function setFC(value: number) { fc = value; }
 
-export function setIM2(v: number) { im2 = v; }
-export function setIM1(v: number) { im1 = v; }
-export function setIFF2(v: number) { iff2 = v; }
-export function setIFF1(v: number) { iff1 = v; }
-export function setHLT(v: number) { hlt = v; }
-export function setINT(v: number) { int = v; }
+export function setIM2(value: number) { im2 = value; }
+export function setIM1(value: number) { im1 = value; }
+export function setIFF2(value: number) { iff2 = value; }
+export function setIFF1(value: number) { iff1 = value; }
+export function setHLT(value: number) { hlt = value; }
+export function setINT(value: number) { int = value; }
 
 export function packF(): number {
   return fs | fz | f5 | fh | f3 | fp | fn | fc;
@@ -63,20 +63,15 @@ export function unpackSYS(byte: number) {
   int = byte & INT;
 }
 
-/** Set S, Z, 5, 3, P flags from 8-bit result */
-export function setFSZ53P(value: number) {
-  setFSZ53(value);
-  calcFP(value);
-}
-
 /** Set S, Z, 5, 3 flags from 8-bit result */
-export function setFSZ53(value: number) {
+export function calcFSZ53(value: number) {
   fs = value & FS;
   fz = value ? 0 : FZ;
   f5 = value & F5;
   f3 = value & F3;
 }
 
+/** Set P flag from 8-bit result */
 export function calcFP(value: number) {
   value ^= value >> 4;
   value ^= value << 2;

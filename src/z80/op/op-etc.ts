@@ -1,15 +1,15 @@
 import { xFF, xFFFF } from '../../common/constants';
 import { mem } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
-import { FP, iff2, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
-import { A, B, BC, C, cpu, get16, PC, set16, set88 } from '../registers';
+import { calcFP, calcFSZ53, FP, iff2, setFH, setFN, setFP } from '../flags';
+import { A, B, C, cpu, get16, PC, set16, set88 } from '../registers';
 import { incPC, next } from '../utils';
 
 /** LD A,I | LD A,R */
 export function ld_A_IR(value: number) {
   cpu[A] = value;
 
-  setFSZ53(value);
+  calcFSZ53(value);
   setFP(iff2 ? FP : 0);
   setFH(0);
   setFN(0);
@@ -61,7 +61,8 @@ export function IN_c(reg: number = 0) {
   const result = readPort(portLow, portHigh);
   if (reg) cpu[reg] = result;
 
-  setFSZ53P(result);
+  calcFSZ53(result);
+  calcFP(result);
   setFH(0);
   setFN(0);
 }

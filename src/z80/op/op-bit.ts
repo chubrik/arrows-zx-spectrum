@@ -1,6 +1,6 @@
 import { BIT7, xFF } from '../../common/constants';
 import { mem, write } from '../../common/memory';
-import { F3, F5, FC, fc, FH, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFSZ53P, setFZ } from '../flags';
+import { calcFP, calcFSZ53, F3, F5, FC, fc, FH, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { A, cpu, get16, HL } from '../registers';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
@@ -94,7 +94,8 @@ export function RLD() {
   cpu[A] = resultA;
   write(hl, resultMem);
 
-  setFSZ53P(resultA);
+  calcFSZ53(resultA);
+  calcFP(resultA);
   setFH(0);
   setFN(0);
 }
@@ -109,7 +110,8 @@ export function RRD() {
   cpu[A] = resultA;
   write(hl, resultMem);
 
-  setFSZ53P(resultA);
+  calcFSZ53(resultA);
+  calcFP(resultA);
   setFH(0);
   setFN(0);
 }
@@ -155,7 +157,8 @@ function setFRotA(result: number, fc: number) {
 }
 
 function setFShift(result: number, fc: number) {
-  setFSZ53P(result);
+  calcFSZ53(result);
+  calcFP(result);
   setFH(0);
   setFN(0);
   setFC(fc);

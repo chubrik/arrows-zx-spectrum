@@ -1,6 +1,6 @@
 import { BIT7, xFF } from '../../common/constants';
 import { mem, write } from '../../common/memory';
-import { F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFSZ53, setFSZ53P, setFZ } from '../flags';
+import { calcFP, calcFSZ53, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { A, cpu } from '../registers';
 import { getHLXYd } from '../utils';
 
@@ -10,7 +10,7 @@ export function INC_r(reg: number) {
   const result = (r + 1) & xFF;
   cpu[reg] = result;
 
-  setFSZ53(result);
+  calcFSZ53(result);
   setFH(result & 0x0F ? 0 : FH);
   setFP(r === 0x7F ? FP : 0);
   setFN(0);
@@ -23,7 +23,7 @@ export function INC_hl() {
   const result = (value + 1) & xFF;
   write(addr, result);
 
-  setFSZ53(result);
+  calcFSZ53(result);
   setFH(result & 0x0F ? 0 : FH);
   setFP(value === 0x7F ? FP : 0);
   setFN(0);
@@ -35,7 +35,7 @@ export function DEC_r(reg: number) {
   const result = (r - 1) & xFF;
   cpu[reg] = result;
 
-  setFSZ53(result);
+  calcFSZ53(result);
   setFH(r & 0x0F ? 0 : FH);
   setFP(r === BIT7 ? FP : 0);
   setFN(FN);
@@ -48,7 +48,7 @@ export function DEC_hl() {
   const result = (value - 1) & xFF;
   write(addr, result);
 
-  setFSZ53(result);
+  calcFSZ53(result);
   setFH(value & 0x0F ? 0 : FH);
   setFP(value === BIT7 ? FP : 0);
   setFN(FN);
@@ -64,7 +64,7 @@ export function ADD_ADC(operand: number, fc: number = 0) {
   const result = sum & xFF;
   cpu[A] = result;
 
-  setFSZ53(result);
+  calcFSZ53(result);
   setFH((a ^ operand ^ result) & FH);
   setFP(((a ^ ~operand) & (a ^ result) & FS) >> 5);
   setFN(0);
@@ -81,7 +81,7 @@ export function SUB_SBC(operand: number, fc: number = 0) {
   const result = diff & xFF;
   cpu[A] = result;
 
-  setFSZ53(result);
+  calcFSZ53(result);
   setFH((a ^ operand ^ result) & FH);
   setFP(((a ^ operand) & (a ^ result) & FS) >> 5);
   setFN(FN);
@@ -112,7 +112,8 @@ export function CP(operand: number) {
 export function AND_XOR_OR(result: number, fh: number = 0) {
   cpu[A] = result;
 
-  setFSZ53P(result);
+  calcFSZ53(result);
+  calcFP(result);
   setFH(fh);
   setFN(0);
   setFC(0);
