@@ -4,7 +4,7 @@ let keysX: number;
 let keysY: number;
 
 export function initPorts(chunkX: number, chunkY: number) {
-  keysX = chunkX + 64;
+  keysX = chunkX - 16;
   keysY = chunkY;
 }
 

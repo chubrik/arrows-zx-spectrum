@@ -6,35 +6,33 @@ import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu, fetchCpu, initCpu } from './z80/init';
 import { interrupt } from './z80/interrupt';
+import { fetchOptions, initOptions, OPTS_LIMITED_SPEED, OPTS_OP_PER_TICK } from './z80/options';
 import { eiDelay, setEIDelay } from './z80/registers';
 
 const pos = getPosition();
 const chunkX = pos.x & ~15;
 const chunkY = pos.y & ~15;
+initOptions(chunkX, chunkY);
 initCpu(chunkX, chunkY);
 initMemory(chunkX, chunkY);
 initPorts(chunkX, chunkY);
 
-let opPerTick = 0;
+let enabled = false;
 let opCount = 0;
 let lastFrameTime = 0;
 
 onActive(() => {
-  if (opPerTick === 0) {
+  if (enabled = !enabled) {
     fetchCpu();
     fetchMemory();
-    opPerTick = 1;
   }
-  else if (opPerTick === 1)
-    opPerTick = OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
-  else
-    opPerTick = 0;
 });
 
 always(() => {
-  if (!opPerTick) return;
+  if (!enabled) return;
+  fetchOptions();
 
-  for (let i = 0; i < opPerTick; i++) {
+  for (let i = 0; i < OPTS_OP_PER_TICK; i++) {
     opCount++;
     executeMain();
 
@@ -50,9 +48,11 @@ always(() => {
     setINT(INT);
     interrupt();
 
-    let now: number;
-    while ((now = Date.now()) < lastFrameTime + MS_PER_FRAME) { }
-    lastFrameTime = now;
+    if (OPTS_LIMITED_SPEED) {
+      let now: number;
+      while ((now = Date.now()) < lastFrameTime + MS_PER_FRAME) { }
+      lastFrameTime = now;
+    }
 
     break;
   }

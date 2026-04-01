@@ -1,11 +1,11 @@
 export type ArrowCtx = { x: number; y: number; a: number[]; };
 
-export function getDirect(ctx: ArrowCtx): number {
+export function getDirect(x: number, y: number): number {
   let value = 0;
 
   for (let i = 0; i < 8; i++) {
     value <<= 1;
-    const arrow = world.getArrow(ctx.x + i, ctx.y);
+    const arrow = world.getArrow(x + i, y);
 
     if (arrow && arrow.type >= 16)
       value |= 1;

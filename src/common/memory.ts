@@ -36,7 +36,7 @@ export function write(addr: number, value: number) {
 export function fetchMemory() {
   for (let addr = 0; addr < memCtx.length; addr++) {
     const ctx = memCtx[addr];
-    mem[addr] = getDirect(ctx);
+    mem[addr] = getDirect(ctx.x, ctx.y);
   }
 }
 

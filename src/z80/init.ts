@@ -42,7 +42,7 @@ export function initCpu(chunkX: number, chunkY: number) {
 export function fetchCpu() {
   for (let i = 0; i < REG_COUNT; i++) {
     const ctx = cpuCtx[i];
-    cpu[i] = getDirect(ctx);
+    cpu[i] = getDirect(ctx.x, ctx.y);
   }
 
   unpackF(cpu[F]);
