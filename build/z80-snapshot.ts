@@ -60,8 +60,8 @@ function parseZ80(buf: Buffer): Z80Snapshot {
   const Ba = buf[16];
   const Ea = buf[17];
   const Da = buf[18];
-  const Ha = buf[19];
-  const La = buf[20];
+  const La = buf[19];
+  const Ha = buf[20];
   const Aa = buf[21];
   const Fa = buf[22];
   const IY = buf.readUInt16LE(23);

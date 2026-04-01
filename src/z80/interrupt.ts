@@ -9,10 +9,10 @@ const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = xFF;
 
 export function interrupt() {
-  if (!(iff1 && int)) return;
-
-  if (hlt) incPC(1);
+  if (!int) return;
   setINT(0);
+  if (!iff1) return;
+  if (hlt) incPC(1);
   setIFF1(0);
   setIFF2(0);
   setHLT(0);

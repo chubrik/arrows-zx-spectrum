@@ -17,3 +17,4 @@ export const ATTRIBUTES_MIN_ADDR = 0x5800;
 export const ATTRIBUTES_AFTER_ADDR = 0x5B00;
 
 export const OP_PER_FRAME = 10000;
+export const MS_PER_FRAME = 20; // 50 fps

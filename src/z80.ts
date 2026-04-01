@@ -1,4 +1,4 @@
-import { OP_PER_FRAME } from './common/constants';
+import { MS_PER_FRAME, OP_PER_FRAME } from './common/constants';
 import { commitMemory, fetchMemory } from './common/memory';
 import { initMemory } from './common/utils';
 import { executeMain } from './z80/execute-main';
@@ -13,9 +13,9 @@ const chunkY = pos.y & ~15;
 initCpu(chunkX, chunkY);
 initMemory(chunkX, chunkY);
 
-const opBeforeFrame = OP_PER_FRAME - 1;
 let opPerTick = 0;
 let opCount = 0;
+let lastFrameTime = 0;
 
 onActive(() => {
   if (opPerTick === 0) {
@@ -24,7 +24,7 @@ onActive(() => {
     opPerTick = 1;
   }
   else if (opPerTick === 1)
-    opPerTick = OP_PER_FRAME;
+    opPerTick = OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
   else
     opPerTick = 0;
 });
@@ -37,19 +37,22 @@ always(() => {
     executeMain();
 
     // Hack: we call interrupt only once per frame
-    if (opCount < opBeforeFrame) continue;
-
-    if (opCount === OP_PER_FRAME) {
-      opCount = 0;
-      setINT(INT);
-    }
+    if (opCount < OP_PER_FRAME) continue;
 
     if (eiDelay) {
       setEIDelay(0);
       continue;
-    };
+    }
 
+    opCount -= OP_PER_FRAME;
+    setINT(INT);
     interrupt();
+
+    let now: number;
+    while ((now = Date.now()) < lastFrameTime + MS_PER_FRAME) { }
+    lastFrameTime = now;
+
+    break;
   }
 
   commitCpu();
