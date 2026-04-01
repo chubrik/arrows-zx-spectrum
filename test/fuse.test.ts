@@ -17,7 +17,7 @@ const mockPorts = vi.hoisted(() => ({
 
 vi.mock('../src/common/ports', () => ({
   readPort: () => mockPorts.readQueue[mockPorts.readIndex++] ?? xFF,
-  writePort: (addr: number, value: number) => { mockPorts.writes.push({ addr, value }); },
+  writePort: (low: number, high: number, value: number) => { mockPorts.writes.push({ addr: (high << 8) | low, value }); },
 }));
 
 // ---------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 import { MS_PER_FRAME, OP_PER_FRAME } from './common/constants';
 import { commitMemory, fetchMemory } from './common/memory';
+import { initPorts } from './common/ports';
 import { initMemory } from './common/utils';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
@@ -12,6 +13,7 @@ const chunkX = pos.x & ~15;
 const chunkY = pos.y & ~15;
 initCpu(chunkX, chunkY);
 initMemory(chunkX, chunkY);
+initPorts(chunkX, chunkY);
 
 let opPerTick = 0;
 let opCount = 0;

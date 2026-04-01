@@ -1,10 +1,30 @@
-import { xFF } from './constants';
+import { BIT0, BIT1, BIT2, BIT3, BIT4, xFF } from './constants';
 
-export function readPort(addr: number): number {
-  /* TODO */
-  return xFF;
+let keysX: number;
+let keysY: number;
+
+export function initPorts(chunkX: number, chunkY: number) {
+  keysX = chunkX + 64;
+  keysY = chunkY;
 }
 
-export function writePort(addr: number, value: number) {
+export function readPort(low: number, high: number): number {
+  let result = xFF;
+
+  for (let i = 0; i < 8; i++) {
+    if (high & (1 << i)) continue;
+    let x = keysX;
+    const y = keysY + i;
+    if (world.getSignal(x, y)) result &= ~BIT0;
+    if (world.getSignal(++x, y)) result &= ~BIT1;
+    if (world.getSignal(++x, y)) result &= ~BIT2;
+    if (world.getSignal(++x, y)) result &= ~BIT3;
+    if (world.getSignal(++x, y)) result &= ~BIT4;
+  }
+
+  return result;
+}
+
+export function writePort(low: number, high: number, value: number) {
   /* TODO */
 }

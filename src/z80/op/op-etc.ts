@@ -2,7 +2,7 @@ import { xFF, xFFFF } from '../../common/constants';
 import { mem } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { FP, iff2, setFH, setFN, setFP, setFSZ53, setFSZ53P } from '../flags';
-import { A, B, BC, cpu, get16, PC, set16, set88 } from '../registers';
+import { A, B, BC, C, cpu, get16, PC, set16, set88 } from '../registers';
 import { incPC, next } from '../utils';
 
 /** LD A,I | LD A,R */
@@ -42,24 +42,23 @@ export function JR_e() {
 
 /** IN A,(n) */
 export function IN_A_n() {
-  const a = cpu[A];
-  const n = next();
-  const ioAddr = (a << 8) | n;
-  cpu[A] = readPort(ioAddr);
+  const portLow = next();
+  const portHigh = cpu[A];
+  cpu[A] = readPort(portLow, portHigh);
 }
 
 /** OUT (n),A */
 export function OUT_n_A() {
-  const a = cpu[A];
-  const n = next();
-  const ioAddr = (a << 8) | n;
-  writePort(ioAddr, a);
+  const portLow = next();
+  const portHigh = cpu[A];
+  writePort(portLow, portHigh, portHigh);
 }
 
 /** IN r,(C) | IN (C) (undocumented) */
 export function IN_c(reg: number = 0) {
-  const ioAddr = get16(BC);
-  const result = readPort(ioAddr);
+  const portLow = cpu[C];
+  const portHigh = cpu[B];
+  const result = readPort(portLow, portHigh);
   if (reg) cpu[reg] = result;
 
   setFSZ53P(result);
@@ -69,7 +68,8 @@ export function IN_c(reg: number = 0) {
 
 /** OUT (C),r | OUT (C),0 (undocumented) */
 export function OUT_c(reg: number = 0) {
-  const ioAddr = get16(BC);
+  const portLow = cpu[C];
+  const portHigh = cpu[B];
   const value = reg ? cpu[reg] : 0; // NMOS: 0, CMOS: 255 (undocumented)
-  writePort(ioAddr, value);
+  writePort(portLow, portHigh, value);
 }

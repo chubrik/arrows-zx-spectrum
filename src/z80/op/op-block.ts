@@ -61,8 +61,7 @@ export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const hl = get16(HL);
   const count = (b - 1) & xFF;
   const newHL = (hl + inc) & xFFFF;
-  const ioAddr = (b << 8) | c;
-  const value = readPort(ioAddr);
+  const value = readPort(c, count);
   cpu[B] = count;
   set16(HL, newHL);
   write(hl, value);
@@ -89,11 +88,10 @@ export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const hl = get16(HL);
   const count = (b - 1) & xFF;
   const newHL = (hl + inc) & xFFFF;
-  const ioAddr = (count << 8) | c;
   const value = mem[hl];
   cpu[B] = count;
   set16(HL, newHL);
-  writePort(ioAddr, value);
+  writePort(c, count, value);
 
   const k = value + (newHL & xFF);
   const kOverflow = k > 255;
