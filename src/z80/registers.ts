@@ -33,8 +33,8 @@ export const PC = 24;
 
 export let SPv = 0;
 export let PCv = 0;
-export function setSPv(value: number) { SPv = value; }
-export function setPCv(value: number) { PCv = value; }
+/*! @__INLINE__ */ export function setSPv(value: number) { SPv = value; }
+/*! @__INLINE__ */ export function setPCv(value: number) { PCv = value; }
 
 export let HXY = H; // H / IXh / IYh
 export let LXY = L; // L / IXl / IYl
@@ -45,7 +45,7 @@ export function setHLXY(hlxy: number) {
 }
 
 export let eiDelay: 0 | 1 = 0;
-export function setEIDelay(value: 0 | 1) { eiDelay = value; }
+/*! @__INLINE__ */ export function setEIDelay(value: 0 | 1) { eiDelay = value; }
 
 //todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
 let wzh = 0;

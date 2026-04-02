@@ -1,9 +1,3 @@
-// Optimal top-level variable re-mangling using acorn scope analysis.
-// Terser's mangler assigns short names per-scope greedily, which can give
-// 1-char names to low-frequency local variables while high-frequency top-level
-// variables get 2-char names. This pass fixes that by reassigning top-level
-// names based on global reference frequency.
-
 import * as acorn from 'acorn';
 
 interface Scope {
@@ -12,6 +6,11 @@ interface Scope {
   children: Scope[];
 }
 
+/** Optimal top-level variable re-mangling using acorn scope analysis. */
+// Terser's mangler assigns short names per-scope greedily, which can give
+// 1-char names to low-frequency local variables while high-frequency top-level
+// variables get 2-char names. This pass fixes that by reassigning top-level
+// names based on global reference frequency.
 export function remangleTopLevel(code: string): string {
   const ast = acorn.parse(code, { ecmaVersion: 2020, sourceType: 'module' }) as any;
 

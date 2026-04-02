@@ -22,6 +22,7 @@ type ResourceName = keyof typeof RESOURCES;
 
 export async function getResource(name: ResourceName): Promise<Buffer>;
 export async function getResource(name: ResourceName, encoding: 'utf-8'): Promise<string>;
+/** Load and verify resource. */
 export async function getResource(name: ResourceName, encoding?: 'utf-8'): Promise<Buffer | string> {
   const res = RESOURCES[name];
   const path = `resources/${name}`;
