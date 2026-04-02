@@ -14,10 +14,10 @@ export function getDirect(x: number, y: number): number {
   return value;
 }
 
-export function setDirect(ctx: ArrowCtx, value: number) {
+export function setDirect(x: number, y: number, arrowTypes: number[], value: number) {
   for (let i = 7; i >= 0; i--) {
-    const arrowType = ctx.a[value & 1];
-    world.setArrow(ctx.x + i, ctx.y, arrowType, 1);
+    const arrowType = arrowTypes[value & 1];
+    world.setArrow(x + i, y, arrowType, 1);
     value >>= 1;
   }
 }

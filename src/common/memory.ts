@@ -52,7 +52,7 @@ export function commitMemory() {
       const addr = base + offset;
       const value = mem[addr];
       const ctx = memCtx[addr];
-      setDirect(ctx, value);
+      setDirect(ctx.x, ctx.y, ctx.a, value);
       bits ^= bit;
     }
   }

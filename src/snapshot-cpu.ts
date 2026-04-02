@@ -2,7 +2,7 @@ import { setDirect } from './common/arrows';
 import { initCpu } from './z80/init';
 import {
   A, F, B, C, D, E, H, L, Aa, Fa, Ba, Ca, Da, Ea, Ha, La,
-  IXh, IXl, IYh, IYl, SPh, SPl, PCh, PCl, I, R, SYS, cpuCtx
+  IXh, IXl, IYh, IYl, SP, PC, I, R, SYS, cpuCtx
 } from './z80/registers';
 
 onActive(() => {

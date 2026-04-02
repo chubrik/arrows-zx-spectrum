@@ -48,13 +48,13 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
 export function deployMemoryBlock(beginAddr: number, data: number[]) {
   for (let i = 0; i < data.length; i++) {
     const ctx = memCtx[beginAddr + i];
-    setDirect(ctx, data[i]);
+    setDirect(ctx.x, ctx.y, ctx.a, data[i]);
   }
 }
 
 export function resetMemoryBlock(firstAddr: number, lastAddr: number) {
   for (let addr = firstAddr; addr <= lastAddr; addr++) {
     const ctx = memCtx[addr];
-    setDirect(ctx, 0);
+    setDirect(ctx.x, ctx.y, ctx.a, 0);
   }
 }

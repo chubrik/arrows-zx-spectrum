@@ -2,8 +2,7 @@ import { xFF, xFFFF } from '../../common/constants';
 import { mem, write } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { calcFP, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { A, B, BC, C, cpu, DE, get16, HL, HLXY, set16 } from '../registers';
-import { incPC } from '../utils';
+import { A, B, BC, C, cpu, DE, get16, HL, HLXY, PC, PCv, set16, setPCv } from '../registers';
 
 /** LDI | LDD | LDIR | LDDR */
 export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
@@ -26,7 +25,7 @@ export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   setFN(0);
 
   if (repeat && count)
-    incPC(-2);
+    setPCv((PCv - 2) & xFFFF);
 }
 
 /** CPI | CPD | CPIR | CPDR */
@@ -51,7 +50,7 @@ export function CP_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   setFN(FN);
 
   if (repeat && count && diff)
-    incPC(-2);
+    setPCv((PCv - 2) & xFFFF);
 }
 
 /** INI | IND | INIR | INDR */
@@ -78,7 +77,7 @@ export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   setFC(kOverflow ? FC : 0);
 
   if (repeat && count)
-    incPC(-2);
+    setPCv((PCv - 2) & xFFFF);
 }
 
 /** OUTI | OUTD | OTIR | OTDR */
@@ -105,5 +104,5 @@ export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   setFC(kOverflow ? FC : 0);
 
   if (repeat && count)
-    incPC(-2);
+    setPCv((PCv - 2) & xFFFF);
 }

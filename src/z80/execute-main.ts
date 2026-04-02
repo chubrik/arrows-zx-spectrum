@@ -1,18 +1,18 @@
-import { BIT7, xFF, xFFFF } from '../common/constants';
+import { BIT7, xFFFF } from '../common/constants';
 import { mem, write, write88 } from '../common/memory';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';
 import { fc, FH, fp, fs, fz, HLT, hlt, IFF1, IFF2, setHLT, setIFF1, setIFF2 } from './flags';
 import { RLA, RLCA, RRA, RRCA } from './op/op-bit';
-import { DJNZ_e, IN_A_n, JR_e, LD_dd_nn, OUT_n_A } from './op/op-etc';
+import { DJNZ_e, IN_A_n, JR_e, LD_dd_nn, LD_SP_nn, OUT_n_A } from './op/op-etc';
 import { EX_AF_AF, EX_DE_HL, EX_sp_HL, EXX } from './op/op-exchange';
-import { ADD_HL } from './op/op-math-16bit';
+import { ADD_HL, ADD_HL_SP } from './op/op-math-16bit';
 import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
-import { CALL_addr, CALL_nn, POP_AF, POP_QQ, PUSH_AF, PUSH_QQ } from './op/op-stack';
-import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, HLXY, HXY, IX, IY, L, LXY, PC, PCh, PCl, R, set16, set88, setEIDelay, setHLXY, SP, SPh, SPl } from './registers';
-import { getHLXYd, incPC, next, next16, nop, setPCNext16 } from './utils';
+import { CALL_addr, CALL_nn, POP_AF, POP_PC, POP_QQ, PUSH_AF, PUSH_QQ } from './op/op-stack';
+import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, HLXY, HXY, IX, IY, L, LXY, PCv, R, set16, set88, setEIDelay, setHLXY, setPCv, setSPv, SPv } from './registers';
+import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 
 export function executeMain() {
 
@@ -24,15 +24,8 @@ export function executeMain() {
   if (hlt) return;
 
   //#region Inline next()
-  const pcl = cpu[PCl];
-  const pch = cpu[PCh];
-  const pc = (pch << 8) | pcl;
-  if (pcl === xFF) {
-    cpu[PCl] = 0;
-    cpu[PCh] = (pch + 1) & xFF;
-  } else {
-    cpu[PCl] = pcl + 1;
-  }
+  const pc = PCv;
+  setPCv((pc + 1) & xFFFF);
   const op = mem[pc];
   //#endregion
 
@@ -74,7 +67,7 @@ const opsMain = [
   /* 1E LD E,n     */ () => cpu[E] = next(),
   /* 1F RRA        */ RRA,
 
-  /* 20 JR NZ,e    */ () => fz ? incPC(1) : JR_e(),
+  /* 20 JR NZ,e    */ () => fz ? setPCv((PCv + 1) & xFFFF) : JR_e(),
   /* 21 LD HL,nn   */ () => LD_dd_nn(HLXY),
   /* 22 LD (nn),HL */ () => write88(next16(), cpu[LXY], cpu[HXY]),
   /* 23 INC HL     */ () => set16(HLXY, (get16(HLXY) + 1) & xFFFF),
@@ -82,7 +75,7 @@ const opsMain = [
   /* 25 DEC H      */ () => DEC_r(HXY),
   /* 26 LD H,n     */ () => cpu[HXY] = next(),
   /* 27 DAA        */ DAA,
-  /* 28 JR Z,e     */ () => fz ? JR_e() : incPC(1),
+  /* 28 JR Z,e     */ () => fz ? JR_e() : setPCv((PCv + 1) & xFFFF),
   /* 29 ADD HL,HL  */ () => ADD_HL(HLXY),
   /* 2A LD HL,(nn) */ () => { const addr = next16(); set88(HLXY, mem[addr], mem[addr + 1]); },
   /* 2B DEC HL     */ () => set16(HLXY, (get16(HLXY) - 1) & xFFFF),
@@ -91,18 +84,18 @@ const opsMain = [
   /* 2E LD L,n     */ () => cpu[LXY] = next(),
   /* 2F CPL        */ CPL,
 
-  /* 30 JR NC,e    */ () => fc ? incPC(1) : JR_e(),
-  /* 31 LD SP,nn   */ () => LD_dd_nn(SP),
+  /* 30 JR NC,e    */ () => fc ? setPCv((PCv + 1) & xFFFF) : JR_e(),
+  /* 31 LD SP,nn   */ () => LD_SP_nn(),
   /* 32 LD (nn),A  */ () => write(next16(), cpu[A]),
-  /* 33 INC SP     */ () => set16(SP, (get16(SP) + 1) & xFFFF),
+  /* 33 INC SP     */ () => setSPv((SPv + 1) & xFFFF),
   /* 34 INC (HL)   */ INC_hl,
   /* 35 DEC (HL)   */ DEC_hl,
   /* 36 LD (HL),n  */ () => write(getHLXYd(), next()),
   /* 37 SCF        */ SCF,
-  /* 38 JR C,e     */ () => fc ? JR_e() : incPC(1),
-  /* 39 ADD HL,SP  */ () => ADD_HL(SP),
+  /* 38 JR C,e     */ () => fc ? JR_e() : setPCv((PCv + 1) & xFFFF),
+  /* 39 ADD HL,SP  */ () => ADD_HL_SP(),
   /* 3A LD A,(nn)  */ () => cpu[A] = mem[next16()],
-  /* 3B DEC SP     */ () => set16(SP, (get16(SP) - 1) & xFFFF),
+  /* 3B DEC SP     */ () => setSPv((SPv - 1) & xFFFF),
   /* 3C INC A      */ () => INC_r(A),
   /* 3D DEC A      */ () => DEC_r(A),
   /* 3E LD A,n     */ () => cpu[A] = next(),
@@ -165,7 +158,7 @@ const opsMain = [
   /* 73 LD (HL),E  */ () => write(getHLXYd(), cpu[E]),
   /* 74 LD (HL),H  */ () => write(getHLXYd(), cpu[H]),
   /* 75 LD (HL),L  */ () => write(getHLXYd(), cpu[L]),
-  /* 76 HALT       */ () => { setHLT(HLT); incPC(-1); },
+  /* 76 HALT       */ () => { setHLT(HLT); setPCv((PCv - 1) & xFFFF); },
   /* 77 LD (HL),A  */ () => write(getHLXYd(), cpu[A]),
   /* 78 LD A,B     */ () => cpu[A] = cpu[B],
   /* 79 LD A,C     */ () => cpu[A] = cpu[C],
@@ -244,70 +237,70 @@ const opsMain = [
   /* BE CP (HL)    */ () => CP(mem[getHLXYd()]),
   /* BF CP A       */ () => CP(cpu[A]),
 
-  /* C0 RET NZ     */ () => fz ? {} : POP_QQ(PC),
+  /* C0 RET NZ     */ () => fz ? {} : POP_PC(),
   /* C1 POP BC     */ () => POP_QQ(BC),
-  /* C2 JP NZ,nn   */ () => fz ? incPC(2) : setPCNext16(),
+  /* C2 JP NZ,nn   */ () => fz ? setPCv((PCv + 2) & xFFFF) : setPCNext16(),
   /* C3 JP nn      */ () => setPCNext16(),
-  /* C4 CALL NZ,nn */ () => fz ? incPC(2) : CALL_nn(),
+  /* C4 CALL NZ,nn */ () => fz ? setPCv((PCv + 2) & xFFFF) : CALL_nn(),
   /* C5 PUSH BC    */ () => PUSH_QQ(BC),
   /* C6 ADD A,n    */ () => ADD_ADC(next()),
   /* C7 CALL 00h   */ () => CALL_addr(0x00),
-  /* C8 RET Z      */ () => fz ? POP_QQ(PC) : {},
-  /* C9 RET        */ () => POP_QQ(PC),
-  /* CA JP Z,nn    */ () => fz ? setPCNext16() : incPC(2),
+  /* C8 RET Z      */ () => fz ? POP_PC() : {},
+  /* C9 RET        */ () => POP_PC(),
+  /* CA JP Z,nn    */ () => fz ? setPCNext16() : setPCv((PCv + 2) & xFFFF),
   /* CB -- BIT --- */ () => HLXY === HL ? executeBit() : executeBitXYd(),
-  /* CC CALL Z,nn  */ () => fz ? CALL_nn() : incPC(2),
+  /* CC CALL Z,nn  */ () => fz ? CALL_nn() : setPCv((PCv + 2) & xFFFF),
   /* CD CALL nn    */ () => CALL_nn(),
   /* CE ADC A,n    */ () => ADD_ADC(next(), fc),
   /* CF CALL 08h   */ () => CALL_addr(0x08),
 
-  /* D0 RET NC     */ () => fc ? {} : POP_QQ(PC),
+  /* D0 RET NC     */ () => fc ? {} : POP_PC(),
   /* D1 POP DE     */ () => POP_QQ(DE),
-  /* D2 JP NC,nn   */ () => fc ? incPC(2) : setPCNext16(),
+  /* D2 JP NC,nn   */ () => fc ? setPCv((PCv + 2) & xFFFF) : setPCNext16(),
   /* D3 OUT (n),A  */ OUT_n_A,
-  /* D4 CALL NC,nn */ () => fc ? incPC(2) : CALL_nn(),
+  /* D4 CALL NC,nn */ () => fc ? setPCv((PCv + 2) & xFFFF) : CALL_nn(),
   /* D5 PUSH DE    */ () => PUSH_QQ(DE),
   /* D6 SUB A,n    */ () => SUB_SBC(next()),
   /* D7 CALL 10h   */ () => CALL_addr(0x10),
-  /* D8 RET C      */ () => fc ? POP_QQ(PC) : {},
+  /* D8 RET C      */ () => fc ? POP_PC() : {},
   /* D9 EXX        */ EXX,
-  /* DA JP C,nn    */ () => fc ? setPCNext16() : incPC(2),
+  /* DA JP C,nn    */ () => fc ? setPCNext16() : setPCv((PCv + 2) & xFFFF),
   /* DB IN A,(n)   */ IN_A_n,
-  /* DC CALL C,nn  */ () => fc ? CALL_nn() : incPC(2),
+  /* DC CALL C,nn  */ () => fc ? CALL_nn() : setPCv((PCv + 2) & xFFFF),
   /* DD --- IX --- */ () => { setHLXY(IX); executeMain(); setHLXY(HL); },
   /* DE SBC A,n    */ () => SUB_SBC(next(), fc),
   /* DF CALL 18h   */ () => CALL_addr(0x18),
 
-  /* E0 RET PO     */ () => fp ? {} : POP_QQ(PC),
+  /* E0 RET PO     */ () => fp ? {} : POP_PC(),
   /* E1 POP HL     */ () => POP_QQ(HLXY),
-  /* E2 JP PO,nn   */ () => fp ? incPC(2) : setPCNext16(),
+  /* E2 JP PO,nn   */ () => fp ? setPCv((PCv + 2) & xFFFF) : setPCNext16(),
   /* E3 EX (SP),HL */ EX_sp_HL,
-  /* E4 CALL PO,nn */ () => fp ? incPC(2) : CALL_nn(),
+  /* E4 CALL PO,nn */ () => fp ? setPCv((PCv + 2) & xFFFF) : CALL_nn(),
   /* E5 PUSH HL    */ () => PUSH_QQ(HLXY),
   /* E6 AND n      */ () => AND_XOR_OR(cpu[A] & next(), FH),
   /* E7 CALL 20h   */ () => CALL_addr(0x20),
-  /* E8 RET PE     */ () => fp ? POP_QQ(PC) : {},
-  /* E9 JP (HL)    */ () => { cpu[PCl] = cpu[LXY]; cpu[PCh] = cpu[HXY]; },
-  /* EA JP PE,nn   */ () => fp ? setPCNext16() : incPC(2),
+  /* E8 RET PE     */ () => fp ? POP_PC() : {},
+  /* E9 JP (HL)    */ () => { setPCv((cpu[HXY] << 8) | cpu[LXY]); },
+  /* EA JP PE,nn   */ () => fp ? setPCNext16() : setPCv((PCv + 2) & xFFFF),
   /* EB EX DE,HL   */ EX_DE_HL,
-  /* EC CALL PE,nn */ () => fp ? CALL_nn() : incPC(2),
+  /* EC CALL PE,nn */ () => fp ? CALL_nn() : setPCv((PCv + 2) & xFFFF),
   /* ED -- MISC -- */ executeMisc,
   /* EE XOR n      */ () => AND_XOR_OR(cpu[A] ^ next()),
   /* EF CALL 28h   */ () => CALL_addr(0x28),
 
-  /* F0 RET P      */ () => fs ? {} : POP_QQ(PC),
+  /* F0 RET P      */ () => fs ? {} : POP_PC(),
   /* F1 POP AF     */ POP_AF,
-  /* F2 JP P,nn    */ () => fs ? incPC(2) : setPCNext16(),
+  /* F2 JP P,nn    */ () => fs ? setPCv((PCv + 2) & xFFFF) : setPCNext16(),
   /* F3 DI         */ () => { setIFF1(0); setIFF2(0); },
-  /* F4 CALL P,nn  */ () => fs ? incPC(2) : CALL_nn(),
+  /* F4 CALL P,nn  */ () => fs ? setPCv((PCv + 2) & xFFFF) : CALL_nn(),
   /* F5 PUSH AF    */ PUSH_AF,
   /* F6 OR n       */ () => AND_XOR_OR(cpu[A] | next()),
   /* F7 RST 30h    */ () => CALL_addr(0x30),
-  /* F8 RET M      */ () => fs ? POP_QQ(PC) : {},
-  /* F9 LD SP,HL   */ () => { cpu[SPl] = cpu[LXY]; cpu[SPh] = cpu[HXY]; },
-  /* FA JP M,nn    */ () => fs ? setPCNext16() : incPC(2),
+  /* F8 RET M      */ () => fs ? POP_PC() : {},
+  /* F9 LD SP,HL   */ () => { setSPv((cpu[HXY] << 8) | cpu[LXY]); },
+  /* FA JP M,nn    */ () => fs ? setPCNext16() : setPCv((PCv + 2) & xFFFF),
   /* FB EI         */ () => { setIFF1(IFF1); setIFF2(IFF2); setEIDelay(1); },
-  /* FC CALL M,nn  */ () => fs ? CALL_nn() : incPC(2),
+  /* FC CALL M,nn  */ () => fs ? CALL_nn() : setPCv((PCv + 2) & xFFFF),
   /* FD --- IY --- */ () => { setHLXY(IY); executeMain(); setHLXY(HL); },
   /* FE CP n       */ () => CP(next()),
   /* FF CALL 38h   */ () => CALL_addr(0x38),

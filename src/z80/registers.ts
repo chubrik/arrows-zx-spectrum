@@ -24,15 +24,17 @@ export const IXl = 16;
 export const IXh = 17;
 export const IYl = 18;
 export const IYh = 19;
-export const SPl = 20;
-export const SPh = 21;
-export const PCl = 22;
-export const PCh = 23;
-export const I = 24;
-export const R = 25;
-export const SYS = 26;
+export const I = 20;
+export const R = 21;
+export const SYS = 22;
 
-export const REG_COUNT = 27;
+export const SP = 23;
+export const PC = 24;
+
+export let SPv = 0;
+export let PCv = 0;
+export function setSPv(value: number) { SPv = value; }
+export function setPCv(value: number) { PCv = value; }
 
 export let HXY = H; // H / IXh / IYh
 export let LXY = L; // L / IXl / IYl
@@ -65,5 +67,5 @@ export function set88(reg: number, valueLow: number, valueHigh: number) {
   cpu[reg + 1] = valueHigh;
 }
 
-export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY, PCl as PC, SPl as SP };
+export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY };
 

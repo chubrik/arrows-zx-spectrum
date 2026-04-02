@@ -1,49 +1,32 @@
 import { BIT7, xFF, xFFFF } from '../common/constants';
 import { mem } from '../common/memory';
-import { HL, HLXY, HXY, LXY, PCh, PCl, R, cpu } from './registers';
+import { HL, HLXY, HXY, LXY, PC, PCv, R, cpu, setPCv } from './registers';
 
 // Hot code!
 // Any attempt to extract common parts leads to slowdown.
 
 export function nop() { };
 
-export function incPC(inc: number) {
-  const pc = (cpu[PCh] << 8) | cpu[PCl];
-  const newPc = (pc + inc) & xFFFF;
-  cpu[PCl] = newPc & xFF;
-  cpu[PCh] = newPc >> 8;
-}
-
 export function next16(): number {
-  const pc = (cpu[PCh] << 8) | cpu[PCl];
-  const newPc = (pc + 2) & xFFFF;
-  cpu[PCl] = newPc & xFF;
-  cpu[PCh] = newPc >> 8;
+  const pc = PCv;
+  setPCv((pc + 2) & xFFFF);
   const low = mem[pc];
   const high = mem[pc + 1];
   return (high << 8) | low;
 }
 
 export function next(): number {
-  const pcl = cpu[PCl];
-  const pch = cpu[PCh];
-  const pc = (pch << 8) | pcl;
-  if (pcl === xFF) {
-    cpu[PCl] = 0;
-    cpu[PCh] = (pch + 1) & xFF;
-  } else {
-    cpu[PCl] = pcl + 1;
-  }
+  const pc = PCv;
   const value = mem[pc];
+  setPCv((pc + 1) & xFFFF);
   return value;
 }
 
 export function setPCNext16() {
-  const pc = (cpu[PCh] << 8) | cpu[PCl];
+  const pc = PCv;
   const low = mem[pc];
   const high = mem[pc + 1];
-  cpu[PCl] = low;
-  cpu[PCh] = high;
+  setPCv((high << 8) | low);
 }
 
 export function refresh() {

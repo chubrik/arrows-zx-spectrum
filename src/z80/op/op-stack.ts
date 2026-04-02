@@ -1,28 +1,25 @@
 import { xFF, xFFFF } from '../../common/constants';
 import { mem, write88 } from '../../common/memory';
 import { packF, unpackF } from '../flags';
-import { A, cpu, get16, PC, PCh, PCl, set16, set88, SP } from '../registers';
+import { A, cpu, PC, PCv, set88, setPCv, setSPv, SP, SPv } from '../registers';
 
 /** CALL addr */
-export function CALL_addr(addrLow: number, addrHigh: number = 0) {
-  const pcl = cpu[PCl];
-  const pch = cpu[PCh];
-  const sp = get16(SP);
-  const newSp = (sp - 2) & xFFFF;
-  set88(PC, addrLow, addrHigh);
-  set16(SP, newSp);
-  write88(newSp, pcl, pch);
+export function CALL_addr(addr: number) {
+  const pc = PCv;
+  const newSp = (SPv - 2) & xFFFF;
+  setPCv(addr);
+  setSPv(newSp);
+  write88(newSp, pc & xFF, pc >> 8);
 }
 
 /** CALL nn | CALL cc,nn */
 export function CALL_nn() {
-  let pc = get16(PC);
+  let pc = PCv;
   const nnLow = mem[pc++];
   const nnHigh = mem[pc++];
-  const sp = get16(SP);
-  const newSp = (sp - 2) & xFFFF;
-  set88(PC, nnLow, nnHigh);
-  set16(SP, newSp);
+  const newSp = (SPv - 2) & xFFFF;
+  setPCv((nnHigh << 8) | nnLow);
+  setSPv(newSp);
   const newPcl = pc & xFF;
   const newPch = (pc >> 8) & xFF;
   write88(newSp, newPcl, newPch);
@@ -32,9 +29,8 @@ export function CALL_nn() {
 export function PUSH_QQ(reg: number) {
   const rLow = cpu[reg];
   const rHigh = cpu[reg + 1];
-  const sp = get16(SP);
-  const newSp = (sp - 2) & xFFFF;
-  set16(SP, newSp);
+  const newSp = (SPv - 2) & xFFFF;
+  setSPv(newSp);
   write88(newSp, rLow, rHigh);
 }
 
@@ -42,27 +38,34 @@ export function PUSH_QQ(reg: number) {
 export function PUSH_AF() {
   const f = packF();
   const a = cpu[A];
-  const sp = get16(SP);
-  const newSp = (sp - 2) & xFFFF;
-  set16(SP, newSp);
+  const newSp = (SPv - 2) & xFFFF;
+  setSPv(newSp);
   write88(newSp, f, a);
 }
 
 /** POP qq | POP IX | POP IY */
 export function POP_QQ(reg: number) {
-  let sp = get16(SP);
+  let sp = SPv;
   const rLow = mem[sp++];
   const rHigh = mem[sp++];
-  set16(SP, sp & xFFFF);
+  setSPv(sp & xFFFF);
   set88(reg, rLow, rHigh);
+}
+
+export function POP_PC() {
+  let sp = SPv;
+  const rLow = mem[sp++];
+  const rHigh = mem[sp++];
+  setSPv(sp & xFFFF);
+  setPCv((rHigh << 8) | rLow);
 }
 
 /** POP AF */
 export function POP_AF() {
-  let sp = get16(SP);
+  let sp = SPv;
   const f = mem[sp++];
   const a = mem[sp++];
-  set16(SP, sp & xFFFF);
+  setSPv(sp & xFFFF);
   unpackF(f);
   cpu[A] = a;
 }
