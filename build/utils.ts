@@ -246,11 +246,9 @@ export function inlineFunctions(code: string): string {
         ? [argsStr]
         : splitInlineArgs(argsStr);
 
-      // Substitute params → args in body
-      let inlined = bodyExpr;
-      for (let k = 0; k < params.length; k++) {
-        inlined = inlined.replace(new RegExp(`\\b${params[k]}\\b`, 'g'), () => args[k]);
-      }
+      // Substitute params → args in body (extract non-trivial args to temp vars)
+      const sub = safeSubstitute(params, args, bodyExpr);
+      const inlined = sub.preamble + sub.body;
 
       out += result.slice(pos, ci) + inlined;
       pos = ai;
@@ -259,8 +257,225 @@ export function inlineFunctions(code: string): string {
     result = out;
   }
 
+  // Handle call-site selective inlining (marker before a call, not a definition).
+  // Loop to support nested inlining (inlined body may contain further markers).
+  while (true) {
+    const prev = result;
+    result = inlineCallSites(result, marker);
+    if (result === prev) break;
+  }
+
   // Remove orphaned markers (e.g. when esbuild tree-shakes the function but keeps the comment)
   return result.replaceAll(marker, '');
+}
+
+// Inline call-site markers: @__INLINE__ before a call → expand body at that call site only.
+// Supports multi-statement bodies with `return`. Renames local variables (suffix `_`) to avoid
+// name conflicts with the surrounding scope. The function definition is preserved.
+function inlineCallSites(code: string, marker: string): string {
+
+  interface CallSite {
+    markerStart: number;
+    callEnd: number;
+    funcName: string;
+    argsStr: string;
+  }
+
+  // Collect call-site markers
+  const sites: CallSite[] = [];
+  let searchPos = 0;
+
+  while (true) {
+    const idx = code.indexOf(marker, searchPos);
+    if (idx === -1) break;
+
+    let i = idx + marker.length;
+    while (i < code.length && /\s/.test(code[i])) i++;
+
+    // Skip declaration-level markers (already processed)
+    if (code.startsWith('function ', i) || code.startsWith('function(', i)) {
+      searchPos = idx + 1;
+      continue;
+    }
+
+    // Parse function name
+    const nameStart = i;
+    while (i < code.length && /[a-zA-Z0-9_$]/.test(code[i])) i++;
+    const funcName = code.slice(nameStart, i);
+
+    if (!funcName || code[i] !== '(') {
+      searchPos = idx + 1;
+      continue;
+    }
+
+    // Extract arguments (balanced parens, skip strings)
+    i++; // skip (
+    const argsStart = i;
+    let depth = 1;
+    while (i < code.length && depth > 0) {
+      const ch = code[i];
+      if (ch === '(') depth++;
+      else if (ch === ')') depth--;
+      else if (ch === '"' || ch === "'" || ch === '`') {
+        i++;
+        while (i < code.length && code[i] !== ch) {
+          if (code[i] === '\\') i++;
+          i++;
+        }
+      }
+      i++;
+    }
+
+    // Check for wrapping parens added by esbuild: = (\n  marker\n  call()\n)
+    // Only match grouping parens (preceded by operator/whitespace), not function call parens
+    let replStart = idx;
+    let replEnd = i;
+    let before = idx - 1;
+    while (before >= 0 && /\s/.test(code[before])) before--;
+    if (before >= 0 && code[before] === '(' && (before === 0 || !/[a-zA-Z0-9_$]/.test(code[before - 1]))) {
+      let after = i;
+      while (after < code.length && /\s/.test(code[after])) after++;
+      if (after < code.length && code[after] === ')') {
+        replStart = before;
+        replEnd = after + 1;
+      }
+    }
+
+    sites.push({ markerStart: replStart, callEnd: replEnd, funcName, argsStr: code.slice(argsStart, i - 1) });
+    searchPos = i;
+  }
+
+  if (sites.length === 0) return code;
+
+  let result = code;
+
+  // Process in reverse order to preserve indices
+  for (let s = sites.length - 1; s >= 0; s--) {
+    const site = sites[s];
+
+    // Find the function definition
+    const defToken = `function ${site.funcName}(`;
+    const defIdx = result.indexOf(defToken);
+    if (defIdx === -1) continue;
+
+    const extracted = extractFunction(result, defIdx, true);
+    if (!extracted) continue;
+
+    const params = extracted.params.split(',').map(p => p.trim()).filter(Boolean);
+    const args = params.length <= 1
+      ? [site.argsStr]
+      : splitInlineArgs(site.argsStr);
+
+    let body = extracted.body;
+
+    // Substitute params → args (extract non-trivial args to temp vars)
+    const sub = safeSubstitute(params, args, body);
+    body = sub.preamble + sub.body;
+
+    // Rename local variables (append `_`) to avoid conflicts with surrounding scope
+    const localVars: string[] = [];
+    const varDeclRe = /\b(?:const|let|var)\s+([a-zA-Z_$]\w*)/g;
+    let m;
+    while ((m = varDeclRe.exec(body)) !== null) {
+      if (!localVars.includes(m[1])) localVars.push(m[1]);
+    }
+    for (const v of localVars) {
+      body = body.replace(new RegExp(`\\b${v}\\b`, 'g'), `${v}_`);
+    }
+
+    // Split body into preamble + return expression
+    const { preamble, returnExpr } = splitBodyReturn(body);
+
+    // Find the containing line boundaries
+    let lineStart = site.markerStart;
+    while (lineStart > 0 && result[lineStart - 1] !== '\n') lineStart--;
+
+    // Detect call-site indentation
+    const callIndent = result.slice(lineStart).match(/^(\s*)/)![1];
+
+    // Detect body base indentation (from the first non-empty line)
+    const bodyLines = preamble.split('\n').filter(l => l.trim());
+    const bodyIndent = bodyLines.length > 0 ? bodyLines[0].match(/^(\s*)/)![1] : '';
+
+    // Re-indent preamble lines to match call site
+    const reindented = bodyLines
+      .map(l => l.startsWith(bodyIndent) ? callIndent + l.slice(bodyIndent.length) : callIndent + l.trimStart())
+      .join('\n');
+
+    // Replace marker+call with returnExpr in the containing line
+    const markerAndCall = result.slice(site.markerStart, site.callEnd);
+    const beforeMarker = result.slice(0, site.markerStart);
+    const afterCall = result.slice(site.callEnd);
+
+    if (reindented) {
+      result = beforeMarker.slice(0, lineStart) + reindented + '\n' + beforeMarker.slice(lineStart) + returnExpr + afterCall;
+    } else {
+      result = beforeMarker + returnExpr + afterCall;
+    }
+  }
+
+  return result;
+}
+
+function splitBodyReturn(body: string): { preamble: string; returnExpr: string } {
+  // Find the last top-level `return` in the body
+  let lastReturnPos = -1;
+  let i = 0;
+  let depth = 0;
+
+  while (i < body.length) {
+    const ch = body[i];
+    if (ch === '"' || ch === "'" || ch === '`') {
+      i++;
+      while (i < body.length && body[i] !== ch) {
+        if (body[i] === '\\') i++;
+        i++;
+      }
+      i++;
+      continue;
+    }
+    if (ch === '{' || ch === '(' || ch === '[') depth++;
+    else if (ch === '}' || ch === ')' || ch === ']') depth--;
+    else if (depth === 0 && body.startsWith('return', i)) {
+      const before = i > 0 ? body[i - 1] : ' ';
+      const after = i + 6 < body.length ? body[i + 6] : ' ';
+      if (!/[a-zA-Z0-9_$]/.test(before) && /[\s;]/.test(after)) {
+        lastReturnPos = i;
+      }
+    }
+    i++;
+  }
+
+  if (lastReturnPos === -1) {
+    return { preamble: body.trim(), returnExpr: '' };
+  }
+
+  const preamble = body.slice(0, lastReturnPos).trimEnd();
+
+  // Extract return expression
+  let exprStart = lastReturnPos + 'return'.length;
+  while (exprStart < body.length && /\s/.test(body[exprStart])) exprStart++;
+
+  let exprEnd = exprStart;
+  depth = 0;
+  while (exprEnd < body.length) {
+    const ch = body[exprEnd];
+    if (ch === '"' || ch === "'" || ch === '`') {
+      exprEnd++;
+      while (exprEnd < body.length && body[exprEnd] !== ch) {
+        if (body[exprEnd] === '\\') exprEnd++;
+        exprEnd++;
+      }
+      exprEnd++;
+      continue;
+    }
+    if (ch === '(' || ch === '[' || ch === '{') depth++;
+    else if (ch === ')' || ch === ']' || ch === '}') depth--;
+    else if (ch === ';' && depth === 0) break;
+    exprEnd++;
+  }
+
+  return { preamble, returnExpr: body.slice(exprStart, exprEnd).trim() };
 }
 
 function splitInlineArgs(argsStr: string): string[] {
@@ -284,6 +499,30 @@ function splitInlineArgs(argsStr: string): string[] {
   }
   args.push(argsStr.slice(start).trim());
   return args;
+}
+
+function isSimpleArg(expr: string): boolean {
+  return /^[a-zA-Z_$][\w$]*$/.test(expr) || /^-?(?:0x[\da-fA-F]+|\d+(?:\.\d+)?)$/.test(expr);
+}
+
+let __safeSubCounter = 0;
+
+function safeSubstitute(params: string[], args: string[], bodyExpr: string): { preamble: string; body: string } {
+  const preambleLines: string[] = [];
+  let body = bodyExpr;
+  for (let k = 0; k < params.length; k++) {
+    const paramRe = new RegExp(`\\b${params[k]}\\b`, 'g');
+    const arg = args[k];
+    const occurrences = (bodyExpr.match(paramRe) || []).length;
+    if (isSimpleArg(arg) || occurrences <= 1) {
+      body = body.replace(paramRe, () => arg);
+    } else {
+      const tmp = `__${params[k]}_${__safeSubCounter++}`;
+      preambleLines.push(`let ${tmp} = ${arg}`);
+      body = body.replace(paramRe, () => tmp);
+    }
+  }
+  return { preamble: preambleLines.length > 0 ? preambleLines.join('; ') + '; ' : '', body };
 }
 
 interface ExtractedFunction {
@@ -358,6 +597,7 @@ function extractFunction(code: string, start: number, named: boolean): Extracted
   const params = code.slice(ps, i - 1);
 
   // Extract body (balanced braces, skipping strings)
+  while (i < code.length && /\s/.test(code[i])) i++;
   if (code[i] !== '{') return null;
   i++;
   const bs = i;

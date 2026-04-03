@@ -1,9 +1,6 @@
 import { type ArrowCtx, getDirect, setDirect } from './arrows.ts';
 import { RAM_MIN_ADDR, xFFFF } from './constants.ts';
 
-// Hot code!
-// Any attempt to extract common parts leads to slowdown.
-
 export const mem: number[] = [];
 export const memCtx: ArrowCtx[] = [];
 const DIRTY_BITMAP_SIZE = 2048; // 0x10000 >> 5
@@ -14,19 +11,18 @@ export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
 
 export function write88(addr: number, low: number, high: number) {
   if (addr < ramMinAddr) return;
-  if (mem[addr] !== low) {
-    mem[addr] = low;
-    dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
-  }
+  writeBase(addr, low);
   if (addr === xFFFF) return;
-  if (mem[++addr] !== high) {
-    mem[addr] = high;
-    dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
-  }
+  writeBase(++addr, high);
 }
 
 export function write(addr: number, value: number) {
   if (addr < ramMinAddr) return;
+  writeBase(addr, value);
+}
+
+/*! @__INLINE__ */
+function writeBase(addr: number, value: number) {
   if (mem[addr] !== value) {
     mem[addr] = value;
     dirtyBitmap[addr >> 5] |= (1 << (addr & 31));

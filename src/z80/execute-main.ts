@@ -17,13 +17,7 @@ import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 export function executeMain() {
   refresh();
   if (hlt) return;
-
-  //#region Inline next()
-  const pc = PCv;
-  setPCv((pc + 1) & xFFFF);
-  const op = mem[pc];
-  //#endregion
-
+  const op = /*! @__INLINE__ */ next();
   opsMain[op]();
 }
 

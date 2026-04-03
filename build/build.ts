@@ -41,7 +41,8 @@ async function buildCpu(path: string) {
   const decoderFuncName = 'unicodeToAscii';
   const decoderTsCode = `export{${decoderFuncName}}from'./common/encode.ts';`;
   const decoderBuilt = step('decoder-build', await buildTs(decoderTsCode));
-  const decoderStripped = step('decoder-strip', decoderBuilt.replace(/^export\s*\{[^}]*\}\s*;?\s*$/gm, ''));
+  const decoderInlined = step('decoder-inline', inlineFunctions(decoderBuilt));
+  const decoderStripped = step('decoder-strip', decoderInlined.replace(/^export\s*\{[^}]*\}\s*;?\s*$/gm, ''));
 
   // Packing pipeline
   const packEncoded = asciiToUnicode(processed);
