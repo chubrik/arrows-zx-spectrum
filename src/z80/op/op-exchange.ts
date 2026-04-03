@@ -1,6 +1,6 @@
 import { mem, write } from '../../common/memory';
 import { packF, unpackF } from '../flags';
-import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, Fa, H, Ha, HXY, L, La, LXY, SP, SPv } from '../registers';
+import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, Fa, H, Ha, HXY, L, La, LXY, SPv } from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {

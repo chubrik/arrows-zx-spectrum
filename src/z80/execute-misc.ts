@@ -6,8 +6,8 @@ import { IN_c, ld_A_IR, OUT_c } from './op/op-etc';
 import { ADC_HL, ADC_HL_SP, SBC_HL, SBC_HL_SP } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
 import { POP_PC } from './op/op-stack';
-import { A, B, BC, C, cpu, D, DE, E, H, HL, I, L, R, set88, setSPv, SP, SPv } from './registers';
-import { nop as _, next, next16, nop, refresh } from './utils';
+import { A, B, BC, C, cpu, D, DE, E, H, HL, I, L, packR, refresh, set88, setSPv, SPv, unpackR } from './registers';
+import { nop as _, next, next16, nop } from './utils';
 
 export function executeMisc() {
   refresh();
@@ -36,7 +36,7 @@ const opsMisc = [
   /* ED4C NEG        * */ NEG,
   /* ED4D RETI         */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED4E IM 0       * */ () => { setIM1(0); setIM2(0); },
-  /* ED4F LD R,A       */ () => cpu[R] = cpu[A],
+  /* ED4F LD R,A       */ () => unpackR(cpu[A]),
 
   /* ED50 IN D,(C)     */ () => IN_c(D),
   /* ED51 OUT (C),D    */ () => OUT_c(D),
@@ -53,7 +53,7 @@ const opsMisc = [
   /* ED5C NEG        * */ NEG,
   /* ED5D RETI       * */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED5E IM 2         */ () => { setIM1(0); setIM2(IM2); },
-  /* ED5F LD A,R       */ () => ld_A_IR(cpu[R]),
+  /* ED5F LD A,R       */ () => ld_A_IR(packR()),
 
   /* ED60 IN H,(C)     */ () => IN_c(H),
   /* ED61 OUT (C),H    */ () => OUT_c(H),

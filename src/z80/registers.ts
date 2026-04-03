@@ -1,5 +1,5 @@
 import { ArrowCtx } from '../common/arrows';
-import { xFF } from '../common/constants';
+import { BIT7, xFF } from '../common/constants';
 
 export const cpu: number[] = [];
 export const cpuCtx: ArrowCtx[] = [];
@@ -42,6 +42,19 @@ export let LXY = L; // L / IXl / IYl
 export function setHLXY(hlxy: number) {
   LXY = hlxy;
   HXY = hlxy + 1;
+}
+
+export let r7 = 0;
+export let ri = 0;
+/*! @__INLINE__ */ export function refresh() { ri++; }
+
+export function unpackR(value: number) {
+  r7 = ri = value;
+}
+
+export function packR(): number {
+  ri &= 0x7F;
+  return (r7 & BIT7) | ri;
 }
 
 export let eiDelay: 0 | 1 = 0;

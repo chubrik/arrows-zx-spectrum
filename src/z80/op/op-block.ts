@@ -2,7 +2,7 @@ import { xFF, xFFFF } from '../../common/constants';
 import { mem, write } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { calcFP, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { A, B, BC, C, cpu, DE, get16, HL, HLXY, PC, PCv, set16, setPCv } from '../registers';
+import { A, B, BC, C, cpu, DE, get16, HL, HLXY, PCv, set16, setPCv } from '../registers';
 
 /** LDI | LDD | LDIR | LDDR */
 export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {

@@ -1,7 +1,7 @@
 import { xFF, xFFFF } from '../../common/constants';
 import { mem, write88 } from '../../common/memory';
 import { packF, unpackF } from '../flags';
-import { A, cpu, PC, PCv, set88, setPCv, setSPv, SP, SPv } from '../registers';
+import { A, cpu, PCv, set88, setPCv, setSPv, SPv } from '../registers';
 
 /** CALL addr */
 export function CALL_addr(addr: number) {

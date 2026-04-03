@@ -1,6 +1,6 @@
 import { createCtx, getDirect, setDirect } from '../common/arrows';
 import { packF, packSYS, unpackF, unpackSYS } from './flags';
-import { A, Aa, B, Ba, C, Ca, cpu, cpuCtx, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, PC, PCv, R, setPCv, setSPv, SP, SPv, SYS } from './registers';
+import { A, Aa, B, Ba, C, Ca, cpu, cpuCtx, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, packR, PC, PCv, R, setPCv, setSPv, SP, SPv, SYS, unpackR } from './registers';
 
 export function initCpu(chunkX: number, chunkY: number) {
   let x = chunkX + 32;
@@ -38,25 +38,28 @@ export function initCpu(chunkX: number, chunkY: number) {
 }
 
 export function fetchCpu() {
-  for (let i = 0; i < SP; i++) {
+  for (let i = 0; i <= SYS; i++) {
     const ctx = cpuCtx[i];
     cpu[i] = getDirect(ctx.x, ctx.y);
   }
 
-  const spCtx = cpuCtx[SP];
-  const pcCtx = cpuCtx[PC];
-  setSPv((getDirect(spCtx.x, spCtx.y) << 8) | getDirect(spCtx.x, spCtx.y + 1));
-  setPCv((getDirect(pcCtx.x, pcCtx.y) << 8) | getDirect(pcCtx.x, pcCtx.y + 1));
-
   unpackF(cpu[F]);
+  unpackR(cpu[R]);
   unpackSYS(cpu[SYS]);
+
+  const spCtx = cpuCtx[SP];
+  setSPv((getDirect(spCtx.x, spCtx.y) << 8) | getDirect(spCtx.x, spCtx.y + 1));
+
+  const pcCtx = cpuCtx[PC];
+  setPCv((getDirect(pcCtx.x, pcCtx.y) << 8) | getDirect(pcCtx.x, pcCtx.y + 1));
 }
 
 export function commitCpu() {
   cpu[F] = packF();
+  cpu[R] = packR();
   cpu[SYS] = packSYS();
 
-  for (let i = 0; i < SP; i++) {
+  for (let i = 0; i <= SYS; i++) {
     const ctx = cpuCtx[i];
     setDirect(ctx.x, ctx.y, ctx.a, cpu[i]);
   }
@@ -64,13 +67,14 @@ export function commitCpu() {
   const spCtx = cpuCtx[SP];
   setDirect(spCtx.x, spCtx.y, spCtx.a, SPv >> 8);
   setDirect(spCtx.x, spCtx.y + 1, spCtx.a, SPv & 0xFF);
+
   const pcCtx = cpuCtx[PC];
   setDirect(pcCtx.x, pcCtx.y, pcCtx.a, PCv >> 8);
   setDirect(pcCtx.x, pcCtx.y + 1, pcCtx.a, PCv & 0xFF);
 }
 
 export function resetCpu() {
-  for (let i = 0; i < SP; i++) {
+  for (let i = 0; i <= SYS; i++) {
     const ctx = cpuCtx[i];
     setDirect(ctx.x, ctx.y, ctx.a, 0);
   }
@@ -78,6 +82,7 @@ export function resetCpu() {
   const spCtx = cpuCtx[SP];
   setDirect(spCtx.x, spCtx.y, spCtx.a, 0);
   setDirect(spCtx.x, spCtx.y + 1, spCtx.a, 0);
+
   const pcCtx = cpuCtx[PC];
   setDirect(pcCtx.x, pcCtx.y, pcCtx.a, 0);
   setDirect(pcCtx.x, pcCtx.y + 1, pcCtx.a, 0);

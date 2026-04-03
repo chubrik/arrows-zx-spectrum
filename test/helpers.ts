@@ -1,8 +1,8 @@
 import { xFF, xFFFF } from '../src/common/constants';
-import { setRamMinAddrForTest, mem } from '../src/common/memory';
+import { mem, setRamMinAddrForTest } from '../src/common/memory';
 import { executeMain } from '../src/z80/execute-main';
 import { HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, packF, setHLT, setIFF1, setIFF2, setIM1, setIM2, unpackF, unpackSYS } from '../src/z80/flags';
-import { A, Aa, B, Ba, C, Ca, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, PC, R, cpu, setHLXY, setWZ, SP, setSPv, SPv, setPCv, PCv } from '../src/z80/registers';
+import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, packR, PCv, R, setHLXY, setPCv, setSPv, setWZ, SPv, unpackR } from '../src/z80/registers';
 
 export function setupCpu() {
   setRamMinAddrForTest(0);
@@ -56,7 +56,7 @@ export function setState(state: CpuState) {
   if (state.PC !== undefined) setPCv(state.PC);
   if (state.WZ !== undefined) setWZ(state.WZ);
   if (state.I !== undefined) cpu[I] = state.I;
-  if (state.R !== undefined) cpu[R] = state.R;
+  if (state.R !== undefined) { cpu[R] = state.R; unpackR(state.R); }
   if (state.IM !== undefined) {
     setIM1(state.IM === 1 ? IM1 : 0);
     setIM2(state.IM === 2 ? IM2 : 0);
@@ -94,7 +94,7 @@ export function getState() {
     SP: SPv,
     PC: PCv,
     I: cpu[I],
-    R: cpu[R],
+    R: packR(),
     IM: (im2 ? 2 : im1 ? 1 : 0) as 0 | 1 | 2,
     IFF1: (iff1 ? 1 : 0) as 0 | 1,
     IFF2: (iff2 ? 1 : 0) as 0 | 1,

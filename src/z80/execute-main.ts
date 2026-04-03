@@ -1,4 +1,4 @@
-import { BIT7, xFFFF } from '../common/constants';
+import { xFFFF } from '../common/constants';
 import { mem, write, write88 } from '../common/memory';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
@@ -11,16 +11,11 @@ import { ADD_HL, ADD_HL_SP } from './op/op-math-16bit';
 import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { CALL_addr, CALL_nn, POP_AF, POP_PC, POP_QQ, PUSH_AF, PUSH_QQ } from './op/op-stack';
-import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, HLXY, HXY, IX, IY, L, LXY, PCv, R, set16, set88, setEIDelay, setHLXY, setPCv, setSPv, SPv } from './registers';
+import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, HLXY, HXY, IX, IY, L, LXY, PCv, refresh, set16, set88, setEIDelay, setHLXY, setPCv, setSPv, SPv } from './registers';
 import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 
 export function executeMain() {
-
-  //#region Inline refresh()
-  const r = cpu[R];
-  cpu[R] = (r & BIT7) | ((r + 1) & 0x7F);
-  //#endregion
-
+  refresh();
   if (hlt) return;
 
   //#region Inline next()

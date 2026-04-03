@@ -1,6 +1,6 @@
-import { BIT7, xFF, xFFFF } from '../common/constants';
+import { xFFFF } from '../common/constants';
 import { mem } from '../common/memory';
-import { HL, HLXY, HXY, LXY, PC, PCv, R, cpu, setPCv } from './registers';
+import { HL, HLXY, HXY, LXY, PCv, cpu, setPCv } from './registers';
 
 // Hot code!
 // Any attempt to extract common parts leads to slowdown.
@@ -27,12 +27,6 @@ export function setPCNext16() {
   const low = mem[pc];
   const high = mem[pc + 1];
   setPCv((high << 8) | low);
-}
-
-export function refresh() {
-  const r = cpu[R];
-  const newR = (r & BIT7) | ((r + 1) & 0x7F);
-  cpu[R] = newR;
 }
 
 /** (HL/IX+d/IY+d) */

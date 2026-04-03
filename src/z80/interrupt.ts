@@ -2,8 +2,7 @@ import { xFF, xFFFF } from '../common/constants';
 import { mem } from '../common/memory';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { CALL_addr } from './op/op-stack';
-import { I, PC, PCv, cpu, setPCv } from './registers';
-import { refresh } from './utils';
+import { I, PCv, cpu, refresh, setPCv } from './registers';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = xFF;
