@@ -1,4 +1,5 @@
 import { createCtx, getDirect, setDirect } from '../common/arrows';
+import { xFF } from '../common/constants';
 import { packF, packSYS, unpackF, unpackSYS } from './flags';
 import { A, Aa, B, Ba, C, Ca, cpu, cpuCtx, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, packR, PC, PCv, R, setPCv, setSPv, SP, SPv, SYS, unpackR } from './registers';
 
@@ -66,11 +67,11 @@ export function commitCpu() {
   
   const spCtx = cpuCtx[SP];
   setDirect(spCtx.x, spCtx.y, spCtx.a, SPv >> 8);
-  setDirect(spCtx.x, spCtx.y + 1, spCtx.a, SPv & 0xFF);
+  setDirect(spCtx.x, spCtx.y + 1, spCtx.a, SPv & xFF);
 
   const pcCtx = cpuCtx[PC];
   setDirect(pcCtx.x, pcCtx.y, pcCtx.a, PCv >> 8);
-  setDirect(pcCtx.x, pcCtx.y + 1, pcCtx.a, PCv & 0xFF);
+  setDirect(pcCtx.x, pcCtx.y + 1, pcCtx.a, PCv & xFF);
 }
 
 export function resetCpu() {

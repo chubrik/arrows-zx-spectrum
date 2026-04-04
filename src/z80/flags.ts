@@ -19,21 +19,21 @@ export const INT = BIT0;
 export let fs = 0, fz = 0, f5 = 0, fh = 0, f3 = 0, fp = 0, fn = 0, fc = 0;
 export let im2 = 0, im1 = 0, iff2 = 0, iff1 = 0, hlt = 0, int = 0;
 
-export function setFS(value: number) { fs = value; }
-export function setFZ(value: number) { fz = value; }
-export function setF5(value: number) { f5 = value; }
-export function setFH(value: number) { fh = value; }
-export function setF3(value: number) { f3 = value; }
-export function setFP(value: number) { fp = value; }
-export function setFN(value: number) { fn = value; }
-export function setFC(value: number) { fc = value; }
+/*! @__INLINE__ */ export function setFS(value: number) { fs = value; }
+/*! @__INLINE__ */ export function setFZ(value: number) { fz = value; }
+/*! @__INLINE__ */ export function setF5(value: number) { f5 = value; }
+/*! @__INLINE__ */ export function setFH(value: number) { fh = value; }
+/*! @__INLINE__ */ export function setF3(value: number) { f3 = value; }
+/*! @__INLINE__ */ export function setFP(value: number) { fp = value; }
+/*! @__INLINE__ */ export function setFN(value: number) { fn = value; }
+/*! @__INLINE__ */ export function setFC(value: number) { fc = value; }
 
-export function setIM2(value: number) { im2 = value; }
-export function setIM1(value: number) { im1 = value; }
-export function setIFF2(value: number) { iff2 = value; }
-export function setIFF1(value: number) { iff1 = value; }
-export function setHLT(value: number) { hlt = value; }
-export function setINT(value: number) { int = value; }
+/*! @__INLINE__ */ export function setIM2(value: number) { im2 = value; }
+/*! @__INLINE__ */ export function setIM1(value: number) { im1 = value; }
+/*! @__INLINE__ */ export function setIFF2(value: number) { iff2 = value; }
+/*! @__INLINE__ */ export function setIFF1(value: number) { iff1 = value; }
+/*! @__INLINE__ */ export function setHLT(value: number) { hlt = value; }
+/*! @__INLINE__ */ export function setINT(value: number) { int = value; }
 
 export function packF(): number {
   return fs | fz | f5 | fh | f3 | fp | fn | fc;

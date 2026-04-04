@@ -18,24 +18,20 @@ export function ld_A_IR(value: number) {
 /** LD dd,nn | LD IX,nn | LD IY,nn */
 export function LD_dd_nn(reg: number) {
   let pc = PCv;
-  const low = mem[pc++];
-  const high = mem[pc++];
+  set88(reg, mem[pc++], mem[pc++]);
   setPCv(pc & xFFFF);
-  set88(reg, low, high);
 }
 
+/** LD SP,nn */
 export function LD_SP_nn() {
   let pc = PCv;
-  const low = mem[pc++];
-  const high = mem[pc++];
+  setSPv(mem[pc++] | (mem[pc++] << 8));
   setPCv(pc & xFFFF);
-  setSPv((high << 8) | low);
 }
 
 /** DJNZ e */
 export function DJNZ_e() {
-  const b = cpu[B];
-  const newB = (b - 1) & xFF;
+  const newB = (cpu[B] - 1) & xFF;
   cpu[B] = newB;
   if (newB) JR_e();
   else setPCv((PCv + 1) & xFFFF);
@@ -43,42 +39,18 @@ export function DJNZ_e() {
 
 /** JR e */
 export function JR_e() {
-  const rawE = next();
-  const e = rawE >= 128 ? rawE - 256 : rawE;
+  let e = next();
+  if (e >= 128) e -= 256;
   setPCv((PCv + e) & xFFFF); // -126...+129 relative to operation start
-}
-
-/** IN A,(n) */
-export function IN_A_n() {
-  const portLow = next();
-  const portHigh = cpu[A];
-  cpu[A] = readPort(portLow, portHigh);
-}
-
-/** OUT (n),A */
-export function OUT_n_A() {
-  const portLow = next();
-  const portHigh = cpu[A];
-  writePort(portLow, portHigh, portHigh);
 }
 
 /** IN r,(C) | IN (C) (undocumented) */
 export function IN_c(reg: number = 0) {
-  const portLow = cpu[C];
-  const portHigh = cpu[B];
-  const result = readPort(portLow, portHigh);
+  const result = readPort(cpu[C], cpu[B]);
   if (reg) cpu[reg] = result;
 
   calcFSZ53(result);
   calcFP(result);
   setFH(0);
   setFN(0);
-}
-
-/** OUT (C),r | OUT (C),0 (undocumented) */
-export function OUT_c(reg: number = 0) {
-  const portLow = cpu[C];
-  const portHigh = cpu[B];
-  const value = reg ? cpu[reg] : 0; // NMOS: 0, CMOS: 255 (undocumented)
-  writePort(portLow, portHigh, value);
 }

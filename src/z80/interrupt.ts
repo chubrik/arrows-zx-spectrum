@@ -1,7 +1,7 @@
 import { xFF, xFFFF } from '../common/constants';
 import { mem } from '../common/memory';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
-import { CALL_addr } from './op/op-stack';
+import { RST_p } from './op/op-stack';
 import { I, PCv, cpu, refresh, setPCv } from './registers';
 
 const IM01_VECTOR = 0x0038;
@@ -19,13 +19,11 @@ export function interrupt() {
   refresh();
 
   if (im2) {
-    const vector = (cpu[I] << 8) | IM2_BUS_VALUE;
-    const addrLow = mem[vector];
-    const addrHigh = mem[vector + 1];
-    CALL_addr((addrHigh) << 8 | addrLow);
+    const vector = IM2_BUS_VALUE | (cpu[I] << 8);
+    RST_p(mem[vector] | (mem[vector + 1] << 8));
   }
   else {
     // On ZX Spectrum IM 0 is equivalent to IM 1 (bus = 0xFF = RST 38h)
-    CALL_addr(IM01_VECTOR);
+    RST_p(IM01_VECTOR);
   }
 }

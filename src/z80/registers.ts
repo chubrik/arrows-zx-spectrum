@@ -39,6 +39,7 @@ export let PCv = 0;
 export let HXY = H; // H / IXh / IYh
 export let LXY = L; // L / IXl / IYl
 
+/*! @__INLINE__ */
 export function setHLXY(hlxy: number) {
   LXY = hlxy;
   HXY = hlxy + 1;
@@ -67,7 +68,7 @@ export function getWZh(): number { return wzh; }
 export function setWZ(value: number) { wzl = value & xFF; wzh = value >> 8; }
 
 export function get16(reg: number): number {
-  return (cpu[reg + 1] << 8) | cpu[reg];
+  return cpu[reg] | (cpu[reg + 1] << 8);
 }
 
 export function set16(reg: number, value: number) {

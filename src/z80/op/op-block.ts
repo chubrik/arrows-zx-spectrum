@@ -6,18 +6,16 @@ import { A, B, BC, C, cpu, DE, get16, HL, HLXY, PCv, set16, setPCv } from '../re
 
 /** LDI | LDD | LDIR | LDDR */
 export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const a = cpu[A];
-  const bc = get16(BC);
   const de = get16(DE);
   const hlxy = get16(HLXY);
-  const count = (bc - 1) & xFFFF;
+  const count = (get16(BC) - 1) & xFFFF;
   const value = mem[hlxy];
   set16(BC, count);
   set16(DE, (de + inc) & xFFFF);
   set16(HLXY, (hlxy + inc) & xFFFF);
   write(de, value);
 
-  const n = (a + value) & xFF;
+  const n = (cpu[A] + value) & xFF;
   setF5((n & 0x02) << 4);
   setF3(n & F3);
   setFH(0);
@@ -31,9 +29,8 @@ export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
 /** CPI | CPD | CPIR | CPDR */
 export function CP_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const a = cpu[A];
-  const bc = get16(BC);
   const hlxy = get16(HLXY);
-  const count = (bc - 1) & xFFFF;
+  const count = (get16(BC) - 1) & xFFFF;
   const value = mem[hlxy];
   set16(BC, count);
   set16(HLXY, (hlxy + inc) & xFFFF);
@@ -55,14 +52,12 @@ export function CP_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
 
 /** INI | IND | INIR | INDR */
 export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const b = cpu[B];
   const c = cpu[C];
   const hl = get16(HL);
-  const count = (b - 1) & xFF;
-  const newHL = (hl + inc) & xFFFF;
+  const count = (cpu[B] - 1) & xFF;
   const value = readPort(c, count);
   cpu[B] = count;
-  set16(HL, newHL);
+  set16(HL, (hl + inc) & xFFFF);
   write(hl, value);
 
   const k = value + ((c + inc) & xFF);
@@ -82,15 +77,13 @@ export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
 
 /** OUTI | OUTD | OTIR | OTDR */
 export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const b = cpu[B];
-  const c = cpu[C];
   const hl = get16(HL);
-  const count = (b - 1) & xFF;
+  const count = (cpu[B] - 1) & xFF;
   const newHL = (hl + inc) & xFFFF;
   const value = mem[hl];
   cpu[B] = count;
   set16(HL, newHL);
-  writePort(c, count, value);
+  writePort(cpu[C], count, value);
 
   const k = value + (newHL & xFF);
   const kOverflow = k > 255;

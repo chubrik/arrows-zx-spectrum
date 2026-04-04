@@ -1,12 +1,14 @@
+import { xFF } from '../common/constants';
 import { mem, write88 } from '../common/memory';
+import { writePort } from '../common/ports';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
 import { RLD, RRD } from './op/op-bit';
 import { CP_block, IN_block, LD_block, OUT_block } from './op/op-block';
-import { IN_c, ld_A_IR, OUT_c } from './op/op-etc';
-import { ADC_HL, ADC_HL_SP, SBC_HL, SBC_HL_SP } from './op/op-math-16bit';
+import { IN_c, ld_A_IR } from './op/op-etc';
+import { ADC_HL, SBC_HL } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
-import { POP_PC } from './op/op-stack';
-import { A, B, BC, C, cpu, D, DE, E, H, HL, I, L, packR, refresh, set88, setSPv, SPv, unpackR } from './registers';
+import { RET } from './op/op-stack';
+import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, I, L, packR, refresh, set88, setSPv, SPv, unpackR } from './registers';
 import { nop as _, next, next16, nop } from './utils';
 
 export function executeMisc() {
@@ -22,70 +24,70 @@ const opsMisc = [
   /* ED30 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
 
   /* ED40 IN B,(C)     */ () => IN_c(B),
-  /* ED41 OUT (C),B    */ () => OUT_c(B),
-  /* ED42 SBC HL,BC    */ () => SBC_HL(BC),
+  /* ED41 OUT (C),B    */ () => writePort(cpu[C], cpu[B], cpu[B]),
+  /* ED42 SBC HL,BC    */ () => SBC_HL(get16(BC)),
   /* ED43 LD (nn),BC   */ () => write88(next16(), cpu[C], cpu[B]),
   /* ED44 NEG          */ NEG,
-  /* ED45 RETN         */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
+  /* ED45 RETN         */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED46 IM 0         */ () => { setIM1(0); setIM2(0); },
   /* ED47 LD I,A       */ () => cpu[I] = cpu[A],
   /* ED48 IN C,(C)     */ () => IN_c(C),
-  /* ED49 OUT (C),C    */ () => OUT_c(C),
-  /* ED4A ADC HL,BC    */ () => ADC_HL(BC),
+  /* ED49 OUT (C),C    */ () => writePort(cpu[C], cpu[B], cpu[C]),
+  /* ED4A ADC HL,BC    */ () => ADC_HL(get16(BC)),
   /* ED4B LD BC,(nn)   */ () => { const addr = next16(); set88(BC, mem[addr], mem[addr + 1]); },
   /* ED4C NEG        * */ NEG,
-  /* ED4D RETI         */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
+  /* ED4D RETI         */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED4E IM 0       * */ () => { setIM1(0); setIM2(0); },
   /* ED4F LD R,A       */ () => unpackR(cpu[A]),
 
   /* ED50 IN D,(C)     */ () => IN_c(D),
-  /* ED51 OUT (C),D    */ () => OUT_c(D),
-  /* ED52 SBC HL,DE    */ () => SBC_HL(DE),
+  /* ED51 OUT (C),D    */ () => writePort(cpu[C], cpu[B], cpu[D]),
+  /* ED52 SBC HL,DE    */ () => SBC_HL(get16(DE)),
   /* ED53 LD (nn),DE   */ () => write88(next16(), cpu[E], cpu[D]),
   /* ED54 NEG        * */ NEG,
-  /* ED55 RETN       * */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
+  /* ED55 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED56 IM 1         */ () => { setIM1(IM1); setIM2(0); },
   /* ED57 LD A,I       */ () => ld_A_IR(cpu[I]),
   /* ED58 IN E,(C)     */ () => IN_c(E),
-  /* ED59 OUT (C),E    */ () => OUT_c(E),
-  /* ED5A ADC HL,DE    */ () => ADC_HL(DE),
+  /* ED59 OUT (C),E    */ () => writePort(cpu[C], cpu[B], cpu[E]),
+  /* ED5A ADC HL,DE    */ () => ADC_HL(get16(DE)),
   /* ED5B LD DE,(nn)   */ () => { const addr = next16(); set88(DE, mem[addr], mem[addr + 1]); },
   /* ED5C NEG        * */ NEG,
-  /* ED5D RETI       * */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
+  /* ED5D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED5E IM 2         */ () => { setIM1(0); setIM2(IM2); },
   /* ED5F LD A,R       */ () => ld_A_IR(packR()),
 
   /* ED60 IN H,(C)     */ () => IN_c(H),
-  /* ED61 OUT (C),H    */ () => OUT_c(H),
-  /* ED62 SBC HL,HL    */ () => SBC_HL(HL),
+  /* ED61 OUT (C),H    */ () => writePort(cpu[C], cpu[B], cpu[H]),
+  /* ED62 SBC HL,HL    */ () => SBC_HL(get16(HL)),
   /* ED63 LD (nn),HL * */ () => write88(next16(), cpu[L], cpu[H]),
   /* ED64 NEG        * */ NEG,
-  /* ED65 RETN       * */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
+  /* ED65 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED66 IM 0       * */ () => { setIM1(0); setIM2(0); },
   /* ED67 RRD          */ RRD,
   /* ED68 IN L,(C)     */ () => IN_c(L),
-  /* ED69 OUT (C),L    */ () => OUT_c(L),
-  /* ED6A ADC HL,HL    */ () => ADC_HL(HL),
+  /* ED69 OUT (C),L    */ () => writePort(cpu[C], cpu[B], cpu[L]),
+  /* ED6A ADC HL,HL    */ () => ADC_HL(get16(HL)),
   /* ED6B LD HL,(nn) * */ () => { const addr = next16(); set88(HL, mem[addr], mem[addr + 1]); },
   /* ED6C NEG        * */ NEG,
-  /* ED6D RETI       * */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
+  /* ED6D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED6E IM 0       * */ () => { setIM1(0); setIM2(0); },
   /* ED6F RLD          */ RLD,
 
   /* ED70 IN (C)     * */ () => IN_c(),
-  /* ED71 OUT (C),0  * */ () => OUT_c(),
-  /* ED72 SBC HL,SP    */ () => SBC_HL_SP(),
-  /* ED73 LD (nn),SP   */ () => write88(next16(), SPv & 0xFF, SPv >> 8),
+  /* ED71 OUT (C),0  * */ () => writePort(cpu[C], cpu[B], 0), // NMOS: 0, CMOS: 255 (undocumented)
+  /* ED72 SBC HL,SP    */ () => SBC_HL(SPv),
+  /* ED73 LD (nn),SP   */ () => write88(next16(), SPv & xFF, SPv >> 8),
   /* ED74 NEG        * */ NEG,
-  /* ED75 RETN       * */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
+  /* ED75 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED76 IM 1       * */ () => { setIM1(IM1); setIM2(0); },
   /* ED77 ---          */ nop,
   /* ED78 IN A,(C)     */ () => IN_c(A),
-  /* ED79 OUT (C),A    */ () => OUT_c(A),
-  /* ED7A ADC HL,SP    */ () => ADC_HL_SP(),
-  /* ED7B LD SP,(nn)   */ () => { const addr = next16(); setSPv((mem[addr + 1] << 8) | mem[addr]); },
+  /* ED79 OUT (C),A    */ () => writePort(cpu[C], cpu[B], cpu[A]),
+  /* ED7A ADC HL,SP    */ () => ADC_HL(SPv),
+  /* ED7B LD SP,(nn)   */ () => { const addr = next16(); setSPv(mem[addr] | (mem[addr + 1] << 8)); },
   /* ED7C NEG        * */ NEG,
-  /* ED7D RETI       * */ () => { POP_PC(); setIFF1(iff2 ? IFF1 : 0); },
+  /* ED7D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED7E IM 2       * */ () => { setIM1(0); setIM2(IM2); },
   /* ED7F ---          */ nop,
 
