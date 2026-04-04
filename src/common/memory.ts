@@ -1,10 +1,11 @@
 import { type ArrowCtx, getDirect, setDirect } from './arrows.ts';
-import { RAM_MIN_ADDR, xFFFF } from './constants.ts';
+import { ATTRIBUTES_MIN_ADDR, RAM_MIN_ADDR, xFFFF } from './constants.ts';
+import { commitScreen } from './screen.ts';
 
 export const mem: number[] = [];
 export const memCtx: ArrowCtx[] = [];
 const DIRTY_BITMAP_SIZE = 2048; // 0x10000 >> 5
-const dirtyBitmap = /* @__PURE__ */ new Uint32Array(DIRTY_BITMAP_SIZE); // "PURE" needs for correct minification
+export const dirtyBitmap = /* @__PURE__ */ new Uint32Array(DIRTY_BITMAP_SIZE); // "PURE" needs for correct minification
 
 let ramMinAddr = RAM_MIN_ADDR;
 export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
@@ -38,19 +39,23 @@ export function fetchMemory() {
 }
 
 export function commitMemory() {
-  for (let i = ramMinAddr >> 5; i < DIRTY_BITMAP_SIZE; i++) {
+  commitScreen();
+
+  for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < DIRTY_BITMAP_SIZE; i++) {
     let bits = dirtyBitmap[i];
     if (bits === 0) continue;
     dirtyBitmap[i] = 0;
-    const base = i << 5;
+    const addrBase = i << 5;
+
     while (bits) {
       const bit = bits & -bits;
       const offset = 31 - Math.clz32(bit);
-      const addr = base + offset;
+      bits ^= bit;
+
+      const addr = addrBase + offset;
       const value = mem[addr];
       const ctx = memCtx[addr];
       setDirect(ctx.x, ctx.y, ctx.a, value);
-      bits ^= bit;
     }
   }
 }

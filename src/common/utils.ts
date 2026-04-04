@@ -23,12 +23,12 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
 
   if (addr >= SCREEN_MIN_ADDR && addr < ATTRIBUTES_MIN_ADDR) {
     // Pretty screen
-    x = memoryX + (addr & 0x1F) * 8 + xShift;
+    x = memoryX + ((addr & 0x1F) << 3) + xShift;
     y = memoryY + ((addr & 0x1800) >> 5) + ((addr & 0x0700) >> 8) + ((addr & 0xE0) >> 2);
   }
   else if (addr >= ATTRIBUTES_MIN_ADDR && addr < ATTRIBUTES_AFTER_ADDR) {
     // Line by line:
-    x = memoryX + (addr & 0x1F) * 8 + xShift;
+    x = memoryX + ((addr & 0x1F) << 3) + xShift;
     y = memoryY + ((addr & 0x3FFF) >> 5);
 
     y += 16;

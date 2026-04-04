@@ -1,6 +1,7 @@
 import { MS_PER_FRAME, OP_PER_FRAME } from './common/constants';
 import { commitMemory, fetchMemory } from './common/memory';
 import { initPorts } from './common/ports';
+import { initScreen, refreshScreen } from './common/screen';
 import { initMemory } from './common/utils';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
@@ -24,11 +25,13 @@ onActive(() => {
     initCpu(chunkX, chunkY);
     initMemory(chunkX, chunkY);
     initPorts(chunkX, chunkY);
+    initScreen(chunkX, chunkY);
   }
 
   if (enabled = !enabled) {
     fetchCpu();
     fetchMemory();
+    refreshScreen();
   }
 });
 
