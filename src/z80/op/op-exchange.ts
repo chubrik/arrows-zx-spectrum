@@ -1,6 +1,6 @@
 import { mem, write } from '../../common/memory';
 import { packF, unpackF } from '../flags';
-import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, Fa, H, Ha, HXY, L, La, LXY, SPv } from '../registers';
+import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, Fa, H, Ha, HXY, L, La, LXY, sp } from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
@@ -36,10 +36,10 @@ export function EXX() {
 
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
 export function EX_sp_HL() {
-  const spl = mem[SPv];
-  const sph = mem[SPv + 1];
-  write(SPv, cpu[LXY]);
-  write(SPv + 1, cpu[HXY]);
+  const spl = mem[sp];
+  const sph = mem[sp + 1];
+  write(sp, cpu[LXY]);
+  write(sp + 1, cpu[HXY]);
   cpu[LXY] = spl;
   cpu[HXY] = sph;
 }

@@ -2,7 +2,7 @@ import { xFF, xFFFF } from '../../common/constants';
 import { mem } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { calcFP, calcFSZ53, FP, iff2, setFH, setFN, setFP } from '../flags';
-import { A, B, C, cpu, incPCv, PCv, set88, setPCv, setSPv } from '../registers';
+import { A, B, C, cpu, incPC, pc, set88, setPC, setSP } from '../registers';
 import { next } from '../utils';
 
 /** LD A,I | LD A,R */
@@ -17,14 +17,14 @@ export function ld_A_IR(value: number) {
 
 /** LD dd,nn | LD IX,nn | LD IY,nn */
 export function LD_dd_nn(reg: number) {
-  set88(reg, mem[incPCv()], mem[incPCv()]);
-  setPCv(PCv & xFFFF);
+  set88(reg, mem[incPC()], mem[incPC()]);
+  setPC(pc & xFFFF);
 }
 
 /** LD SP,nn */
 export function LD_SP_nn() {
-  setSPv(mem[incPCv()] | (mem[incPCv()] << 8));
-  setPCv(PCv & xFFFF);
+  setSP(mem[incPC()] | (mem[incPC()] << 8));
+  setPC(pc & xFFFF);
 }
 
 /** DJNZ e */
@@ -32,14 +32,14 @@ export function DJNZ_e() {
   const newB = (cpu[B] - 1) & xFF;
   cpu[B] = newB;
   if (newB) JR_e();
-  else setPCv((PCv + 1) & xFFFF);
+  else setPC((pc + 1) & xFFFF);
 }
 
 /** JR e */
 export function JR_e() {
   let e = next();
   if (e >= 128) e -= 256;
-  setPCv((PCv + e) & xFFFF); // -126...+129 relative to operation start
+  setPC((pc + e) & xFFFF); // -126...+129 relative to operation start
 }
 
 /** IN r,(C) | IN (C) (undocumented) */

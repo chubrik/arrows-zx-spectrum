@@ -2,7 +2,7 @@ import { xFF, xFFFF } from '../common/constants';
 import { mem } from '../common/memory';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { RST_p } from './op/op-stack';
-import { I, PCv, cpu, refresh, setPCv } from './registers';
+import { I, pc, cpu, refresh, setPC } from './registers';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = xFF;
@@ -11,7 +11,7 @@ export function interrupt() {
   if (!int) return;
   setINT(0);
   if (!iff1) return;
-  if (hlt) setPCv((PCv + 1) & xFFFF);
+  if (hlt) setPC((pc + 1) & xFFFF);
   setIFF1(0);
   setIFF2(0);
   setHLT(0);

@@ -1,7 +1,7 @@
 import { createCtx, getDirect, setDirect } from '../common/arrows';
 import { xFF } from '../common/constants';
 import { packF, packSYS, unpackF, unpackSYS } from './flags';
-import { A, Aa, B, Ba, C, Ca, cpu, cpuCtx, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, packR, PC, PCv, R, setPCv, setSPv, SP, SPv, SYS, unpackR } from './registers';
+import { A, Aa, B, Ba, C, Ca, cpu, cpuCtx, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, packR, PC, pc, R, setPC, setSP, SP, sp, SYS, unpackR } from './registers';
 
 export function initCpu(chunkX: number, chunkY: number) {
   let x = chunkX + 32;
@@ -49,10 +49,10 @@ export function fetchCpu() {
   unpackSYS(cpu[SYS]);
 
   const spCtx = cpuCtx[SP];
-  setSPv((getDirect(spCtx.x, spCtx.y) << 8) | getDirect(spCtx.x, spCtx.y + 1));
+  setSP((getDirect(spCtx.x, spCtx.y) << 8) | getDirect(spCtx.x, spCtx.y + 1));
 
   const pcCtx = cpuCtx[PC];
-  setPCv((getDirect(pcCtx.x, pcCtx.y) << 8) | getDirect(pcCtx.x, pcCtx.y + 1));
+  setPC((getDirect(pcCtx.x, pcCtx.y) << 8) | getDirect(pcCtx.x, pcCtx.y + 1));
 }
 
 export function commitCpu() {
@@ -66,12 +66,12 @@ export function commitCpu() {
   }
   
   const spCtx = cpuCtx[SP];
-  setDirect(spCtx.x, spCtx.y, spCtx.a, SPv >> 8);
-  setDirect(spCtx.x, spCtx.y + 1, spCtx.a, SPv & xFF);
+  setDirect(spCtx.x, spCtx.y, spCtx.a, sp >> 8);
+  setDirect(spCtx.x, spCtx.y + 1, spCtx.a, sp & xFF);
 
   const pcCtx = cpuCtx[PC];
-  setDirect(pcCtx.x, pcCtx.y, pcCtx.a, PCv >> 8);
-  setDirect(pcCtx.x, pcCtx.y + 1, pcCtx.a, PCv & xFF);
+  setDirect(pcCtx.x, pcCtx.y, pcCtx.a, pc >> 8);
+  setDirect(pcCtx.x, pcCtx.y + 1, pcCtx.a, pc & xFF);
 }
 
 export function resetCpu() {

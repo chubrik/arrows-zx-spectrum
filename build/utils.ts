@@ -122,7 +122,7 @@ const optsCompressMangle: MinifyOptions = {
 
 /** Inline functions annotated with \@\_\_INLINE\__. */
 // Replaces all call sites with the function body, substituting params with args.
-// Handles single-statement bodies (e.g. simple setters: SPv = value).
+// Handles single-statement bodies (e.g. simple setters: sp = value).
 export function inlineFunctions(code: string): string {
   const marker = '/*! @__INLINE__ */';
 

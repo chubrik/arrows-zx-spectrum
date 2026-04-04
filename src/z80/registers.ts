@@ -31,12 +31,12 @@ export const SYS = 22;
 export const SP = 23;
 export const PC = 24;
 
-export let SPv = 0;
-export let PCv = 0;
-/*! @__INLINE__ */ export function setSPv(value: number) { SPv = value; }
-/*! @__INLINE__ */ export function setPCv(value: number) { PCv = value; }
-/*! @__INLINE__ */ export function incSPv() { return SPv++; }
-/*! @__INLINE__ */ export function incPCv() { return PCv++; }
+export let sp = 0;
+export let pc = 0;
+/*! @__INLINE__ */ export function setSP(value: number) { sp = value; }
+/*! @__INLINE__ */ export function setPC(value: number) { pc = value; }
+/*! @__INLINE__ */ export function incSP() { return sp++; }
+/*! @__INLINE__ */ export function incPC() { return pc++; }
 
 export let HXY = H; // H / IXh / IYh
 export let LXY = L; // L / IXl / IYl

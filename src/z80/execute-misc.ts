@@ -8,7 +8,7 @@ import { IN_c, ld_A_IR } from './op/op-etc';
 import { ADC_HL, SBC_HL } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
 import { RET } from './op/op-stack';
-import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, I, L, packR, refresh, set88, setSPv, SPv, unpackR } from './registers';
+import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, I, L, packR, refresh, set88, setSP, sp, unpackR } from './registers';
 import { nop as _, next, next16, nop } from './utils';
 
 export function executeMisc() {
@@ -76,16 +76,16 @@ const opsMisc = [
 
   /* ED70 IN (C)     * */ () => IN_c(),
   /* ED71 OUT (C),0  * */ () => writePort(cpu[C], cpu[B], 0), // NMOS: 0, CMOS: 255 (undocumented)
-  /* ED72 SBC HL,SP    */ () => SBC_HL(SPv),
-  /* ED73 LD (nn),SP   */ () => write88(next16(), SPv & xFF, SPv >> 8),
+  /* ED72 SBC HL,SP    */ () => SBC_HL(sp),
+  /* ED73 LD (nn),SP   */ () => write88(next16(), sp & xFF, sp >> 8),
   /* ED74 NEG        * */ NEG,
   /* ED75 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED76 IM 1       * */ () => { setIM1(IM1); setIM2(0); },
   /* ED77 ---          */ nop,
   /* ED78 IN A,(C)     */ () => IN_c(A),
   /* ED79 OUT (C),A    */ () => writePort(cpu[C], cpu[B], cpu[A]),
-  /* ED7A ADC HL,SP    */ () => ADC_HL(SPv),
-  /* ED7B LD SP,(nn)   */ () => { const addr = next16(); setSPv(mem[addr] | (mem[addr + 1] << 8)); },
+  /* ED7A ADC HL,SP    */ () => ADC_HL(sp),
+  /* ED7B LD SP,(nn)   */ () => { const addr = next16(); setSP(mem[addr] | (mem[addr + 1] << 8)); },
   /* ED7C NEG        * */ NEG,
   /* ED7D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED7E IM 2       * */ () => { setIM1(0); setIM2(IM2); },

@@ -2,7 +2,7 @@ import { xFF, xFFFF } from '../src/common/constants';
 import { mem, setRamMinAddrForTest } from '../src/common/memory';
 import { executeMain } from '../src/z80/execute-main';
 import { HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, packF, setHLT, setIFF1, setIFF2, setIM1, setIM2, unpackF, unpackSYS } from '../src/z80/flags';
-import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, packR, PCv, R, setHLXY, setPCv, setSPv, setWZ, SPv, unpackR } from '../src/z80/registers';
+import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, F, Fa, H, Ha, HL, I, IXh, IXl, IYh, IYl, L, La, packR, pc, R, setHLXY, setPC, setSP, setWZ, sp, unpackR } from '../src/z80/registers';
 
 export function setupCpu() {
   setRamMinAddrForTest(0);
@@ -52,8 +52,8 @@ export function setState(state: CpuState) {
   if (state.La !== undefined) cpu[La] = state.La;
   if (state.IX !== undefined) { cpu[IXl] = state.IX & xFF; cpu[IXh] = (state.IX >> 8) & xFF; }
   if (state.IY !== undefined) { cpu[IYl] = state.IY & xFF; cpu[IYh] = (state.IY >> 8) & xFF; }
-  if (state.SP !== undefined) setSPv(state.SP);
-  if (state.PC !== undefined) setPCv(state.PC);
+  if (state.SP !== undefined) setSP(state.SP);
+  if (state.PC !== undefined) setPC(state.PC);
   if (state.WZ !== undefined) setWZ(state.WZ);
   if (state.I !== undefined) cpu[I] = state.I;
   if (state.R !== undefined) { cpu[R] = state.R; unpackR(state.R); }
@@ -91,8 +91,8 @@ export function getState() {
     La: cpu[La],
     IX: (cpu[IXh] << 8) | cpu[IXl],
     IY: (cpu[IYh] << 8) | cpu[IYl],
-    SP: SPv,
-    PC: PCv,
+    SP: sp,
+    PC: pc,
     I: cpu[I],
     R: packR(),
     IM: (im2 ? 2 : im1 ? 1 : 0) as 0 | 1 | 2,
