@@ -1,6 +1,6 @@
-import { setDirect } from './arrows.ts';
+import { setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR } from './constants.ts';
-import { dirtyBitmap, mem, memCtx } from './memory.ts';
+import { dirtyBitmap, mem } from './memory.ts';
 
 const posXCache: number[] = [];
 const posYCache: number[] = [];
@@ -73,10 +73,8 @@ export function commitScreen() {
         const addr = addrBase + offset;
         const value = mem[addr];
 
-        if (pixelBits & bit) {
-          const ctx = memCtx[addr];
-          setDirect(ctx.x, ctx.y, ctx.a, value);
-        }
+        if (pixelBits & bit)
+          setMemDirect(addr, value);
 
         const attrAddr = attrAddrBase + offset;
         const attr = mem[attrAddr];
@@ -91,7 +89,7 @@ export function commitScreen() {
   }
 }
 
-export function setPixels(addr: number, value: number, attr: number) {
+function setPixels(addr: number, value: number, attr: number) {
   const posX = posXCache[addr];
   const posY = posYCache[addr];
   const base = attr << 1;

@@ -171,34 +171,38 @@ async function buildSnapshotCpu(gameName: string, snap: Z80Snapshot) {
     (snap.IFF2 ? IFF2 : 0) |
     (snap.IFF1 ? IFF1 : 0);
 
+  const reg = (r: string, v: string) =>
+    `setDirect(cpuCtxX[${r}], cpuCtxY[${r}], cpuCtxA[${r}], ${v})`;
+
+  const reg16 = (r: string, hi: string, lo: string) =>
+    `${reg(r, hi)}; setDirect(cpuCtxX[${r}], cpuCtxY[${r}] + 1, cpuCtxA[${r}], ${lo})`;
+
   const body = [
-    `setDirect(cpuCtx[A], ${snap.A})`,
-    `setDirect(cpuCtx[F], ${snap.F})`,
-    `setDirect(cpuCtx[B], ${snap.B})`,
-    `setDirect(cpuCtx[C], ${snap.C})`,
-    `setDirect(cpuCtx[D], ${snap.D})`,
-    `setDirect(cpuCtx[E], ${snap.E})`,
-    `setDirect(cpuCtx[H], ${snap.H})`,
-    `setDirect(cpuCtx[L], ${snap.L})`,
-    `setDirect(cpuCtx[Aa], ${snap.Aa})`,
-    `setDirect(cpuCtx[Fa], ${snap.Fa})`,
-    `setDirect(cpuCtx[Ba], ${snap.Ba})`,
-    `setDirect(cpuCtx[Ca], ${snap.Ca})`,
-    `setDirect(cpuCtx[Da], ${snap.Da})`,
-    `setDirect(cpuCtx[Ea], ${snap.Ea})`,
-    `setDirect(cpuCtx[Ha], ${snap.Ha})`,
-    `setDirect(cpuCtx[La], ${snap.La})`,
-    `setDirect(cpuCtx[IXh], ${snap.IX >> 8})`,
-    `setDirect(cpuCtx[IXl], ${snap.IX & xFF})`,
-    `setDirect(cpuCtx[IYh], ${snap.IY >> 8})`,
-    `setDirect(cpuCtx[IYl], ${snap.IY & xFF})`,
-    `setDirect(cpuCtx[SPh], ${snap.SP >> 8})`,
-    `setDirect(cpuCtx[SPl], ${snap.SP & xFF})`,
-    `setDirect(cpuCtx[PCh], ${snap.PC >> 8})`,
-    `setDirect(cpuCtx[PCl], ${snap.PC & xFF})`,
-    `setDirect(cpuCtx[I], ${snap.I})`,
-    `setDirect(cpuCtx[R], ${snap.R})`,
-    `setDirect(cpuCtx[SYS], ${sys})`,
+    reg('A', `${snap.A}`),
+    reg('F', `${snap.F}`),
+    reg('B', `${snap.B}`),
+    reg('C', `${snap.C}`),
+    reg('D', `${snap.D}`),
+    reg('E', `${snap.E}`),
+    reg('H', `${snap.H}`),
+    reg('L', `${snap.L}`),
+    reg('Aa', `${snap.Aa}`),
+    reg('Fa', `${snap.Fa}`),
+    reg('Ba', `${snap.Ba}`),
+    reg('Ca', `${snap.Ca}`),
+    reg('Da', `${snap.Da}`),
+    reg('Ea', `${snap.Ea}`),
+    reg('Ha', `${snap.Ha}`),
+    reg('La', `${snap.La}`),
+    reg('IXh', `${snap.IX >> 8}`),
+    reg('IXl', `${snap.IX & xFF}`),
+    reg('IYh', `${snap.IY >> 8}`),
+    reg('IYl', `${snap.IY & xFF}`),
+    reg16('SP', `${snap.SP >> 8}`, `${snap.SP & xFF}`),
+    reg16('PC', `${snap.PC >> 8}`, `${snap.PC & xFF}`),
+    reg('I', `${snap.I}`),
+    reg('R', `${snap.R}`),
+    reg('SYS', `${sys}`),
   ].join('; ');
 
   const code = srcTsCode.replace(

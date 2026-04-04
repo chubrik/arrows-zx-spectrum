@@ -1,58 +1,65 @@
 import { createCtx, getDirect, setDirect } from '../common/arrows';
 import { xFF } from '../common/constants';
 import { packF, packSYS, unpackF, unpackSYS } from './flags';
-import { A, Aa, B, Ba, C, Ca, cpu, cpuCtx, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, packR, PC, pc, R, setPC, setSP, SP, sp, SYS, unpackR } from './registers';
+import { A, Aa, B, Ba, C, Ca, cpu, cpuCtxA, cpuCtxX, cpuCtxY, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, packR, PC, pc, R, setPC, setSP, SP, sp, SYS, unpackR } from './registers';
 
 export function initCpu(chunkX: number, chunkY: number) {
   let x = chunkX + 32;
   let y = chunkY;
 
-  cpuCtx[A] = createCtx(x, y);
-  cpuCtx[F] = createCtx(x, ++y);
-  cpuCtx[B] = createCtx(x, ++y);
-  cpuCtx[C] = createCtx(x, ++y);
-  cpuCtx[D] = createCtx(x, ++y);
-  cpuCtx[E] = createCtx(x, ++y);
-  cpuCtx[H] = createCtx(x, ++y);
-  cpuCtx[L] = createCtx(x, ++y);
-  cpuCtx[IXh] = createCtx(x, ++y);
-  cpuCtx[IXl] = createCtx(x, ++y);
+  initReg(A, x, y);
+  initReg(F, x, ++y);
+  initReg(B, x, ++y);
+  initReg(C, x, ++y);
+  initReg(D, x, ++y);
+  initReg(E, x, ++y);
+  initReg(H, x, ++y);
+  initReg(L, x, ++y);
+  initReg(IXh, x, ++y);
+  initReg(IXl, x, ++y);
 
-  cpuCtx[SP] = createCtx(x, y += 2);
-  cpuCtx[PC] = createCtx(x, y += 2);
+  initReg(SP, x, y += 2);
+  initReg(PC, x, y += 2);
 
-  cpuCtx[Aa] = createCtx(x += 8, y = chunkY);
-  cpuCtx[Fa] = createCtx(x, ++y);
-  cpuCtx[Ba] = createCtx(x, ++y);
-  cpuCtx[Ca] = createCtx(x, ++y);
-  cpuCtx[Da] = createCtx(x, ++y);
-  cpuCtx[Ea] = createCtx(x, ++y);
-  cpuCtx[Ha] = createCtx(x, ++y);
-  cpuCtx[La] = createCtx(x, ++y);
-  cpuCtx[IYh] = createCtx(x, ++y);
-  cpuCtx[IYl] = createCtx(x, ++y);
+  initReg(Aa, x += 8, y = chunkY);
+  initReg(Fa, x, ++y);
+  initReg(Ba, x, ++y);
+  initReg(Ca, x, ++y);
+  initReg(Da, x, ++y);
+  initReg(Ea, x, ++y);
+  initReg(Ha, x, ++y);
+  initReg(La, x, ++y);
+  initReg(IYh, x, ++y);
+  initReg(IYl, x, ++y);
 
-  cpuCtx[I] = createCtx(x, y += 2);
-  cpuCtx[R] = createCtx(x, ++y);
+  initReg(I, x, y += 2);
+  initReg(R, x, ++y);
 
-  cpuCtx[SYS] = createCtx(x, y + 2);
+  initReg(SYS, x, y + 2);
+}
+
+function initReg(reg: number, x: number, y: number) {
+  const ctx = createCtx(x, y);
+  cpuCtxX[reg] = ctx.x;
+  cpuCtxY[reg] = ctx.y;
+  cpuCtxA[reg] = ctx.a;
 }
 
 export function fetchCpu() {
-  for (let i = 0; i <= SYS; i++) {
-    const ctx = cpuCtx[i];
-    cpu[i] = getDirect(ctx.x, ctx.y);
-  }
+  for (let reg = 0; reg <= SYS; reg++)
+    cpu[reg] = getDirect(cpuCtxX[reg], cpuCtxY[reg]);
 
   unpackF(cpu[F]);
   unpackR(cpu[R]);
   unpackSYS(cpu[SYS]);
 
-  const spCtx = cpuCtx[SP];
-  setSP((getDirect(spCtx.x, spCtx.y) << 8) | getDirect(spCtx.x, spCtx.y + 1));
+  const spX = cpuCtxX[SP];
+  const spY = cpuCtxY[SP];
+  setSP((getDirect(spX, spY) << 8) | getDirect(spX, spY + 1));
 
-  const pcCtx = cpuCtx[PC];
-  setPC((getDirect(pcCtx.x, pcCtx.y) << 8) | getDirect(pcCtx.x, pcCtx.y + 1));
+  const pcX = cpuCtxX[PC];
+  const pcY = cpuCtxY[PC];
+  setPC((getDirect(pcX, pcY) << 8) | getDirect(pcX, pcY + 1));
 }
 
 export function commitCpu() {
@@ -60,31 +67,35 @@ export function commitCpu() {
   cpu[R] = packR();
   cpu[SYS] = packSYS();
 
-  for (let i = 0; i <= SYS; i++) {
-    const ctx = cpuCtx[i];
-    setDirect(ctx.x, ctx.y, ctx.a, cpu[i]);
-  }
-  
-  const spCtx = cpuCtx[SP];
-  setDirect(spCtx.x, spCtx.y, spCtx.a, sp >> 8);
-  setDirect(spCtx.x, spCtx.y + 1, spCtx.a, sp & xFF);
+  for (let reg = 0; reg <= SYS; reg++)
+    setDirect(cpuCtxX[reg], cpuCtxY[reg], cpuCtxA[reg], cpu[reg]);
 
-  const pcCtx = cpuCtx[PC];
-  setDirect(pcCtx.x, pcCtx.y, pcCtx.a, pc >> 8);
-  setDirect(pcCtx.x, pcCtx.y + 1, pcCtx.a, pc & xFF);
+  const spX = cpuCtxX[SP];
+  const spY = cpuCtxY[SP];
+  const spA = cpuCtxA[SP];
+  setDirect(spX, spY, spA, sp >> 8);
+  setDirect(spX, spY + 1, spA, sp & xFF);
+
+  const pcX = cpuCtxX[PC];
+  const pcY = cpuCtxY[PC];
+  const pcA = cpuCtxA[PC];
+  setDirect(pcX, pcY, pcA, pc >> 8);
+  setDirect(pcX, pcY + 1, pcA, pc & xFF);
 }
 
 export function resetCpu() {
-  for (let i = 0; i <= SYS; i++) {
-    const ctx = cpuCtx[i];
-    setDirect(ctx.x, ctx.y, ctx.a, 0);
-  }
+  for (let reg = 0; reg <= SYS; reg++)
+    setDirect(cpuCtxX[reg], cpuCtxY[reg], cpuCtxA[reg], 0);
 
-  const spCtx = cpuCtx[SP];
-  setDirect(spCtx.x, spCtx.y, spCtx.a, 0);
-  setDirect(spCtx.x, spCtx.y + 1, spCtx.a, 0);
+  const spX = cpuCtxX[SP];
+  const spY = cpuCtxY[SP];
+  const spA = cpuCtxA[SP];
+  setDirect(spX, spY, spA, 0);
+  setDirect(spX, spY + 1, spA, 0);
 
-  const pcCtx = cpuCtx[PC];
-  setDirect(pcCtx.x, pcCtx.y, pcCtx.a, 0);
-  setDirect(pcCtx.x, pcCtx.y + 1, pcCtx.a, 0);
+  const pcX = cpuCtxX[PC];
+  const pcY = cpuCtxY[PC];
+  const pcA = cpuCtxA[PC];
+  setDirect(pcX, pcY, pcA, 0);
+  setDirect(pcX, pcY + 1, pcA, 0);
 }

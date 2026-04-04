@@ -1,3 +1,5 @@
+import { memCtxA, memCtxX, memCtxY } from './memory.ts';
+
 export type ArrowCtx = { x: number; y: number; a: number[]; };
 
 export function getDirect(x: number, y: number): number {
@@ -12,6 +14,13 @@ export function getDirect(x: number, y: number): number {
   }
 
   return value;
+}
+
+export function setMemDirect(addr: number, value: number) {
+  const x = memCtxX[addr];
+  const y = memCtxY[addr];
+  const arrowTypes = memCtxA[addr];
+  /*! @__INLINE__ */ setDirect(x, y, arrowTypes, value);
 }
 
 export function setDirect(x: number, y: number, arrowTypes: number[], value: number) {

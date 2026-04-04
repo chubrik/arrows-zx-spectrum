@@ -1,8 +1,9 @@
-import { ArrowCtx } from '../common/arrows';
 import { BIT7, xFF } from '../common/constants';
 
 export const cpu: number[] = [];
-export const cpuCtx: ArrowCtx[] = [];
+export const cpuCtxX: number[] = [];
+export const cpuCtxY: number[] = [];
+export const cpuCtxA: number[][] = [];
 
 export const F = 0;
 export const A = 1;

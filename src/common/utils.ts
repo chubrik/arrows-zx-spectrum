@@ -1,6 +1,6 @@
-import { createCtx, setDirect } from './arrows.ts';
+import { createCtx, setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
-import { memCtx } from './memory.ts';
+import { memCtxA, memCtxX, memCtxY } from './memory.ts';
 
 export function check(condition: boolean, message: string = 'Check failed') {
   if (!condition)
@@ -14,7 +14,10 @@ export function initMemory(chunkX: number, chunkY: number) {
   for (let addr = 0; addr <= xFFFF; addr++)
     initAddrCtx(addr, memoryX, memoryY);
 
-  memCtx[0x10000] = memCtx[0]; // Mirror 0x0000 address for easier access to byte pairs
+  // Mirror 0x0000 address for easier access to byte pairs
+  memCtxX[0x10000] = memCtxX[0];
+  memCtxY[0x10000] = memCtxY[0];
+  memCtxA[0x10000] = memCtxA[0];
 }
 
 function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
@@ -42,19 +45,18 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
       y += 16;
   }
 
-  memCtx[addr] = createCtx(x, y);
+  const ctx = createCtx(x, y);
+  memCtxX[addr] = ctx.x;
+  memCtxY[addr] = ctx.y;
+  memCtxA[addr] = ctx.a;
 }
 
 export function deployMemoryBlock(beginAddr: number, data: number[]) {
-  for (let i = 0; i < data.length; i++) {
-    const ctx = memCtx[beginAddr + i];
-    setDirect(ctx.x, ctx.y, ctx.a, data[i]);
-  }
+  for (let i = 0; i < data.length; i++)
+    setMemDirect(beginAddr + i, data[i]);
 }
 
 export function resetMemoryBlock(firstAddr: number, lastAddr: number) {
-  for (let addr = firstAddr; addr <= lastAddr; addr++) {
-    const ctx = memCtx[addr];
-    setDirect(ctx.x, ctx.y, ctx.a, 0);
-  }
+  for (let addr = firstAddr; addr <= lastAddr; addr++)
+    setMemDirect(addr, 0);
 }
