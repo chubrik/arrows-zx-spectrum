@@ -13,7 +13,8 @@ export function write88(addr: number, low: number, high: number) {
   if (addr < ramMinAddr) return;
   writeBase(addr, low);
   if (addr === xFFFF) return;
-  writeBase(++addr, high);
+  addr++;
+  writeBase(addr, high);
 }
 
 export function write(addr: number, value: number) {

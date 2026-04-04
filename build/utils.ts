@@ -190,7 +190,8 @@ export function inlineFunctions(code: string): string {
       i++;
     }
 
-    const bodyExpr = code.slice(bs, i - 1).trim().replace(/;$/, '');
+    let bodyExpr = code.slice(bs, i - 1).trim().replace(/;$/, '');
+    if (bodyExpr.startsWith('return ')) bodyExpr = bodyExpr.slice(7);
     defs.push({ name, params, bodyExpr, defStart: idx, defEnd: i });
     searchPos = i;
   }

@@ -35,6 +35,8 @@ export let SPv = 0;
 export let PCv = 0;
 /*! @__INLINE__ */ export function setSPv(value: number) { SPv = value; }
 /*! @__INLINE__ */ export function setPCv(value: number) { PCv = value; }
+/*! @__INLINE__ */ export function incSPv() { return SPv++; }
+/*! @__INLINE__ */ export function incPCv() { return PCv++; }
 
 export let HXY = H; // H / IXh / IYh
 export let LXY = L; // L / IXl / IYl
@@ -54,8 +56,7 @@ export function unpackR(value: number) {
 }
 
 export function packR(): number {
-  ri &= 0x7F;
-  return (r7 & BIT7) | ri;
+  return (r7 & BIT7) | (ri &= 0x7F);
 }
 
 export let eiDelay: 0 | 1 = 0;

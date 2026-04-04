@@ -1,7 +1,7 @@
 import { xFF, xFFFF } from '../../common/constants';
 import { mem, write88 } from '../../common/memory';
 import { packF, unpackF } from '../flags';
-import { A, cpu, PCv, set88, setPCv, setSPv, SPv } from '../registers';
+import { A, cpu, incSPv, PCv, set88, setPCv, setSPv, SPv } from '../registers';
 
 /** RST p */
 export function RST_p(addr: number) {
@@ -22,9 +22,8 @@ export function CALL_nn() {
 
 /** RET | RET cc | RETN | RETI */
 export function RET() {
-  let sp = SPv;
-  setPCv(mem[sp++] | (mem[sp++] << 8));
-  setSPv(sp & xFFFF);
+  setPCv(mem[incSPv()] | (mem[incSPv()] << 8));
+  setSPv(SPv & xFFFF);
 }
 
 /** PUSH qq | PUSH IX | PUSH IY */
@@ -43,15 +42,13 @@ export function PUSH_AF() {
 
 /** POP qq | POP IX | POP IY */
 export function POP_QQ(reg: number) {
-  let sp = SPv;
-  set88(reg, mem[sp++], mem[sp++]);
-  setSPv(sp & xFFFF);
+  set88(reg, mem[incSPv()], mem[incSPv()]);
+  setSPv(SPv & xFFFF);
 }
 
 /** POP AF */
 export function POP_AF() {
-  let sp = SPv;
-  unpackF(mem[sp++]);
-  cpu[A] = mem[sp++];
-  setSPv(sp & xFFFF);
+  unpackF(mem[incSPv()]);
+  cpu[A] = mem[incSPv()];
+  setSPv(SPv & xFFFF);
 }

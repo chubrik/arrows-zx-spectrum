@@ -2,7 +2,7 @@ import { xFF, xFFFF } from '../../common/constants';
 import { mem } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { calcFP, calcFSZ53, FP, iff2, setFH, setFN, setFP } from '../flags';
-import { A, B, C, cpu, PCv, set88, setPCv, setSPv } from '../registers';
+import { A, B, C, cpu, incPCv, PCv, set88, setPCv, setSPv } from '../registers';
 import { next } from '../utils';
 
 /** LD A,I | LD A,R */
@@ -17,16 +17,14 @@ export function ld_A_IR(value: number) {
 
 /** LD dd,nn | LD IX,nn | LD IY,nn */
 export function LD_dd_nn(reg: number) {
-  let pc = PCv;
-  set88(reg, mem[pc++], mem[pc++]);
-  setPCv(pc & xFFFF);
+  set88(reg, mem[incPCv()], mem[incPCv()]);
+  setPCv(PCv & xFFFF);
 }
 
 /** LD SP,nn */
 export function LD_SP_nn() {
-  let pc = PCv;
-  setSPv(mem[pc++] | (mem[pc++] << 8));
-  setPCv(pc & xFFFF);
+  setSPv(mem[incPCv()] | (mem[incPCv()] << 8));
+  setPCv(PCv & xFFFF);
 }
 
 /** DJNZ e */

@@ -148,7 +148,7 @@ const opsMain = [
   /* 73 LD (HL),E  */ () => write(getHLXYd(), cpu[E]),
   /* 74 LD (HL),H  */ () => write(getHLXYd(), cpu[H]),
   /* 75 LD (HL),L  */ () => write(getHLXYd(), cpu[L]),
-  /* 76 HALT       */ () => { setHLT(HLT); setPCv((PCv - 1) & xFFFF); },
+  /* 76 HALT       */ () => { setHLT(HLT); setPCv(PCv - 1); },
   /* 77 LD (HL),A  */ () => write(getHLXYd(), cpu[A]),
   /* 78 LD A,B     */ () => cpu[A] = cpu[B],
   /* 79 LD A,C     */ () => cpu[A] = cpu[C],
