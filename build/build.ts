@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync } from 'fs';
 import { basename } from 'path';
-import { xFF } from '../src/common/constants.ts';
-import { asciiToUnicode, bytesToUnicode } from '../src/common/encode.ts';
-import { check } from '../src/common/utils.ts';
+import { xFF } from '../src/hw/constants.ts';
+import { check } from '../src/util/check.ts';
+import { asciiToUnicode, bytesToUnicode } from '../src/util/encode.ts';
 import { IFF1, IFF2, IM1, IM2 } from '../src/z80/flags.ts';
 import { remangleTopLevel } from './remangle.ts';
 import { getResource } from './resources.ts';
@@ -39,7 +39,7 @@ async function buildCpu(path: string) {
 
   // Decoder pipeline
   const decoderFuncName = 'unicodeToAscii';
-  const decoderTsCode = `export{${decoderFuncName}}from'./common/encode.ts';`;
+  const decoderTsCode = `export{${decoderFuncName}}from'./util/encode.ts';`;
   const decoderBuilt = step('decoder-build', await buildTs(decoderTsCode));
   const decoderInlined = step('decoder-inline', inlineFunctions(decoderBuilt));
   const decoderStripped = step('decoder-strip', decoderInlined.replace(/^export\s*\{[^}]*\}\s*;?\s*$/gm, ''));
@@ -82,7 +82,7 @@ async function buildDeployer(path: string) {
 
   // Decoder pipeline
   const decoderFuncName = 'unicodeToAscii';
-  const decoderTsCode = `export{${decoderFuncName}}from'./common/encode.ts';`;
+  const decoderTsCode = `export{${decoderFuncName}}from'./util/encode.ts';`;
   const decoderBuilt = step('decoder-build', await buildTs(decoderTsCode));
   const decoderStripped = step('decoder-strip', decoderBuilt.replace(/^export\s*\{[^}]*\}\s*;?\s*$/gm, ''));
 

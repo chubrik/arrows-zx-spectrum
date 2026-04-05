@@ -1,6 +1,6 @@
-import { xFFFF } from '../common/constants';
-import { mem, write, write88 } from '../common/memory';
-import { readPort, writePort } from '../common/ports';
+import { xFFFF } from '../hw/constants';
+import { mem, write, write88 } from '../hw/mem-state';
+import { readPort, writePort } from '../hw/ports';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';
@@ -11,7 +11,7 @@ import { EX_AF_AF, EX_DE_HL, EX_sp_HL, EXX } from './op/op-exchange';
 import { ADD_HL } from './op/op-math-16bit';
 import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
-import { RST_p, CALL_nn, POP_AF, RET, POP_QQ, PUSH_AF, PUSH_QQ } from './op/op-stack';
+import { CALL_nn, POP_AF, POP_QQ, PUSH_AF, PUSH_QQ, RET, RST_p } from './op/op-stack';
 import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, HLXY, HXY, IX, IY, L, LXY, pc, refresh, set16, set88, setEIDelay, setHLXY, setPC, setSP, sp } from './registers';
 import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 

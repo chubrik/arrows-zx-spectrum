@@ -1,6 +1,4 @@
-import { getDirect, setMemDirect } from './arrows.ts';
-import { ATTRIBUTES_MIN_ADDR, RAM_MIN_ADDR, xFFFF } from './constants.ts';
-import { commitScreen } from './screen.ts';
+import { RAM_MIN_ADDR, xFFFF } from './constants.ts';
 
 export const mem: number[] = [];
 export const memCtxX: number[] = [];
@@ -30,30 +28,5 @@ function writeBase(addr: number, value: number) {
   if (mem[addr] !== value) {
     mem[addr] = value;
     dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
-  }
-}
-
-export function fetchMemory() {
-  for (let addr = 0; addr < memCtxX.length; addr++)
-    mem[addr] = getDirect(memCtxX[addr], memCtxY[addr]);
-}
-
-export function commitMemory() {
-  commitScreen();
-
-  for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < DIRTY_BITMAP_SIZE; i++) {
-    let bits = dirtyBitmap[i];
-    if (bits === 0) continue;
-    dirtyBitmap[i] = 0;
-    const addrBase = i << 5;
-
-    while (bits) {
-      const bit = bits & -bits;
-      const offset = 31 - Math.clz32(bit);
-      bits ^= bit;
-
-      const addr = addrBase + offset;
-      setMemDirect(addr, mem[addr]);
-    }
   }
 }

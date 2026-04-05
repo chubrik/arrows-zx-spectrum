@@ -1,6 +1,6 @@
 import { setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR } from './constants.ts';
-import { dirtyBitmap, mem } from './memory.ts';
+import { dirtyBitmap, mem } from './mem-state.ts';
 
 const posXCache: number[] = [];
 const posYCache: number[] = [];

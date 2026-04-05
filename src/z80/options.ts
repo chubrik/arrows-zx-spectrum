@@ -1,4 +1,4 @@
-import { OP_PER_FRAME } from '../common/constants';
+import { OP_PER_FRAME } from '../hw/constants';
 
 let optionsX: number;
 let optionsY: number;

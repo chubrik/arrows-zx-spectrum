@@ -1,4 +1,4 @@
-import { memCtxA, memCtxX, memCtxY } from './memory.ts';
+import { memCtxA, memCtxX, memCtxY } from './mem-state.ts';
 
 export type ArrowCtx = { x: number; y: number; a: number[]; };
 

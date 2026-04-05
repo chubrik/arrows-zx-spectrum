@@ -1,5 +1,5 @@
-import { xFF, xFFFF } from '../../common/constants';
-import { mem, write88 } from '../../common/memory';
+import { xFF, xFFFF } from '../../hw/constants';
+import { mem, write88 } from '../../hw/mem-state';
 import { packF, unpackF } from '../flags';
 import { A, cpu, incSP, pc, set88, setPC, setSP, sp } from '../registers';
 

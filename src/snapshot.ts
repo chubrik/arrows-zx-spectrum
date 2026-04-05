@@ -1,5 +1,5 @@
-import { unicodeToBytes } from './common/encode';
-import { deployMemoryBlock, initMemory } from './common/utils';
+import { deployMemoryBlock, initMemory } from './hw/mem-init';
+import { unicodeToBytes } from './util/encode';
 
 onActive(() => {
   const pos = getPosition();

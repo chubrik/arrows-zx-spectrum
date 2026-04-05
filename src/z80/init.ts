@@ -1,5 +1,5 @@
-import { createCtx, getDirect, setDirect } from '../common/arrows';
-import { xFF } from '../common/constants';
+import { createCtx, getDirect, setDirect } from '../hw/arrows';
+import { xFF } from '../hw/constants';
 import { packF, packSYS, unpackF, unpackSYS } from './flags';
 import { A, Aa, B, Ba, C, Ca, cpu, cpuCtxA, cpuCtxX, cpuCtxY, D, Da, E, Ea, F, Fa, H, Ha, I, IXh, IXl, IYh, IYl, L, La, packR, PC, pc, R, setPC, setSP, SP, sp, SYS, unpackR } from './registers';
 

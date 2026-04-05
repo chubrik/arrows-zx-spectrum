@@ -1,4 +1,4 @@
-import { BIT7, xFF } from '../common/constants';
+import { BIT7, xFF } from '../hw/constants';
 
 export const cpu: number[] = [];
 export const cpuCtxX: number[] = [];
@@ -84,4 +84,3 @@ export function set88(reg: number, valueLow: number, valueHigh: number) {
 }
 
 export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY };
-

@@ -1,6 +1,6 @@
-import { xFF } from '../common/constants';
-import { mem, write88 } from '../common/memory';
-import { writePort } from '../common/ports';
+import { xFF } from '../hw/constants';
+import { mem, write88 } from '../hw/mem-state';
+import { writePort } from '../hw/ports';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
 import { RLD, RRD } from './op/op-bit';
 import { CP_block, IN_block, LD_block, OUT_block } from './op/op-block';

@@ -1,4 +1,4 @@
-import { mem, write } from '../../common/memory';
+import { mem, write } from '../../hw/mem-state';
 import { packF, unpackF } from '../flags';
 import { A, Aa, B, Ba, C, Ca, cpu, D, Da, E, Ea, Fa, H, Ha, HXY, L, La, LXY, sp } from '../registers';
 

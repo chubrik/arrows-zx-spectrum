@@ -1,6 +1,6 @@
-import { xFFFF } from '../common/constants';
-import { mem } from '../common/memory';
-import { HL, HLXY, HXY, LXY, pc, cpu, setPC } from './registers';
+import { xFFFF } from '../hw/constants';
+import { mem } from '../hw/mem-state';
+import { cpu, HL, HLXY, HXY, LXY, pc, setPC } from './registers';
 
 export function nop() { };
 

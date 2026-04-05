@@ -1,8 +1,8 @@
-import { MS_PER_FRAME, OP_PER_FRAME } from './common/constants';
-import { commitMemory, fetchMemory } from './common/memory';
-import { initPorts } from './common/ports';
-import { initScreen, refreshScreen } from './common/screen';
-import { initMemory } from './common/utils';
+import { MS_PER_FRAME, OP_PER_FRAME } from './hw/constants';
+import { commitMemory, fetchMemory } from './hw/mem';
+import { initMemory } from './hw/mem-init';
+import { initPorts } from './hw/ports';
+import { commitScreen, initScreen, refreshScreen } from './hw/screen';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu, fetchCpu, initCpu } from './z80/init';
@@ -65,5 +65,6 @@ always(() => {
   }
 
   commitCpu();
+  commitScreen();
   commitMemory();
 });

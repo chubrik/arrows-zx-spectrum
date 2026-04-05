@@ -1,6 +1,6 @@
-import { RAM_MIN_ADDR, xFFFF } from './common/constants';
-import { unicodeToBytes } from './common/encode';
-import { deployMemoryBlock, initMemory, resetMemoryBlock } from './common/utils';
+import { RAM_MIN_ADDR, xFFFF } from './hw/constants';
+import { deployMemoryBlock, initMemory, resetMemoryBlock } from './hw/mem-init';
+import { unicodeToBytes } from './util/encode';
 import { initCpu, resetCpu } from './z80/init';
 
 declare const $: string; // Encoded ROM data

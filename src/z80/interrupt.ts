@@ -1,8 +1,8 @@
-import { xFF, xFFFF } from '../common/constants';
-import { mem } from '../common/memory';
+import { xFF, xFFFF } from '../hw/constants';
+import { mem } from '../hw/mem-state';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { RST_p } from './op/op-stack';
-import { I, pc, cpu, refresh, setPC } from './registers';
+import { cpu, I, pc, refresh, setPC } from './registers';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = xFF;

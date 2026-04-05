@@ -1,4 +1,4 @@
-import { xFFFF } from '../../common/constants';
+import { xFFFF } from '../../hw/constants';
 import { F3, F5, FC, fc, FH, FN, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { get16, HL, HLXY, set16 } from '../registers';
 

@@ -1,4 +1,4 @@
-import { BIT7, xFF } from '../../common/constants';
+import { BIT7, xFF } from '../../hw/constants';
 import { calcFP, calcFSZ53, F3, f3, F5, f5, FC, fc, FH, fh, fn, FN, FP, setF3, setF5, setFC, setFH, setFN, setFP } from '../flags';
 import { A, cpu } from '../registers';
 

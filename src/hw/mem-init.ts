@@ -1,11 +1,6 @@
 import { createCtx, setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
-import { memCtxA, memCtxX, memCtxY } from './memory.ts';
-
-export function check(condition: boolean, message: string = 'Check failed') {
-  if (!condition)
-    throw new Error(message);
-}
+import { memCtxA, memCtxX, memCtxY } from './mem-state.ts';
 
 export function initMemory(chunkX: number, chunkY: number) {
   const memoryX = chunkX - 240;

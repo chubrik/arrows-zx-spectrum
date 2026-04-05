@@ -1,5 +1,5 @@
-import { xFF } from './constants.ts';
-import { check } from './utils.ts';
+import { xFF } from '../hw/constants.ts';
+import { check } from './check.ts';
 
 const bits = 20;
 const mask = (1 << bits) - 1;

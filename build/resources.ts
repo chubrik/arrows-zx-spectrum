@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
-import { check } from '../src/common/utils.ts';
+import { check } from '../src/util/check.ts';
 
 const RESOURCES = {
   '48k.rom': {

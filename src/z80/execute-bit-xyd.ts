@@ -1,5 +1,5 @@
-import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../common/constants';
-import { mem, write } from '../common/memory';
+import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../hw/constants';
+import { mem, write } from '../hw/mem-state';
 import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
 import { A, B, C, cpu, D, E, H, L } from './registers';
 import { getHLXYd, next } from './utils';

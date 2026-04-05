@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getResource } from '../build/resources';
-import { mem } from '../src/common/memory';
+import { xFF, xFFFF } from '../src/hw/constants';
+import { mem } from '../src/hw/mem-state';
 import { FuseTestExpected, parseTestsExpected, parseTestsIn } from './fuse-parse';
 import { getState, loadProgram, setState, setupCpu, step } from './helpers';
-import { xFF, xFFFF } from '../src/common/constants';
 
 // ---------------------------------------------------------------------------
 // Port mocking — queue-based for multiple reads per instruction
@@ -15,7 +15,7 @@ const mockPorts = vi.hoisted(() => ({
   writes: [] as Array<{ addr: number; value: number }>,
 }));
 
-vi.mock('../src/common/ports', () => ({
+vi.mock('../src/hw/ports', () => ({
   readPort: () => mockPorts.readQueue[mockPorts.readIndex++] ?? xFF,
   writePort: (low: number, high: number, value: number) => { mockPorts.writes.push({ addr: (high << 8) | low, value }); },
 }));
