@@ -4,9 +4,8 @@ import { calcFP, calcFSZ53, F3, F5, FC, fc, FH, FP, FS, FZ, setF3, setF5, setFC,
 import { A, cpu, get16, HL } from '../registers';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
-export function BIT_b_r(bit: number, value: number, f53Src: number) {
-  const isSet = value & bit;
-
+/*! @__INLINE__ */
+export function BIT_b_r(isSet: number, f53Src: number) {
   setFS(isSet & FS);
   setFZ(isSet ? 0 : FZ);
   setF5(f53Src & F5);

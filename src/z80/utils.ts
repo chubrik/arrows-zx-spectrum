@@ -16,7 +16,6 @@ export function next(): number {
   return value;
 }
 
-//todo inline?
 export function setPCNext16() {
   setPC(mem[pc] | (mem[pc + 1] << 8));
 }

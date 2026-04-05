@@ -208,54 +208,69 @@ export function inlineFunctions(code: string): string {
     result = result.slice(0, defStart) + result.slice(end);
   }
 
-  // Replace all call sites
-  for (const { name, params, bodyExpr } of defs) {
-    const token = name + '(';
-    let out = '';
-    let pos = 0;
+  // Replace all call sites (loop for recursive inlining)
+  while (true) {
+    const prev = result;
 
-    while (pos < result.length) {
-      const ci = result.indexOf(token, pos);
-      if (ci === -1) { out += result.slice(pos); break; }
+    for (const { name, params, bodyExpr } of defs) {
+      const token = name + '(';
+      let out = '';
+      let pos = 0;
 
-      // Skip if part of a larger identifier or member access
-      if (ci > 0 && /[a-zA-Z0-9_$.]/.test(result[ci - 1])) {
-        out += result.slice(pos, ci + token.length);
-        pos = ci + token.length;
-        continue;
-      }
+      while (pos < result.length) {
+        const ci = result.indexOf(token, pos);
+        if (ci === -1) { out += result.slice(pos); break; }
 
-      // Extract arguments with balanced parens
-      let ai = ci + token.length;
-      let depth = 1;
-      while (ai < result.length && depth > 0) {
-        const ch = result[ai];
-        if (ch === '(') depth++;
-        else if (ch === ')') depth--;
-        else if (ch === '"' || ch === "'" || ch === '`') {
-          ai++;
-          while (ai < result.length && result[ai] !== ch) {
-            if (result[ai] === '\\') ai++;
+        // Skip if part of a larger identifier or member access
+        if (ci > 0 && /[a-zA-Z0-9_$.]/.test(result[ci - 1])) {
+          out += result.slice(pos, ci + token.length);
+          pos = ci + token.length;
+          continue;
+        }
+
+        // Extract arguments with balanced parens
+        let ai = ci + token.length;
+        let depth = 1;
+        while (ai < result.length && depth > 0) {
+          const ch = result[ai];
+          if (ch === '(') depth++;
+          else if (ch === ')') depth--;
+          else if (ch === '"' || ch === "'" || ch === '`') {
             ai++;
+            while (ai < result.length && result[ai] !== ch) {
+              if (result[ai] === '\\') ai++;
+              ai++;
+            }
+          }
+          ai++;
+        }
+
+        const argsStr = result.slice(ci + token.length, ai - 1);
+        const args = params.length <= 1
+          ? [argsStr]
+          : splitInlineArgs(argsStr);
+
+        // Substitute params → args in body (extract non-trivial args to temp vars)
+        const sub = safeSubstitute(params, args, bodyExpr);
+        let inlined = sub.preamble + sub.body;
+
+        // Wrap in braces if multi-statement body lands in arrow expression context
+        if (hasTopLevel(inlined, ';')) {
+          let k = ci - 1;
+          while (k >= 0 && /\s/.test(result[k])) k--;
+          if (k >= 1 && result[k - 1] === '=' && result[k] === '>') {
+            inlined = '{ ' + inlined + ' }';
           }
         }
-        ai++;
+
+        out += result.slice(pos, ci) + inlined;
+        pos = ai;
       }
 
-      const argsStr = result.slice(ci + token.length, ai - 1);
-      const args = params.length <= 1
-        ? [argsStr]
-        : splitInlineArgs(argsStr);
-
-      // Substitute params → args in body (extract non-trivial args to temp vars)
-      const sub = safeSubstitute(params, args, bodyExpr);
-      const inlined = sub.preamble + sub.body;
-
-      out += result.slice(pos, ci) + inlined;
-      pos = ai;
+      result = out;
     }
 
-    result = out;
+    if (result === prev) break;
   }
 
   // Handle call-site selective inlining (marker before a call, not a definition).

@@ -13,8 +13,7 @@ import { nop as _, next, next16, nop } from './utils';
 
 export function executeMisc() {
   refresh();
-  const op = next();
-  opsMisc[op]();
+  opsMisc[next()]();
 }
 
 const opsMisc = [

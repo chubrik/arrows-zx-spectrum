@@ -11,12 +11,11 @@ let xydVal = 0;
 export function executeBitXYd() {
   xydAddr = getHLXYd();
   xydVal = mem[xydAddr];
-  const op = next();
-  opsBitXY[op]();
+  opsBitXY[next()]();
 }
 
 function testBitXYd(bit: number) {
-  BIT_b_r(bit, xydVal, xydAddr >> 8);
+  BIT_b_r(xydVal & bit, xydAddr >> 8);
 }
 
 function setXYd(value: number) {

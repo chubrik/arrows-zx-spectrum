@@ -7,19 +7,16 @@ import { next } from './utils';
 /** Bit Instructions (CB) */
 export function executeBit() {
   refresh();
-  const op = next();
-  opsBit[op]();
+  opsBit[next()]();
 }
 
 function testBitReg(bit: number, reg: number) {
   const value = cpu[reg];
-  BIT_b_r(bit, value, value);
+  BIT_b_r(value & bit, value);
 }
 
 function testBit(bit: number) {
-  const addr = get16(HL);
-  const value = mem[addr];
-  BIT_b_r(bit, value, getWZh());
+  BIT_b_r(mem[get16(HL)] & bit, getWZh());
 }
 
 function resBitReg(bit: number, reg: number) {
