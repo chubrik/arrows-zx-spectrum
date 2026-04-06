@@ -1,4 +1,5 @@
 import { BIT0, BIT1, BIT2, BIT3, BIT4, xFF } from './constants';
+import { world_getSignal } from './world-refs';
 
 let keysX: number;
 let keysY: number;
@@ -15,11 +16,11 @@ export function readPort(low: number, high: number): number {
     if (high & (1 << i)) continue;
     const x = keysX + i;
     let y = keysY;
-    if (world.getSignal(x, y)) result &= ~BIT0;
-    if (world.getSignal(x, ++y)) result &= ~BIT1;
-    if (world.getSignal(x, ++y)) result &= ~BIT2;
-    if (world.getSignal(x, ++y)) result &= ~BIT3;
-    if (world.getSignal(x, ++y)) result &= ~BIT4;
+    if (world_getSignal(x, y)) result &= ~BIT0;
+    if (world_getSignal(x, ++y)) result &= ~BIT1;
+    if (world_getSignal(x, ++y)) result &= ~BIT2;
+    if (world_getSignal(x, ++y)) result &= ~BIT3;
+    if (world_getSignal(x, ++y)) result &= ~BIT4;
   }
 
   return result;

@@ -1,4 +1,5 @@
 import { memCtxA, memCtxX, memCtxY } from './mem-state.ts';
+import { world_getArrow, world_setArrow } from './world-refs.ts';
 
 export type ArrowCtx = { x: number; y: number; a: number[]; };
 
@@ -7,7 +8,7 @@ export function getDirect(x: number, y: number): number {
 
   for (let i = 0; i < 8; i++) {
     value <<= 1;
-    const arrow = world.getArrow(x + i, y);
+    const arrow = world_getArrow(x + i, y);
 
     if (arrow && arrow.type >= 16)
       value |= 1;
@@ -26,7 +27,7 @@ export function setMemDirect(addr: number, value: number) {
 export function setDirect(x: number, y: number, arrowTypes: number[], value: number) {
   for (let i = 7; i >= 0; i--) {
     const arrowType = arrowTypes[value & 1];
-    world.setArrow(x + i, y, arrowType, 1);
+    world_setArrow(x + i, y, arrowType, 1);
     value >>= 1;
   }
 }

@@ -1,6 +1,7 @@
 import { setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR } from './constants.ts';
 import { dirtyBitmap, mem } from './mem-state.ts';
+import { world_copyRegion, world_setSignal } from './world-refs.ts';
 
 const posXCache: number[] = [];
 const posYCache: number[] = [];
@@ -100,11 +101,11 @@ function setPixels(addr: number, value: number, attr: number) {
     const palY = palYCache[index];
     const sig0 = sig0Cache[index];
     const sig1 = sig1Cache[index];
-    world.copyRegion(palX, palY, palX + 1, palY + 1, pixelX, posY);
-    world.setSignal(pixelX, posY, sig0);
-    world.setSignal(pixelX + 1, posY, sig1);
-    world.setSignal(pixelX + 1, posY + 1, sig0);
-    world.setSignal(pixelX, posY + 1, sig1);
+    world_copyRegion(palX, palY, palX + 1, palY + 1, pixelX, posY);
+    world_setSignal(pixelX, posY, sig0);
+    world_setSignal(pixelX + 1, posY, sig1);
+    world_setSignal(pixelX + 1, posY + 1, sig0);
+    world_setSignal(pixelX, posY + 1, sig1);
     value >>= 1;
   }
 }
