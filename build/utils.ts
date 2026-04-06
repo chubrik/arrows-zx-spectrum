@@ -254,6 +254,13 @@ export function inlineFunctions(code: string): string {
         const sub = safeSubstitute(params, args, bodyExpr);
         let inlined = sub.preamble + sub.body;
 
+        // Wrap expression bodies in parens to preserve operator precedence at the call site.
+        // The substituted body replaces `name(args)` (a single expression token), so without
+        // parens, e.g. body `c | b << 8` inside `(getBC() - 1)` parses as `c | (b << 7)`.
+        if (!sub.preamble && isExpressionBody(bodyExpr)) {
+          inlined = '(' + sub.body + ')';
+        }
+
         // Wrap in braces if multi-statement body lands in arrow expression context
         if (hasTopLevel(inlined, ';')) {
           let k = ci - 1;
@@ -655,6 +662,13 @@ function fmtArrowBody(body: string): string {
   if (hasTopLevel(body, ';')) return `{${body}}`;
   // Single expression — wrap in parens if has top-level comma, else bare
   return hasTopLevel(body, ',') ? `(${body})` : body;
+}
+
+/** True if body is a single expression (safe to wrap in parens), not a statement. */
+function isExpressionBody(body: string): boolean {
+  if (!body || body[0] === '{') return false;
+  if (/^(?:return|if|for|while|do|switch|try|throw|let |const |var |break|continue)\b/.test(body)) return false;
+  return !hasTopLevel(body, ';');
 }
 
 function hasTopLevel(code: string, target: string): boolean {

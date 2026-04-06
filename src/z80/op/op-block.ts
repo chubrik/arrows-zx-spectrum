@@ -2,20 +2,20 @@ import { xFF, xFFFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
 import { readPort, writePort } from '../../hw/ports';
 import { calcFP, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { A, B, BC, C, cpu, DE, get16, HL, HLXY, pc, set16, setPC } from '../registers';
+import { a, b, c, getBC, getDE, getHL, getHLXY, pc, setB, setBC, setDE, setHL, setHLXY, setPC } from '../registers';
 
 /** LDI | LDD | LDIR | LDDR */
 export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const de = get16(DE);
-  const hlxy = get16(HLXY);
-  const count = (get16(BC) - 1) & xFFFF;
+  const de = getDE();
+  const hlxy = getHLXY();
+  const count = (getBC() - 1) & xFFFF;
   const value = mem[hlxy];
-  set16(BC, count);
-  set16(DE, (de + inc) & xFFFF);
-  set16(HLXY, (hlxy + inc) & xFFFF);
+  setBC(count);
+  setDE((de + inc) & xFFFF);
+  setHLXY((hlxy + inc) & xFFFF);
   write(de, value);
 
-  const n = (cpu[A] + value) & xFF;
+  const n = (a + value) & xFF;
   setF5((n & 0x02) << 4);
   setF3(n & F3);
   setFH(0);
@@ -28,12 +28,11 @@ export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
 
 /** CPI | CPD | CPIR | CPDR */
 export function CP_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const a = cpu[A];
-  const hlxy = get16(HLXY);
-  const count = (get16(BC) - 1) & xFFFF;
+  const hlxy = getHLXY();
+  const count = (getBC() - 1) & xFFFF;
   const value = mem[hlxy];
-  set16(BC, count);
-  set16(HLXY, (hlxy + inc) & xFFFF);
+  setBC(count);
+  setHLXY((hlxy + inc) & xFFFF);
 
   const diff = (a - value) & xFF;
   const fh = (a ^ value ^ diff) & FH;
@@ -52,12 +51,11 @@ export function CP_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
 
 /** INI | IND | INIR | INDR */
 export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const c = cpu[C];
-  const hl = get16(HL);
-  const count = (cpu[B] - 1) & xFF;
+  const hl = getHL();
+  const count = (b - 1) & xFF;
   const value = readPort(c, count);
-  cpu[B] = count;
-  set16(HL, (hl + inc) & xFFFF);
+  setB(count);
+  setHL((hl + inc) & xFFFF);
   write(hl, value);
 
   const k = value + ((c + inc) & xFF);
@@ -77,13 +75,13 @@ export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
 
 /** OUTI | OUTD | OTIR | OTDR */
 export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const hl = get16(HL);
-  const count = (cpu[B] - 1) & xFF;
+  const hl = getHL();
+  const count = (b - 1) & xFF;
   const newHL = (hl + inc) & xFFFF;
   const value = mem[hl];
-  cpu[B] = count;
-  set16(HL, newHL);
-  writePort(cpu[C], count, value);
+  setB(count);
+  setHL(newHL);
+  writePort(c, count, value);
 
   const k = value + (newHL & xFF);
   const kOverflow = k > 255;

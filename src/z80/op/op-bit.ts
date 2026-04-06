@@ -1,7 +1,7 @@
 import { BIT7, xFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
 import { calcFP, calcFSZ53, F3, F5, FC, fc, FH, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { A, cpu, get16, HL } from '../registers';
+import { a, getHL, setA } from '../registers';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
 /*! @__INLINE__ */
@@ -17,44 +17,41 @@ export function BIT_b_r(isSet: number, f53Src: number) {
 
 /** RLCA */
 export function RLCA() {
-  const a = cpu[A];
-  const fc = (a >> 7) & FC;
-  const result = ((a << 1) | fc) & xFF;
-  cpu[A] = result;
-  setFRotA(result, fc);
+  const mewFc = (a >> 7) & FC;
+  const result = ((a << 1) | mewFc) & xFF;
+  setA(result);
+  setFRotA(result, mewFc);
 }
 
 /** RLC r | RLC (HL) | RLC (IX+d) | RLC (IY+d) */
 export function RLC_val(value: number): number {
-  const fc = (value >> 7) & FC;
-  const result = ((value << 1) | fc) & xFF;
-  setFShift(result, fc);
+  const newFc = (value >> 7) & FC;
+  const result = ((value << 1) | newFc) & xFF;
+  setFShift(result, newFc);
   return result;
 }
 
 /** RRCA */
 export function RRCA() {
-  const a = cpu[A];
-  const fc = a & FC;
-  const result = ((a >> 1) | (fc << 7)) & xFF;
-  cpu[A] = result;
-  setFRotA(result, fc);
+  const newFc = a & FC;
+  const result = ((a >> 1) | (newFc << 7)) & xFF;
+  setA(result);
+  setFRotA(result, newFc);
 }
 
 /** RRC r | RRC (HL) | RRC (IX+d) | RRC (IY+d) */
 export function RRC_val(value: number): number {
-  const fc = value & FC;
-  const result = ((value >> 1) | (fc << 7)) & xFF;
-  setFShift(result, fc);
+  const newFc = value & FC;
+  const result = ((value >> 1) | (newFc << 7)) & xFF;
+  setFShift(result, newFc);
   return result;
 }
 
 /** RLA */
 export function RLA() {
-  const a = cpu[A];
   const newFc = (a >> 7) & FC;
   const result = ((a << 1) | fc) & xFF;
-  cpu[A] = result;
+  setA(result);
   setFRotA(result, newFc);
 }
 
@@ -68,10 +65,9 @@ export function RL_val(value: number): number {
 
 /** RRA */
 export function RRA() {
-  const a = cpu[A];
   const newFc = a & FC;
   const result = ((a >> 1) | (fc << 7)) & xFF;
-  cpu[A] = result;
+  setA(result);
   setFRotA(result, newFc);
 }
 
@@ -85,12 +81,11 @@ export function RR_val(value: number): number {
 
 /** RLD */
 export function RLD() {
-  const a = cpu[A];
-  const hl = get16(HL);
+  const hl = getHL();
   const value = mem[hl];
   const resultA = (a & 0xF0) | (value >> 4);
   const resultMem = ((value << 4) | (a & 0x0F)) & xFF;
-  cpu[A] = resultA;
+  setA(resultA);
   write(hl, resultMem);
 
   calcFSZ53(resultA);
@@ -101,12 +96,11 @@ export function RLD() {
 
 /** RRD */
 export function RRD() {
-  const a = cpu[A];
-  const hl = get16(HL);
+  const hl = getHL();
   const value = mem[hl];
   const resultA = (a & 0xF0) | (value & 0x0F);
   const resultMem = ((a << 4) | (value >> 4)) & xFF;
-  cpu[A] = resultA;
+  setA(resultA);
   write(hl, resultMem);
 
   calcFSZ53(resultA);

@@ -2,7 +2,6 @@ import { xFF } from '../hw/constants.ts';
 import { check } from './check.ts';
 
 const bits = 20;
-const mask = (1 << bits) - 1;
 const cpOff = 0xA0;
 const toCP = (v: number): number => { v += cpOff; return v < 0xD800 ? v : v + 0x800; };
 const toVal = (cp: number): number => (cp < 0xD800 ? cp : cp - 0x800) - cpOff;
@@ -45,6 +44,7 @@ export function unicodeToAscii(str: string): string {
 //
 /** Efficiency 94.3% */
 export function bytesToUnicode(buf: Buffer): string {
+  const mask = (1 << bits) - 1;
   const hdr = Buffer.alloc(2);
   hdr.writeUInt16BE(buf.length);
   const data = Buffer.concat([hdr, buf]);

@@ -1,6 +1,6 @@
 import { xFFFF } from '../hw/constants';
 import { mem } from '../hw/mem-state';
-import { cpu, HL, HLXY, HXY, LXY, pc, setPC } from './registers';
+import { cpu, HXY, L, LXY, pc, setPC } from './registers';
 
 export function nop() { };
 
@@ -24,7 +24,7 @@ export function setPCNext16() {
 export function getHLXYd() {
   let hlxyd = cpu[LXY] | (cpu[HXY] << 8);
 
-  if (HLXY !== HL) {
+  if (LXY !== L) {
     let d = next();
     if (d >= 128) d -= 256; // -128...+127
     hlxyd = (hlxyd + d) & xFFFF;

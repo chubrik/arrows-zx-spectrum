@@ -1,14 +1,14 @@
 import { xFF } from '../hw/constants';
-import { mem, write88 } from '../hw/mem-state';
+import { mem, write16 } from '../hw/mem-state';
 import { writePort } from '../hw/ports';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
 import { RLD, RRD } from './op/op-bit';
 import { CP_block, IN_block, LD_block, OUT_block } from './op/op-block';
-import { IN_c, ld_A_IR } from './op/op-etc';
+import { in_port, ld_A_IR } from './op/op-etc';
 import { ADC_HL, SBC_HL } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
 import { RET } from './op/op-stack';
-import { A, B, BC, C, cpu, D, DE, E, get16, H, HL, I, L, packR, refresh, set88, setSP, sp, unpackR } from './registers';
+import { a, b, c, cpu, d, e, getBC, getDE, getHL, H, I, L, packR, refresh, setA, setB, setC, setD, setE, setSP, sp, unpackR } from './registers';
 import { nop as _, next, next16, nop } from './utils';
 
 export function executeMisc() {
@@ -22,67 +22,67 @@ const opsMisc = [
   /* ED20 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
   /* ED30 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
 
-  /* ED40 IN B,(C)     */ () => IN_c(B),
-  /* ED41 OUT (C),B    */ () => writePort(cpu[C], cpu[B], cpu[B]),
-  /* ED42 SBC HL,BC    */ () => SBC_HL(get16(BC)),
-  /* ED43 LD (nn),BC   */ () => write88(next16(), cpu[C], cpu[B]),
+  /* ED40 IN B,(C)     */ () => setB(in_port()),
+  /* ED41 OUT (C),B    */ () => writePort(c, b, b),
+  /* ED42 SBC HL,BC    */ () => SBC_HL(getBC()),
+  /* ED43 LD (nn),BC   */ () => write16(next16(), c, b),
   /* ED44 NEG          */ NEG,
   /* ED45 RETN         */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED46 IM 0         */ () => { setIM1(0); setIM2(0); },
-  /* ED47 LD I,A       */ () => cpu[I] = cpu[A],
-  /* ED48 IN C,(C)     */ () => IN_c(C),
-  /* ED49 OUT (C),C    */ () => writePort(cpu[C], cpu[B], cpu[C]),
-  /* ED4A ADC HL,BC    */ () => ADC_HL(get16(BC)),
-  /* ED4B LD BC,(nn)   */ () => { const addr = next16(); set88(BC, mem[addr], mem[addr + 1]); },
+  /* ED47 LD I,A       */ () => cpu[I] = a,
+  /* ED48 IN C,(C)     */ () => setC(in_port()),
+  /* ED49 OUT (C),C    */ () => writePort(c, b, c),
+  /* ED4A ADC HL,BC    */ () => ADC_HL(getBC()),
+  /* ED4B LD BC,(nn)   */ () => { const addr = next16(); setC(mem[addr]); setB(mem[addr + 1]); },
   /* ED4C NEG        * */ NEG,
   /* ED4D RETI         */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED4E IM 0       * */ () => { setIM1(0); setIM2(0); },
-  /* ED4F LD R,A       */ () => unpackR(cpu[A]),
+  /* ED4F LD R,A       */ () => unpackR(a),
 
-  /* ED50 IN D,(C)     */ () => IN_c(D),
-  /* ED51 OUT (C),D    */ () => writePort(cpu[C], cpu[B], cpu[D]),
-  /* ED52 SBC HL,DE    */ () => SBC_HL(get16(DE)),
-  /* ED53 LD (nn),DE   */ () => write88(next16(), cpu[E], cpu[D]),
+  /* ED50 IN D,(C)     */ () => setD(in_port()),
+  /* ED51 OUT (C),D    */ () => writePort(c, b, d),
+  /* ED52 SBC HL,DE    */ () => SBC_HL(getDE()),
+  /* ED53 LD (nn),DE   */ () => write16(next16(), e, d),
   /* ED54 NEG        * */ NEG,
   /* ED55 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED56 IM 1         */ () => { setIM1(IM1); setIM2(0); },
   /* ED57 LD A,I       */ () => ld_A_IR(cpu[I]),
-  /* ED58 IN E,(C)     */ () => IN_c(E),
-  /* ED59 OUT (C),E    */ () => writePort(cpu[C], cpu[B], cpu[E]),
-  /* ED5A ADC HL,DE    */ () => ADC_HL(get16(DE)),
-  /* ED5B LD DE,(nn)   */ () => { const addr = next16(); set88(DE, mem[addr], mem[addr + 1]); },
+  /* ED58 IN E,(C)     */ () => setE(in_port()),
+  /* ED59 OUT (C),E    */ () => writePort(c, b, e),
+  /* ED5A ADC HL,DE    */ () => ADC_HL(getDE()),
+  /* ED5B LD DE,(nn)   */ () => { const addr = next16(); setE(mem[addr]); setD(mem[addr + 1]); },
   /* ED5C NEG        * */ NEG,
   /* ED5D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED5E IM 2         */ () => { setIM1(0); setIM2(IM2); },
   /* ED5F LD A,R       */ () => ld_A_IR(packR()),
 
-  /* ED60 IN H,(C)     */ () => IN_c(H),
-  /* ED61 OUT (C),H    */ () => writePort(cpu[C], cpu[B], cpu[H]),
-  /* ED62 SBC HL,HL    */ () => SBC_HL(get16(HL)),
-  /* ED63 LD (nn),HL * */ () => write88(next16(), cpu[L], cpu[H]),
+  /* ED60 IN H,(C)     */ () => cpu[H] = in_port(),
+  /* ED61 OUT (C),H    */ () => writePort(c, b, cpu[H]),
+  /* ED62 SBC HL,HL    */ () => SBC_HL(getHL()),
+  /* ED63 LD (nn),HL * */ () => write16(next16(), cpu[L], cpu[H]),
   /* ED64 NEG        * */ NEG,
   /* ED65 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED66 IM 0       * */ () => { setIM1(0); setIM2(0); },
   /* ED67 RRD          */ RRD,
-  /* ED68 IN L,(C)     */ () => IN_c(L),
-  /* ED69 OUT (C),L    */ () => writePort(cpu[C], cpu[B], cpu[L]),
-  /* ED6A ADC HL,HL    */ () => ADC_HL(get16(HL)),
-  /* ED6B LD HL,(nn) * */ () => { const addr = next16(); set88(HL, mem[addr], mem[addr + 1]); },
+  /* ED68 IN L,(C)     */ () => cpu[L] = in_port(),
+  /* ED69 OUT (C),L    */ () => writePort(c, b, cpu[L]),
+  /* ED6A ADC HL,HL    */ () => ADC_HL(getHL()),
+  /* ED6B LD HL,(nn) * */ () => { const addr = next16(); cpu[L] = mem[addr]; cpu[H] = mem[addr + 1]; },
   /* ED6C NEG        * */ NEG,
   /* ED6D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED6E IM 0       * */ () => { setIM1(0); setIM2(0); },
   /* ED6F RLD          */ RLD,
 
-  /* ED70 IN (C)     * */ () => IN_c(),
-  /* ED71 OUT (C),0  * */ () => writePort(cpu[C], cpu[B], 0), // NMOS: 0, CMOS: 255 (undocumented)
+  /* ED70 IN (C)     * */ () => { in_port(); },
+  /* ED71 OUT (C),0  * */ () => writePort(c, b, 0), // NMOS: 0, CMOS: 255 (undocumented)
   /* ED72 SBC HL,SP    */ () => SBC_HL(sp),
-  /* ED73 LD (nn),SP   */ () => write88(next16(), sp & xFF, sp >> 8),
+  /* ED73 LD (nn),SP   */ () => write16(next16(), sp & xFF, sp >> 8),
   /* ED74 NEG        * */ NEG,
   /* ED75 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED76 IM 1       * */ () => { setIM1(IM1); setIM2(0); },
   /* ED77 ---          */ nop,
-  /* ED78 IN A,(C)     */ () => IN_c(A),
-  /* ED79 OUT (C),A    */ () => writePort(cpu[C], cpu[B], cpu[A]),
+  /* ED78 IN A,(C)     */ () => setA(in_port()),
+  /* ED79 OUT (C),A    */ () => writePort(c, b, a),
   /* ED7A ADC HL,SP    */ () => ADC_HL(sp),
   /* ED7B LD SP,(nn)   */ () => { const addr = next16(); setSP(mem[addr] | (mem[addr + 1] << 8)); },
   /* ED7C NEG        * */ NEG,

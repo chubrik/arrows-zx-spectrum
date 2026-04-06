@@ -32,6 +32,32 @@ export const SYS = 22;
 export const SP = 23;
 export const PC = 24;
 
+export let a = 0;
+export let b = 0;
+export let c = 0;
+export let d = 0;
+export let e = 0;
+export let aa = 0;
+export let ba = 0;
+export let ca = 0;
+export let da = 0;
+export let ea = 0;
+/*! @__INLINE__ */ export function setA(value: number) { a = value; }
+/*! @__INLINE__ */ export function setB(value: number) { b = value; }
+/*! @__INLINE__ */ export function setC(value: number) { c = value; }
+/*! @__INLINE__ */ export function setD(value: number) { d = value; }
+/*! @__INLINE__ */ export function setE(value: number) { e = value; }
+/*! @__INLINE__ */ export function setAa(value: number) { aa = value; }
+/*! @__INLINE__ */ export function setBa(value: number) { ba = value; }
+/*! @__INLINE__ */ export function setCa(value: number) { ca = value; }
+/*! @__INLINE__ */ export function setDa(value: number) { da = value; }
+/*! @__INLINE__ */ export function setEa(value: number) { ea = value; }
+
+/*! @__INLINE__ */ export function getBC() { return c | (b << 8); }
+/*! @__INLINE__ */ export function getDE() { return e | (d << 8); }
+/*! @__INLINE__ */ export function setBC(value: number) { c = value & xFF; b = value >> 8; }
+/*! @__INLINE__ */ export function setDE(value: number) { e = value & xFF; d = value >> 8; }
+
 export let sp = 0;
 export let pc = 0;
 /*! @__INLINE__ */ export function setSP(value: number) { sp = value; }
@@ -41,12 +67,14 @@ export let pc = 0;
 
 export let HXY = H; // H / IXh / IYh
 export let LXY = L; // L / IXl / IYl
+/*! @__INLINE__ */ export function setHLMode() { LXY = L; HXY = H; }
+/*! @__INLINE__ */ export function setIXMode() { LXY = IXl; HXY = IXh; }
+/*! @__INLINE__ */ export function setIYMode() { LXY = IYl; HXY = IYh; }
 
-/*! @__INLINE__ */
-export function setHLXY(hlxy: number) {
-  LXY = hlxy;
-  HXY = hlxy + 1;
-}
+/*! @__INLINE__ */ export function getHL() { return cpu[L] | (cpu[H] << 8); }
+/*! @__INLINE__ */ export function setHL(value: number) { cpu[L] = value & xFF; cpu[H] = value >> 8; }
+/*! @__INLINE__ */ export function getHLXY() { return cpu[LXY] | (cpu[HXY] << 8); }
+/*! @__INLINE__ */ export function setHLXY(value: number) { cpu[LXY] = value & xFF; cpu[HXY] = value >> 8; }
 
 export let r7 = 0;
 export let ri = 0;
@@ -64,23 +92,6 @@ export let eiDelay: 0 | 1 = 0;
 /*! @__INLINE__ */ export function setEIDelay(value: 0 | 1) { eiDelay = value; }
 
 //todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
-let wzh = 0;
+export let wzh = 0;
 let wzl = 0;
-export function getWZh(): number { return wzh; }
 export function setWZ(value: number) { wzl = value & xFF; wzh = value >> 8; }
-
-export function get16(reg: number): number {
-  return cpu[reg] | (cpu[reg + 1] << 8);
-}
-
-export function set16(reg: number, value: number) {
-  cpu[reg] = value & xFF;
-  cpu[reg + 1] = value >> 8;
-}
-
-export function set88(reg: number, valueLow: number, valueHigh: number) {
-  cpu[reg] = valueLow;
-  cpu[reg + 1] = valueHigh;
-}
-
-export { F as AF, C as BC, E as DE, L as HL, LXY as HLXY, IXl as IX, IYl as IY };

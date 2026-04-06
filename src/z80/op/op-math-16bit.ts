@@ -1,13 +1,13 @@
 import { xFFFF } from '../../hw/constants';
 import { F3, F5, FC, fc, FH, FN, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { get16, HL, HLXY, set16 } from '../registers';
+import { getHL, getHLXY, setHL, setHLXY } from '../registers';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
 export function ADD_HL(rr: number) {
-  const hlxy = get16(HLXY);
+  const hlxy = getHLXY();
   const sum = hlxy + rr;
   const result = sum & xFFFF;
-  set16(HLXY, result);
+  setHLXY(result);
 
   setF5((result >> 8) & F5);
   setF3((result >> 8) & F3);
@@ -18,10 +18,10 @@ export function ADD_HL(rr: number) {
 
 /** ADC HL,ss */
 export function ADC_HL(rr: number) {
-  const hl = get16(HL);
+  const hl = getHL();
   const sum = hl + rr + fc;
   const result = sum & xFFFF;
-  set16(HL, result);
+  setHL(result);
 
   setFS((result >> 8) & FS);
   setFZ(result ? 0 : FZ);
@@ -35,10 +35,10 @@ export function ADC_HL(rr: number) {
 
 /** SBC HL,ss */
 export function SBC_HL(rr: number) {
-  const hl = get16(HL);
+  const hl = getHL();
   const diff = hl - rr - fc;
   const result = diff & xFFFF;
-  set16(HL, result);
+  setHL(result);
 
   setFS((result >> 8) & FS);
   setFZ(result ? 0 : FZ);
