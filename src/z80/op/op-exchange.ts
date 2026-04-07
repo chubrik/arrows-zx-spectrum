@@ -1,15 +1,15 @@
 import { mem, write } from '../../hw/mem-state';
-import { packF, unpackF } from '../flags';
-import { a, aa, b, ba, c, ca, cpu, d, da, e, ea, Fa, H, Ha, HXY, L, La, LXY, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, sp } from '../registers';
+import { getF, setF } from '../flags';
+import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getHXY, getL, getLXY, ha, la, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHa, setHXY, setL, setLa, setLXY, sp } from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
   const a_ = a;
-  const f_ = packF();
+  const f_ = getF();
   setA(aa);
-  unpackF(cpu[Fa]);
+  setF(fa);
   setAa(a_);
-  cpu[Fa] = f_;
+  setFa(f_);
 }
 
 /** EXX */
@@ -27,30 +27,30 @@ export function EXX() {
   setDa(d_);
   setEa(e_);
 
-  const h_ = cpu[H];
-  const l_ = cpu[L];
-  cpu[H] = cpu[Ha];
-  cpu[L] = cpu[La];
-  cpu[Ha] = h_;
-  cpu[La] = l_;
+  const h_ = getH();
+  const l_ = getL();
+  setH(ha);
+  setL(la);
+  setHa(h_);
+  setLa(l_);
 }
 
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
 export function EX_sp_HL() {
   const spl = mem[sp];
   const sph = mem[sp + 1];
-  write(sp, cpu[LXY]);
-  write(sp + 1, cpu[HXY]);
-  cpu[LXY] = spl;
-  cpu[HXY] = sph;
+  write(sp, getLXY());
+  write(sp + 1, getHXY());
+  setLXY(spl);
+  setHXY(sph);
 }
 
 /** EX DE,HL (игнорирует DD/FD префикс — всегда D/E/H/L, не HXY/LXY) */
 export function EX_DE_HL() {
   const d_ = d;
   const e_ = e;
-  setD(cpu[H]);
-  setE(cpu[L]);
-  cpu[H] = d_;
-  cpu[L] = e_;
+  setD(getH());
+  setE(getL());
+  setH(d_);
+  setL(e_);
 }

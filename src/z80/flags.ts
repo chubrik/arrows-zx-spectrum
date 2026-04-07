@@ -35,32 +35,32 @@ export let im2 = 0, im1 = 0, iff2 = 0, iff1 = 0, hlt = 0, int = 0;
 /*! @__INLINE__ */ export function setHLT(value: number) { hlt = value; }
 /*! @__INLINE__ */ export function setINT(value: number) { int = value; }
 
-export function packF(): number {
+export function getF(): number {
   return fs | fz | f5 | fh | f3 | fp | fn | fc;
 }
 
-export function unpackF(byte: number) {
-  fs = byte & FS;
-  fz = byte & FZ;
-  f5 = byte & F5;
-  fh = byte & FH;
-  f3 = byte & F3;
-  fp = byte & FP;
-  fn = byte & FN;
-  fc = byte & FC;
+export function setF(value: number) {
+  fs = value & FS;
+  fz = value & FZ;
+  f5 = value & F5;
+  fh = value & FH;
+  f3 = value & F3;
+  fp = value & FP;
+  fn = value & FN;
+  fc = value & FC;
 }
 
-export function packSYS(): number {
+export function getSYS(): number {
   return im2 | im1 | iff2 | iff1 | hlt | int;
 }
 
-export function unpackSYS(byte: number) {
-  im2 = byte & IM2;
-  im1 = byte & IM1;
-  iff2 = byte & IFF2;
-  iff1 = byte & IFF1;
-  hlt = byte & HLT;
-  int = byte & INT;
+export function setSYS(value: number) {
+  im2 = value & IM2;
+  im1 = value & IM1;
+  iff2 = value & IFF2;
+  iff1 = value & IFF1;
+  hlt = value & HLT;
+  int = value & INT;
 }
 
 /** Set S, Z, 5, 3 flags from 8-bit result */

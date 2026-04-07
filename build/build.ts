@@ -170,43 +170,16 @@ async function buildSnapshotCpu(gameName: string, snap: Z80Snapshot) {
     (snap.IFF2 ? IFF2 : 0) |
     (snap.IFF1 ? IFF1 : 0);
 
-  const reg = (r: string, v: string) =>
-    `setDirect(cpuCtxX[${r}], cpuCtxY[${r}], cpuCtxA[${r}], ${v})`;
-
-  const reg16 = (r: string, hi: string, lo: string) =>
-    `${reg(r, hi)}; setDirect(cpuCtxX[${r}], cpuCtxY[${r}] + 1, cpuCtxA[${r}], ${lo})`;
-
-  const body = [
-    reg('A', `${snap.A}`),
-    reg('F', `${snap.F}`),
-    reg('B', `${snap.B}`),
-    reg('C', `${snap.C}`),
-    reg('D', `${snap.D}`),
-    reg('E', `${snap.E}`),
-    reg('H', `${snap.H}`),
-    reg('L', `${snap.L}`),
-    reg('Aa', `${snap.Aa}`),
-    reg('Fa', `${snap.Fa}`),
-    reg('Ba', `${snap.Ba}`),
-    reg('Ca', `${snap.Ca}`),
-    reg('Da', `${snap.Da}`),
-    reg('Ea', `${snap.Ea}`),
-    reg('Ha', `${snap.Ha}`),
-    reg('La', `${snap.La}`),
-    reg('IXh', `${snap.IX >> 8}`),
-    reg('IXl', `${snap.IX & xFF}`),
-    reg('IYh', `${snap.IY >> 8}`),
-    reg('IYl', `${snap.IY & xFF}`),
-    reg16('SP', `${snap.SP >> 8}`, `${snap.SP & xFF}`),
-    reg16('PC', `${snap.PC >> 8}`, `${snap.PC & xFF}`),
-    reg('I', `${snap.I}`),
-    reg('R', `${snap.R}`),
-    reg('SYS', `${sys}`),
-  ].join('; ');
+  const values = [
+    snap.A, snap.F, snap.B, snap.C, snap.D, snap.E, snap.H, snap.L,
+    snap.IX >> 8, snap.IX & xFF, snap.SP >> 8, snap.SP & xFF, snap.PC >> 8, snap.PC & xFF,
+    snap.Aa, snap.Fa, snap.Ba, snap.Ca, snap.Da, snap.Ea, snap.Ha, snap.La,
+    snap.IY >> 8, snap.IY & xFF, snap.I, snap.R, sys
+  ];
 
   const code = srcTsCode.replace(
-    'function restoreCpu() { }',
-    `function restoreCpu() { ${body}; }`
+    'restoreCpu([]);',
+    `restoreCpu([${values}]);`
   );
 
   const built = await buildTs(code);

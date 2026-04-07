@@ -2,7 +2,7 @@ import { xFF, xFFFF } from '../hw/constants';
 import { mem } from '../hw/mem-state';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { RST_p } from './op/op-stack';
-import { cpu, I, pc, refresh, setPC } from './registers';
+import { i, pc, refresh, setPC } from './registers';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = xFF;
@@ -19,7 +19,7 @@ export function interrupt() {
   refresh();
 
   if (im2) {
-    const vector = IM2_BUS_VALUE | (cpu[I] << 8);
+    const vector = IM2_BUS_VALUE | (i << 8);
     RST_p(mem[vector] | (mem[vector + 1] << 8));
   }
   else {

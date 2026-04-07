@@ -46,6 +46,7 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
   memCtxA[addr] = ctx.a;
 }
 
+//todo forEach (anywhere)
 export function deployMemoryBlock(beginAddr: number, data: number[]) {
   for (let i = 0; i < data.length; i++)
     setMemDirect(beginAddr + i, data[i]);
