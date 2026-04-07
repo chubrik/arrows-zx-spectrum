@@ -18,10 +18,6 @@ function testBitXYd(bit: number) {
   BIT_b_r(xydVal & bit, xydAddr >> 8);
 }
 
-function setXYd(value: number) {
-  write(xydAddr, value);
-}
-
 function setXYd_undoc(value: number): number {
   write(xydAddr, value);
   return value;
@@ -34,7 +30,7 @@ const opsBitXY: (() => void)[] = [
   /* 03 RLC (XY+d),E   * */ () => setE(setXYd_undoc(RLC_val(xydVal))),
   /* 04 RLC (XY+d),H   * */ () => cpu[H] = setXYd_undoc(RLC_val(xydVal)),
   /* 05 RLC (XY+d),L   * */ () => cpu[L] = setXYd_undoc(RLC_val(xydVal)),
-  /* 06 RLC (XY+d)       */ () => setXYd(RLC_val(xydVal)),
+  /* 06 RLC (XY+d)       */ () => write(xydAddr, RLC_val(xydVal)),
   /* 07 RLC (XY+d),A   * */ () => setA(setXYd_undoc(RLC_val(xydVal))),
   /* 08 RRC (XY+d),B   * */ () => setB(setXYd_undoc(RRC_val(xydVal))),
   /* 09 RRC (XY+d),C   * */ () => setC(setXYd_undoc(RRC_val(xydVal))),
@@ -42,7 +38,7 @@ const opsBitXY: (() => void)[] = [
   /* 0B RRC (XY+d),E   * */ () => setE(setXYd_undoc(RRC_val(xydVal))),
   /* 0C RRC (XY+d),H   * */ () => cpu[H] = setXYd_undoc(RRC_val(xydVal)),
   /* 0D RRC (XY+d),L   * */ () => cpu[L] = setXYd_undoc(RRC_val(xydVal)),
-  /* 0E RRC (XY+d)       */ () => setXYd(RRC_val(xydVal)),
+  /* 0E RRC (XY+d)       */ () => write(xydAddr, RRC_val(xydVal)),
   /* 0F RRC (XY+d),A   * */ () => setA(setXYd_undoc(RRC_val(xydVal))),
 
   /* 10 RL (XY+d),B    * */ () => setB(setXYd_undoc(RL_val(xydVal))),
@@ -51,7 +47,7 @@ const opsBitXY: (() => void)[] = [
   /* 13 RL (XY+d),E    * */ () => setE(setXYd_undoc(RL_val(xydVal))),
   /* 14 RL (XY+d),H    * */ () => cpu[H] = setXYd_undoc(RL_val(xydVal)),
   /* 15 RL (XY+d),L    * */ () => cpu[L] = setXYd_undoc(RL_val(xydVal)),
-  /* 16 RL (XY+d)        */ () => setXYd(RL_val(xydVal)),
+  /* 16 RL (XY+d)        */ () => write(xydAddr, RL_val(xydVal)),
   /* 17 RL (XY+d),A    * */ () => setA(setXYd_undoc(RL_val(xydVal))),
   /* 18 RR (XY+d),B    * */ () => setB(setXYd_undoc(RR_val(xydVal))),
   /* 19 RR (XY+d),C    * */ () => setC(setXYd_undoc(RR_val(xydVal))),
@@ -59,7 +55,7 @@ const opsBitXY: (() => void)[] = [
   /* 1B RR (XY+d),E    * */ () => setE(setXYd_undoc(RR_val(xydVal))),
   /* 1C RR (XY+d),H    * */ () => cpu[H] = setXYd_undoc(RR_val(xydVal)),
   /* 1D RR (XY+d),L    * */ () => cpu[L] = setXYd_undoc(RR_val(xydVal)),
-  /* 1E RR (XY+d)        */ () => setXYd(RR_val(xydVal)),
+  /* 1E RR (XY+d)        */ () => write(xydAddr, RR_val(xydVal)),
   /* 1F RR (XY+d),A    * */ () => setA(setXYd_undoc(RR_val(xydVal))),
 
   /* 20 SLA (XY+d),B   * */ () => setB(setXYd_undoc(SLA_val(xydVal))),
@@ -68,7 +64,7 @@ const opsBitXY: (() => void)[] = [
   /* 23 SLA (XY+d),E   * */ () => setE(setXYd_undoc(SLA_val(xydVal))),
   /* 24 SLA (XY+d),H   * */ () => cpu[H] = setXYd_undoc(SLA_val(xydVal)),
   /* 25 SLA (XY+d),L   * */ () => cpu[L] = setXYd_undoc(SLA_val(xydVal)),
-  /* 26 SLA (XY+d)       */ () => setXYd(SLA_val(xydVal)),
+  /* 26 SLA (XY+d)       */ () => write(xydAddr, SLA_val(xydVal)),
   /* 27 SLA (XY+d),A   * */ () => setA(setXYd_undoc(SLA_val(xydVal))),
   /* 28 SRA (XY+d),B   * */ () => setB(setXYd_undoc(SRA_val(xydVal))),
   /* 29 SRA (XY+d),C   * */ () => setC(setXYd_undoc(SRA_val(xydVal))),
@@ -76,7 +72,7 @@ const opsBitXY: (() => void)[] = [
   /* 2B SRA (XY+d),E   * */ () => setE(setXYd_undoc(SRA_val(xydVal))),
   /* 2C SRA (XY+d),H   * */ () => cpu[H] = setXYd_undoc(SRA_val(xydVal)),
   /* 2D SRA (XY+d),L   * */ () => cpu[L] = setXYd_undoc(SRA_val(xydVal)),
-  /* 2E SRA (XY+d)       */ () => setXYd(SRA_val(xydVal)),
+  /* 2E SRA (XY+d)       */ () => write(xydAddr, SRA_val(xydVal)),
   /* 2F SRA (XY+d),A   * */ () => setA(setXYd_undoc(SRA_val(xydVal))),
 
   /* 30 SLL (XY+d),B   * */ () => setB(setXYd_undoc(SLL_val(xydVal))),
@@ -85,7 +81,7 @@ const opsBitXY: (() => void)[] = [
   /* 33 SLL (XY+d),E   * */ () => setE(setXYd_undoc(SLL_val(xydVal))),
   /* 34 SLL (XY+d),H   * */ () => cpu[H] = setXYd_undoc(SLL_val(xydVal)),
   /* 35 SLL (XY+d),L   * */ () => cpu[L] = setXYd_undoc(SLL_val(xydVal)),
-  /* 36 SLL (XY+d)     * */ () => setXYd(SLL_val(xydVal)),
+  /* 36 SLL (XY+d)     * */ () => write(xydAddr, SLL_val(xydVal)),
   /* 37 SLL (XY+d),A   * */ () => setA(setXYd_undoc(SLL_val(xydVal))),
   /* 38 SRL (XY+d),B   * */ () => setB(setXYd_undoc(SRL_val(xydVal))),
   /* 39 SRL (XY+d),C   * */ () => setC(setXYd_undoc(SRL_val(xydVal))),
@@ -93,7 +89,7 @@ const opsBitXY: (() => void)[] = [
   /* 3B SRL (XY+d),E   * */ () => setE(setXYd_undoc(SRL_val(xydVal))),
   /* 3C SRL (XY+d),H   * */ () => cpu[H] = setXYd_undoc(SRL_val(xydVal)),
   /* 3D SRL (XY+d),L   * */ () => cpu[L] = setXYd_undoc(SRL_val(xydVal)),
-  /* 3E SRL (XY+d)       */ () => setXYd(SRL_val(xydVal)),
+  /* 3E SRL (XY+d)       */ () => write(xydAddr, SRL_val(xydVal)),
   /* 3F SRL (XY+d),A   * */ () => setA(setXYd_undoc(SRL_val(xydVal))),
 
   /* 40 BIT 0,(XY+d)   * */ () => testBitXYd(BIT0),
@@ -170,7 +166,7 @@ const opsBitXY: (() => void)[] = [
   /* 83 RES 0,(XY+d),E * */ () => setE(setXYd_undoc(xydVal & ~BIT0)),
   /* 84 RES 0,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal & ~BIT0),
   /* 85 RES 0,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal & ~BIT0),
-  /* 86 RES 0,(XY+d)     */ () => setXYd(xydVal & ~BIT0),
+  /* 86 RES 0,(XY+d)     */ () => write(xydAddr, xydVal & ~BIT0),
   /* 87 RES 0,(XY+d),A * */ () => setA(setXYd_undoc(xydVal & ~BIT0)),
   /* 88 RES 1,(XY+d),B * */ () => setB(setXYd_undoc(xydVal & ~BIT1)),
   /* 89 RES 1,(XY+d),C * */ () => setC(setXYd_undoc(xydVal & ~BIT1)),
@@ -178,7 +174,7 @@ const opsBitXY: (() => void)[] = [
   /* 8B RES 1,(XY+d),E * */ () => setE(setXYd_undoc(xydVal & ~BIT1)),
   /* 8C RES 1,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal & ~BIT1),
   /* 8D RES 1,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal & ~BIT1),
-  /* 8E RES 1,(XY+d)     */ () => setXYd(xydVal & ~BIT1),
+  /* 8E RES 1,(XY+d)     */ () => write(xydAddr, xydVal & ~BIT1),
   /* 8F RES 1,(XY+d),A * */ () => setA(setXYd_undoc(xydVal & ~BIT1)),
 
   /* 90 RES 2,(XY+d),B * */ () => setB(setXYd_undoc(xydVal & ~BIT2)),
@@ -187,7 +183,7 @@ const opsBitXY: (() => void)[] = [
   /* 93 RES 2,(XY+d),E * */ () => setE(setXYd_undoc(xydVal & ~BIT2)),
   /* 94 RES 2,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal & ~BIT2),
   /* 95 RES 2,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal & ~BIT2),
-  /* 96 RES 2,(XY+d)     */ () => setXYd(xydVal & ~BIT2),
+  /* 96 RES 2,(XY+d)     */ () => write(xydAddr, xydVal & ~BIT2),
   /* 97 RES 2,(XY+d),A * */ () => setA(setXYd_undoc(xydVal & ~BIT2)),
   /* 98 RES 3,(XY+d),B * */ () => setB(setXYd_undoc(xydVal & ~BIT3)),
   /* 99 RES 3,(XY+d),C * */ () => setC(setXYd_undoc(xydVal & ~BIT3)),
@@ -195,7 +191,7 @@ const opsBitXY: (() => void)[] = [
   /* 9B RES 3,(XY+d),E * */ () => setE(setXYd_undoc(xydVal & ~BIT3)),
   /* 9C RES 3,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal & ~BIT3),
   /* 9D RES 3,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal & ~BIT3),
-  /* 9E RES 3,(XY+d)     */ () => setXYd(xydVal & ~BIT3),
+  /* 9E RES 3,(XY+d)     */ () => write(xydAddr, xydVal & ~BIT3),
   /* 9F RES 3,(XY+d),A * */ () => setA(setXYd_undoc(xydVal & ~BIT3)),
 
   /* A0 RES 4,(XY+d),B * */ () => setB(setXYd_undoc(xydVal & ~BIT4)),
@@ -204,7 +200,7 @@ const opsBitXY: (() => void)[] = [
   /* A3 RES 4,(XY+d),E * */ () => setE(setXYd_undoc(xydVal & ~BIT4)),
   /* A4 RES 4,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal & ~BIT4),
   /* A5 RES 4,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal & ~BIT4),
-  /* A6 RES 4,(XY+d)     */ () => setXYd(xydVal & ~BIT4),
+  /* A6 RES 4,(XY+d)     */ () => write(xydAddr, xydVal & ~BIT4),
   /* A7 RES 4,(XY+d),A * */ () => setA(setXYd_undoc(xydVal & ~BIT4)),
   /* A8 RES 5,(XY+d),B * */ () => setB(setXYd_undoc(xydVal & ~BIT5)),
   /* A9 RES 5,(XY+d),C * */ () => setC(setXYd_undoc(xydVal & ~BIT5)),
@@ -212,7 +208,7 @@ const opsBitXY: (() => void)[] = [
   /* AB RES 5,(XY+d),E * */ () => setE(setXYd_undoc(xydVal & ~BIT5)),
   /* AC RES 5,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal & ~BIT5),
   /* AD RES 5,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal & ~BIT5),
-  /* AE RES 5,(XY+d)     */ () => setXYd(xydVal & ~BIT5),
+  /* AE RES 5,(XY+d)     */ () => write(xydAddr, xydVal & ~BIT5),
   /* AF RES 5,(XY+d),A * */ () => setA(setXYd_undoc(xydVal & ~BIT5)),
 
   /* B0 RES 6,(XY+d),B * */ () => setB(setXYd_undoc(xydVal & ~BIT6)),
@@ -221,7 +217,7 @@ const opsBitXY: (() => void)[] = [
   /* B3 RES 6,(XY+d),E * */ () => setE(setXYd_undoc(xydVal & ~BIT6)),
   /* B4 RES 6,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal & ~BIT6),
   /* B5 RES 6,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal & ~BIT6),
-  /* B6 RES 6,(XY+d)     */ () => setXYd(xydVal & ~BIT6),
+  /* B6 RES 6,(XY+d)     */ () => write(xydAddr, xydVal & ~BIT6),
   /* B7 RES 6,(XY+d),A * */ () => setA(setXYd_undoc(xydVal & ~BIT6)),
   /* B8 RES 7,(XY+d),B * */ () => setB(setXYd_undoc(xydVal & ~BIT7)),
   /* B9 RES 7,(XY+d),C * */ () => setC(setXYd_undoc(xydVal & ~BIT7)),
@@ -229,7 +225,7 @@ const opsBitXY: (() => void)[] = [
   /* BB RES 7,(XY+d),E * */ () => setE(setXYd_undoc(xydVal & ~BIT7)),
   /* BC RES 7,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal & ~BIT7),
   /* BD RES 7,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal & ~BIT7),
-  /* BE RES 7,(XY+d)     */ () => setXYd(xydVal & ~BIT7),
+  /* BE RES 7,(XY+d)     */ () => write(xydAddr, xydVal & ~BIT7),
   /* BF RES 7,(XY+d),A * */ () => setA(setXYd_undoc(xydVal & ~BIT7)),
 
   /* C0 SET 0,(XY+d),B * */ () => setB(setXYd_undoc(xydVal | BIT0)),
@@ -238,7 +234,7 @@ const opsBitXY: (() => void)[] = [
   /* C3 SET 0,(XY+d),E * */ () => setE(setXYd_undoc(xydVal | BIT0)),
   /* C4 SET 0,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal | BIT0),
   /* C5 SET 0,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal | BIT0),
-  /* C6 SET 0,(XY+d)     */ () => setXYd(xydVal | BIT0),
+  /* C6 SET 0,(XY+d)     */ () => write(xydAddr, xydVal | BIT0),
   /* C7 SET 0,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT0)),
   /* C8 SET 1,(XY+d),B * */ () => setB(setXYd_undoc(xydVal | BIT1)),
   /* C9 SET 1,(XY+d),C * */ () => setC(setXYd_undoc(xydVal | BIT1)),
@@ -246,7 +242,7 @@ const opsBitXY: (() => void)[] = [
   /* CB SET 1,(XY+d),E * */ () => setE(setXYd_undoc(xydVal | BIT1)),
   /* CC SET 1,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal | BIT1),
   /* CD SET 1,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal | BIT1),
-  /* CE SET 1,(XY+d)     */ () => setXYd(xydVal | BIT1),
+  /* CE SET 1,(XY+d)     */ () => write(xydAddr, xydVal | BIT1),
   /* CF SET 1,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT1)),
 
   /* D0 SET 2,(XY+d),B * */ () => setB(setXYd_undoc(xydVal | BIT2)),
@@ -255,7 +251,7 @@ const opsBitXY: (() => void)[] = [
   /* D3 SET 2,(XY+d),E * */ () => setE(setXYd_undoc(xydVal | BIT2)),
   /* D4 SET 2,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal | BIT2),
   /* D5 SET 2,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal | BIT2),
-  /* D6 SET 2,(XY+d)     */ () => setXYd(xydVal | BIT2),
+  /* D6 SET 2,(XY+d)     */ () => write(xydAddr, xydVal | BIT2),
   /* D7 SET 2,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT2)),
   /* D8 SET 3,(XY+d),B * */ () => setB(setXYd_undoc(xydVal | BIT3)),
   /* D9 SET 3,(XY+d),C * */ () => setC(setXYd_undoc(xydVal | BIT3)),
@@ -263,7 +259,7 @@ const opsBitXY: (() => void)[] = [
   /* DB SET 3,(XY+d),E * */ () => setE(setXYd_undoc(xydVal | BIT3)),
   /* DC SET 3,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal | BIT3),
   /* DD SET 3,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal | BIT3),
-  /* DE SET 3,(XY+d)     */ () => setXYd(xydVal | BIT3),
+  /* DE SET 3,(XY+d)     */ () => write(xydAddr, xydVal | BIT3),
   /* DF SET 3,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT3)),
 
   /* E0 SET 4,(XY+d),B * */ () => setB(setXYd_undoc(xydVal | BIT4)),
@@ -272,7 +268,7 @@ const opsBitXY: (() => void)[] = [
   /* E3 SET 4,(XY+d),E * */ () => setE(setXYd_undoc(xydVal | BIT4)),
   /* E4 SET 4,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal | BIT4),
   /* E5 SET 4,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal | BIT4),
-  /* E6 SET 4,(XY+d)     */ () => setXYd(xydVal | BIT4),
+  /* E6 SET 4,(XY+d)     */ () => write(xydAddr, xydVal | BIT4),
   /* E7 SET 4,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT4)),
   /* E8 SET 5,(XY+d),B * */ () => setB(setXYd_undoc(xydVal | BIT5)),
   /* E9 SET 5,(XY+d),C * */ () => setC(setXYd_undoc(xydVal | BIT5)),
@@ -280,7 +276,7 @@ const opsBitXY: (() => void)[] = [
   /* EB SET 5,(XY+d),E * */ () => setE(setXYd_undoc(xydVal | BIT5)),
   /* EC SET 5,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal | BIT5),
   /* ED SET 5,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal | BIT5),
-  /* EE SET 5,(XY+d)     */ () => setXYd(xydVal | BIT5),
+  /* EE SET 5,(XY+d)     */ () => write(xydAddr, xydVal | BIT5),
   /* EF SET 5,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT5)),
 
   /* F0 SET 6,(XY+d),B * */ () => setB(setXYd_undoc(xydVal | BIT6)),
@@ -289,7 +285,7 @@ const opsBitXY: (() => void)[] = [
   /* F3 SET 6,(XY+d),E * */ () => setE(setXYd_undoc(xydVal | BIT6)),
   /* F4 SET 6,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal | BIT6),
   /* F5 SET 6,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal | BIT6),
-  /* F6 SET 6,(XY+d)     */ () => setXYd(xydVal | BIT6),
+  /* F6 SET 6,(XY+d)     */ () => write(xydAddr, xydVal | BIT6),
   /* F7 SET 6,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT6)),
   /* F8 SET 7,(XY+d),B * */ () => setB(setXYd_undoc(xydVal | BIT7)),
   /* F9 SET 7,(XY+d),C * */ () => setC(setXYd_undoc(xydVal | BIT7)),
@@ -297,6 +293,6 @@ const opsBitXY: (() => void)[] = [
   /* FB SET 7,(XY+d),E * */ () => setE(setXYd_undoc(xydVal | BIT7)),
   /* FC SET 7,(XY+d),H * */ () => cpu[H] = setXYd_undoc(xydVal | BIT7),
   /* FD SET 7,(XY+d),L * */ () => cpu[L] = setXYd_undoc(xydVal | BIT7),
-  /* FE SET 7,(XY+d)     */ () => setXYd(xydVal | BIT7),
+  /* FE SET 7,(XY+d)     */ () => write(xydAddr, xydVal | BIT7),
   /* FF SET 7,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT7)),
 ];

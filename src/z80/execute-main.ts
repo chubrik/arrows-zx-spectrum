@@ -67,7 +67,7 @@ const opsMain = [
   /* 27 DAA        */ DAA,
   /* 28 JR Z,e     */ () => fz ? JR_e() : setPC((pc + 1) & xFFFF),
   /* 29 ADD HL,HL  */ () => ADD_HL(getHLXY()),
-  /* 2A LD HL,(nn) */ () => { const addr = next16(); cpu[LXY] = mem[addr]; cpu[HXY] = mem[addr + 1]; },
+  /* 2A LD HL,(nn) */ () => { const nn = next16(); cpu[LXY] = mem[nn]; cpu[HXY] = mem[nn + 1]; },
   /* 2B DEC HL     */ () => setHLXY((getHLXY() - 1) & xFFFF),
   /* 2C INC L      */ () => cpu[LXY] = INC_r(cpu[LXY]),
   /* 2D DEC L      */ () => cpu[LXY] = DEC_r(cpu[LXY]),

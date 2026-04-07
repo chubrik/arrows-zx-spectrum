@@ -17,10 +17,10 @@ export function BIT_b_r(isSet: number, f53Src: number) {
 
 /** RLCA */
 export function RLCA() {
-  const mewFc = (a >> 7) & FC;
-  const result = ((a << 1) | mewFc) & xFF;
+  const newFc = (a >> 7) & FC;
+  const result = ((a << 1) | newFc) & xFF;
   setA(result);
-  setFRotA(result, mewFc);
+  setFRotA(result, newFc);
 }
 
 /** RLC r | RLC (HL) | RLC (IX+d) | RLC (IY+d) */

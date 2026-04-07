@@ -2,7 +2,7 @@ import { MS_PER_FRAME, OP_PER_FRAME } from './hw/constants';
 import { commitMemory, fetchMemory } from './hw/mem';
 import { initMemory } from './hw/mem-init';
 import { initPorts } from './hw/ports';
-import { commitScreen, initScreen, refreshScreen } from './hw/screen';
+import { commitScreen, incFrameCount, initScreen, refreshScreen } from './hw/screen';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu, fetchCpu, initCpu } from './z80/init';
@@ -43,7 +43,7 @@ always(() => {
     opCount++;
     executeMain();
 
-    // Hack: we call interrupt only once per frame
+    // Hack: we check interrupt only once per frame
     if (opCount < OP_PER_FRAME) continue;
 
     if (eiDelay) {
@@ -54,6 +54,7 @@ always(() => {
     opCount -= OP_PER_FRAME;
     setINT(INT);
     interrupt();
+    incFrameCount();
 
     if (OPTS_LIMITED_SPEED) {
       let now: number;
