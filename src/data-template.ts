@@ -1,0 +1,9 @@
+import { unicodeToBytes } from './util/encode';
+
+let cache: number[] | undefined;
+
+onActive(() => {
+  state.todo = 1;
+  let placeholder: number;                     // Replaced during build (optional)
+  state.NAME = (cache ??= unicodeToBytes('')); // NAME and '' replaced during build
+});

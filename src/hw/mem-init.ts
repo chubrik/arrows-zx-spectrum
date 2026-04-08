@@ -53,14 +53,14 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
 }
 
 //todo forEach anywhere
-export function deployMemoryBlock(data: number[], beginAddr: number) {
+export function restoreMemoryBlock(fromAddr: number, data: number[]) {
   initMemory();
-  data.forEach((value, i) => setMemDirect(beginAddr + i, value));
+  data.forEach((value, i) => setMemDirect(fromAddr + i, value));
 }
 
-export function resetMemoryBlock(firstAddr: number, lastAddr: number) {
+export function resetMemoryBlock(fromAddr: number, toAddr: number) {
   initMemory();
 
-  for (let addr = firstAddr; addr <= lastAddr; addr++)
+  for (let addr = fromAddr; addr <= toAddr; addr++)
     setMemDirect(addr, 0);
 }

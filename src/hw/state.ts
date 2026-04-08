@@ -1,11 +1,9 @@
 import { clearCpu, restoreCpu } from '../z80/init';
 import { RAM_MIN_ADDR, xFFFF } from './constants';
-import { deployMemoryBlock, resetMemoryBlock } from './mem-init';
+import { resetMemoryBlock, restoreMemoryBlock } from './mem-init';
 
 export let chunkX: number;
 export let chunkY: number;
-
-export const _state = state as State;
 
 export function initState() {
   const pos = getPosition();
@@ -14,27 +12,33 @@ export function initState() {
 }
 
 export function fetchState() {
-  if (!_state.todo) return;
-  _state.todo = 0;
+  if (!state.todo) return;
+  state.todo = 0;
 
-  if (_state.rom) {
+  if (state.rom) {
     clearCpu();
-    deployMemoryBlock(_state.rom, 0);
+    restoreMemoryBlock(0x0000, state.rom);
     resetMemoryBlock(RAM_MIN_ADDR, xFFFF);
-    _state.rom = 0;
+    state.rom = 0;
   }
 
-  if (_state.cpu) {
-    restoreCpu(_state.cpu);
-    _state.cpu = 0;
+  if (state.cpu) {
+    restoreCpu(state.cpu);
+    state.cpu = 0;
   }
-}
 
-interface State {
-  todo?: number;
-  cpu?: number[] | 0;
-  rom?: number[] | 0;
-  x0004?: number[] | 0;
-  x0008?: number[] | 0;
-  x000C?: number[] | 0;
+  if (state.ram1) {
+    restoreMemoryBlock(0x4000, state.ram1);
+    state.ram1 = 0;
+  }
+
+  if (state.ram2) {
+    restoreMemoryBlock(0x8000, state.ram2);
+    state.ram2 = 0;
+  }
+
+  if (state.ram3) {
+    restoreMemoryBlock(0xC000, state.ram3);
+    state.ram3 = 0;
+  }
 }
