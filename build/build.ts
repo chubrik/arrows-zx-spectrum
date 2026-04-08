@@ -69,41 +69,25 @@ async function buildDeployer(path: string) {
     return code;
   };
 
+  // Encode ROM data
+  const rom = await getResource('48k.rom');
+  const romEncoded = bytesToUnicode(rom);
+
   // Build pipeline
   const srcTsCode = readFileSync(path, 'utf8');
   const built = step('build', await buildTs(srcTsCode));
-  const inlined = step('inline', inlineFunctions(built));
-  const collapsed = step('collapse', await terserCollapse(inlined));
+  const assembled = step('assemble', built.replace('("")', `('${romEncoded}')`));
+  const collapsed = step('collapse', await terserCollapse(assembled));
   const compressed = step('compress', await terserCompress(collapsed));
   const arrowed = step('arrows', arrowFunctions(compressed));
   const cmangled = step('cmangle', await terserCMangle(arrowed));
   const processed = step('postprocess', postProcess(cmangled));
 
-  // Decoder pipeline
-  const decoderFuncName = 'unicodeToAscii';
-  const decoderTsCode = `export{${decoderFuncName}}from'./util/encode.ts';`;
-  const decoderBuilt = step('decoder-build', await buildTs(decoderTsCode));
-  const decoderStripped = step('decoder-strip', decoderBuilt.replace(/^export\s*\{[^}]*\}\s*;?\s*$/gm, ''));
-
-  // Packing pipeline
-  const packEncoded = asciiToUnicode(processed);
-  const packAssembled = step('pack-assemble', `${decoderStripped};\neval(${decoderFuncName}('${packEncoded}'));`);
-  const packCollapsed = step('pack-collapse', await terserCollapse(packAssembled));
-  const packArrowed = step('pack-arrows', arrowFunctions(packCollapsed));
-  const packCmangled = step('pack-cmangle', await terserCMangle(packArrowed));
-  const packProcessed = step('pack-postprocess', postProcess(packCmangled));
-
-  // Bundle with ROM data
-  const rom = await getResource('48k.rom');
-  const romEncoded = bytesToUnicode(rom);
-  const packBundle = step('pack-bundle', `${packProcessed}var $='${romEncoded}';`);
-
-  writeToPath(`${DIST_DIR}/${fileName}.pack.js`, packBundle);
+  writeToPath(`${DIST_DIR}/${fileName}.pack.js`, processed);
 
   console.log(
     `${path}: ${built.length + rom.length} bytes → ` +
-    `minified: ${processed.length + rom.length} bytes → ` +
-    `packed: ${packBundle.length} bytes (${[...packBundle].length} chars)`);
+    `packed: ${processed.length} bytes (${[...processed].length} chars)`);
 }
 
 async function buildSnapshots() {
@@ -178,8 +162,8 @@ async function buildSnapshotCpu(gameName: string, snap: Z80Snapshot) {
   ];
 
   const code = srcTsCode.replace(
-    'restoreCpu([]);',
-    `restoreCpu([${values}]);`
+    'state.cpu = [];',
+    `state.cpu = [${values}];`
   );
 
   const built = await buildTs(code);

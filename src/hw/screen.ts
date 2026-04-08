@@ -1,6 +1,7 @@
 import { setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
 import { dirtyBitmap, mem } from './mem-state.ts';
+import { chunkX, chunkY } from './state.ts';
 import { world_copyRegion, world_setSignal } from './world-refs.ts';
 
 const posXCache: number[] = [];
@@ -46,7 +47,12 @@ function checkFlashPhase(): boolean {
 let frameCount = 0;
 /*! @__INLINE__ */ export function incFrameCount() { frameCount++; }
 
-export function initScreen(chunkX: number, chunkY: number) {
+let inited = false;
+
+export function initScreen() {
+  if (inited) return;
+  inited = true;
+
   const screenX = chunkX + 32;
   const screenY = chunkY - 416;
   const paletteX = chunkX + 48;

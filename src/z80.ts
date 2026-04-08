@@ -3,6 +3,7 @@ import { commitMemory, fetchMemory } from './hw/mem';
 import { initMemory } from './hw/mem-init';
 import { initPorts } from './hw/ports';
 import { commitScreen, incFrameCount, initScreen, refreshScreen } from './hw/screen';
+import { fetchState, initState } from './hw/state';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu, fetchCpu, initCpu } from './z80/init';
@@ -10,32 +11,29 @@ import { interrupt } from './z80/interrupt';
 import { fetchOptions, initOptions, OPTS_LIMITED_SPEED, OPTS_OP_PER_TICK } from './z80/options';
 import { eiDelay, setEIDelay } from './z80/registers';
 
-let inited = false;
 let enabled = false;
 let opCount = 0;
 let lastFrameTime = 0;
 
-onActive(() => {
-  if (!inited) {
-    inited = true;
-    const pos = getPosition();
-    const chunkX = pos.x & ~15;
-    const chunkY = pos.y & ~15;
-    initOptions(chunkX, chunkY);
-    initCpu(chunkX, chunkY);
-    initMemory(chunkX, chunkY);
-    initPorts(chunkX, chunkY);
-    initScreen(chunkX, chunkY);
-  }
+initState();
 
-  if (enabled = !enabled) {
-    fetchCpu();
-    fetchMemory();
-    refreshScreen();
-  }
+onActive(() => {
+  enabled = !enabled;
+  if (!enabled) return;
+
+  initOptions();
+  initCpu();
+  initMemory();
+  initScreen();
+  initPorts();
+
+  fetchCpu();
+  fetchMemory();
+  refreshScreen();
 });
 
 always(() => {
+  fetchState();
   if (!enabled) return;
   fetchOptions();
 

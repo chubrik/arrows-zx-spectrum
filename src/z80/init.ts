@@ -1,5 +1,6 @@
 import { getDirect, setDirect } from '../hw/arrows';
 import { xFF } from '../hw/constants';
+import { chunkX, chunkY } from '../hw/state';
 import { getF, getSYS, setF, setSYS } from './flags';
 import {
   a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getIXh, getIXl, getIYh, getIYl, getL, getR, ha, i,
@@ -12,7 +13,7 @@ let cacheX: number[];
 let cacheY: number[];
 const cacheA: number[][] = [];
 
-export function initCpu(chunkX: number, chunkY: number) {
+export function initCpu() {
   if (inited) return;
   inited = true;
 
@@ -34,10 +35,6 @@ export function initCpu(chunkX: number, chunkY: number) {
 const arrowTypes1 = [10, 25];
 const arrowTypes2 = [1, 18];
 
-export function clearCpu() {
-  loadCpu(() => 0);
-}
-
 export function fetchCpu() {
   let i = 0;
   loadCpu(() => getDirect(cacheX[i], cacheY[i++]));
@@ -48,7 +45,13 @@ export function commitCpu() {
   saveCpu(value => setDirect(cacheX[i], cacheY[i], cacheA[i++], value));
 }
 
+export function clearCpu() {
+  initCpu();
+  cacheX.forEach((_, i) => setDirect(cacheX[i], cacheY[i], cacheA[i], 0));
+}
+
 export function restoreCpu(values: number[]) {
+  initCpu();
   values.forEach((value, i) => setDirect(cacheX[i], cacheY[i], cacheA[i], value));
 }
 

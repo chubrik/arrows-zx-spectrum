@@ -1,10 +1,15 @@
 import { BIT0, BIT1, BIT2, BIT3, BIT4, xFF } from './constants';
+import { chunkX, chunkY } from './state';
 import { world_getSignal } from './world-refs';
 
+let inited = false;
 let keysX: number;
 let keysY: number;
 
-export function initPorts(chunkX: number, chunkY: number) {
+export function initPorts() {
+  if (inited) return;
+  inited = true;
+
   keysX = chunkX + 32;
   keysY = chunkY - 16;
 }

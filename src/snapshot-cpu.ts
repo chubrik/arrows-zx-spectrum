@@ -1,10 +1,6 @@
-import { initCpu, restoreCpu } from './z80/init';
+import { _state } from './hw/state';
 
 onActive(() => {
-  const pos = getPosition();
-  const chunkX = pos.x & ~15;
-  const chunkY = pos.y & ~15;
-  initCpu(chunkX, chunkY);
-
-  restoreCpu([]); // Array filled during build
+  _state.todo = 1;
+  _state.cpu = []; // Array filled during build
 });

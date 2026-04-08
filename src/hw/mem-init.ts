@@ -1,8 +1,14 @@
 import { createCtx, setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
 import { memCtxA, memCtxX, memCtxY } from './mem-state.ts';
+import { chunkX, chunkY } from './state.ts';
 
-export function initMemory(chunkX: number, chunkY: number) {
+let inited = false;
+
+export function initMemory() {
+  if (inited) return;
+  inited = true;
+
   const memoryX = chunkX - 240;
   const memoryY = chunkY + 32;
 
@@ -46,13 +52,15 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
   memCtxA[addr] = ctx.a;
 }
 
-//todo forEach (anywhere)
-export function deployMemoryBlock(beginAddr: number, data: number[]) {
-  for (let i = 0; i < data.length; i++)
-    setMemDirect(beginAddr + i, data[i]);
+//todo forEach anywhere
+export function deployMemoryBlock(data: number[], beginAddr: number) {
+  initMemory();
+  data.forEach((value, i) => setMemDirect(beginAddr + i, value));
 }
 
 export function resetMemoryBlock(firstAddr: number, lastAddr: number) {
+  initMemory();
+
   for (let addr = firstAddr; addr <= lastAddr; addr++)
     setMemDirect(addr, 0);
 }

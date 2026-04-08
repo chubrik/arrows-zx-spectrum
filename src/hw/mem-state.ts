@@ -5,7 +5,7 @@ export const memCtxX: number[] = [];
 export const memCtxY: number[] = [];
 export const memCtxA: number[][] = [];
 const DIRTY_BITMAP_SIZE = 2048; // 0x10000 >> 5
-export const dirtyBitmap = /* @__PURE__ */ new Uint32Array(DIRTY_BITMAP_SIZE); // "PURE" needs for correct minification
+export const dirtyBitmap = /* @__PURE__ */ new Uint32Array(DIRTY_BITMAP_SIZE);
 
 let ramMinAddr = RAM_MIN_ADDR;
 export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }

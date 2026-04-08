@@ -1,10 +1,15 @@
 import { OP_PER_FRAME } from '../hw/constants';
+import { chunkX, chunkY } from '../hw/state';
 import { world_getSignal } from '../hw/world-refs';
 
+let inited = false;
 let optionsX: number;
 let optionsY: number;
 
-export function initOptions(chunkX: number, chunkY: number) {
+export function initOptions() {
+  if (inited) return;
+  inited = true;
+  
   optionsX = chunkX + 64;
   optionsY = chunkY;
 }

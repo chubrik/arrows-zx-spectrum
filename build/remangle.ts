@@ -12,7 +12,7 @@ interface Scope {
 // variables get 2-char names. This pass fixes that by reassigning top-level
 // names based on global reference frequency.
 export function remangleTopLevel(code: string): string {
-  const ast = acorn.parse(code, { ecmaVersion: 2020, sourceType: 'module' }) as any;
+  const ast = acorn.parse(code, { ecmaVersion: 'latest', sourceType: 'module' }) as any;
 
   // Build scope tree
   const globalScope: Scope = { declared: new Set(), referenced: new Set(), children: [] };
