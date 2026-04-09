@@ -1,7 +1,7 @@
 import { setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
 import { dirtyBitmap, mem } from './mem-state.ts';
-import { chunkX, chunkY } from './state.ts';
+import { cpuX, cpuY } from './state.ts';
 import { world_copyRegion, world_setSignal } from './world-refs.ts';
 
 const posXCache: number[] = [];
@@ -53,10 +53,10 @@ export function initScreen() {
   if (inited) return;
   inited = true;
 
-  const screenX = chunkX + 32;
-  const screenY = chunkY - 416;
-  const paletteX = chunkX + 48;
-  const paletteY = chunkY - 16;
+  const screenX = cpuX + 80;
+  const screenY = cpuY - 400;
+  const paletteX = cpuX;
+  const paletteY = cpuY - 32;
 
   for (let addr = SCREEN_MIN_ADDR; addr < ATTRIBUTES_MIN_ADDR; addr++) {
     posXCache[addr] = screenX + ((addr & 0x1F) << 4);

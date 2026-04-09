@@ -1,40 +1,20 @@
 import { MS_PER_FRAME, OP_PER_FRAME } from './hw/constants';
-import { commitMemory, fetchMemory } from './hw/mem';
-import { initMemory } from './hw/mem-init';
-import { initPorts } from './hw/ports';
-import { commitScreen, incFrameCount, initScreen, refreshScreen } from './hw/screen';
-import { fetchState, initState } from './hw/state';
+import { commitMemory } from './hw/mem';
+import { commitScreen, incFrameCount } from './hw/screen';
+import { cpuStarted, fetchState, initState, OPTS_LIMITED_SPEED, OPTS_OP_PER_TICK } from './hw/state';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
-import { commitCpu, fetchCpu, initCpu } from './z80/init';
+import { commitCpu } from './z80/init';
 import { interrupt } from './z80/interrupt';
-import { fetchOptions, initOptions, OPTS_LIMITED_SPEED, OPTS_OP_PER_TICK } from './z80/options';
 import { eiDelay, setEIDelay } from './z80/registers';
 
-let enabled = false;
 let opCount = 0;
 
 initState();
 
-onActive(() => {
-  enabled = !enabled;
-  if (!enabled) return;
-
-  initOptions();
-  initCpu();
-  initMemory();
-  initScreen();
-  initPorts();
-
-  fetchCpu();
-  fetchMemory();
-  refreshScreen();
-});
-
 always(() => {
   fetchState();
-  if (!enabled) return;
-  fetchOptions();
+  if (!cpuStarted) return;
 
   for (let i = 0; i < OPTS_OP_PER_TICK; i++) {
     opCount++;

@@ -1,6 +1,6 @@
 import { getDirect, setDirect } from '../hw/arrows';
 import { xFF } from '../hw/constants';
-import { chunkX, chunkY } from '../hw/state';
+import { cpuX, cpuY } from '../hw/state';
 import { getF, getSYS, setF, setSYS } from './flags';
 import {
   a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getIXh, getIXl, getIYh, getIYl, getL, getR, ha, i,
@@ -17,10 +17,10 @@ export function initCpu() {
   if (inited) return;
   inited = true;
 
-  const x0_ = chunkX + 32;
+  const x0_ = cpuX;
   const x1_ = x0_ + 8;
-  let y = chunkY;
-  const O = () => y = chunkY;
+  let y = cpuY;
+  const O = () => y = cpuY;
   const P = () => y += 2;
 
   //        A    F    B    C    D    E    H    L    IXh  IXl  SPh  SPl  PCh  PCl  Aa   Fa   Ba   Ca   Da   Ea   Ha   La   IYh  IYl  I    R    SYS

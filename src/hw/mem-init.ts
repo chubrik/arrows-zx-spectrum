@@ -1,7 +1,7 @@
 import { createCtx, setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
 import { mem, memCtxA, memCtxX, memCtxY } from './mem-state.ts';
-import { chunkX, chunkY } from './state.ts';
+import { cpuX, cpuY } from './state.ts';
 
 let inited = false;
 
@@ -9,8 +9,8 @@ export function initMemory() {
   if (inited) return;
   inited = true;
 
-  const memoryX = chunkX - 240;
-  const memoryY = chunkY + 32;
+  const memoryX = cpuX - 272;
+  const memoryY = cpuY + 32;
 
   for (let addr = 0; addr <= xFFFF; addr++)
     initAddrCtx(addr, memoryX, memoryY);

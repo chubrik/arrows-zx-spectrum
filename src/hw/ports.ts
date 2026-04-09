@@ -1,5 +1,5 @@
 import { BIT0, BIT1, BIT2, BIT3, BIT4, xFF } from './constants';
-import { chunkX, chunkY } from './state';
+import { cpuX, cpuY } from './state';
 import { world_getSignal } from './world-refs';
 
 let inited = false;
@@ -10,8 +10,8 @@ export function initPorts() {
   if (inited) return;
   inited = true;
 
-  keysX = chunkX + 32;
-  keysY = chunkY - 16;
+  keysX = cpuX + 8;
+  keysY = cpuY - 24;
 }
 
 export function readPort(low: number, high: number): number {
