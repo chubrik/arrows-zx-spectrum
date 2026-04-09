@@ -86,14 +86,14 @@ async function buildSnapshot(z80Path: string) {
     snap.IY >> 8, snap.IY & xFF, snap.I, snap.R, cpuSYS
   ];
 
-  await buildData(`${DIST_DIR}/${fileName}`, `${fileName}.pack1`, 'ram1', snap.ram4000, 'cpu', cpuValues);
+  await buildData(`${DIST_DIR}/${fileName}`, `${fileName}.pack1`, 'ram1', snap.ram4000, cpuValues, snap.border);
   await buildData(`${DIST_DIR}/${fileName}`, `${fileName}.pack2`, 'ram2', snap.ram8000);
   await buildData(`${DIST_DIR}/${fileName}`, `${fileName}.pack3`, 'ram3', snap.ramC000);
 }
 
 async function buildData(
   distDir: string, fileName: string, stateName: string, data: Buffer,
-  extraName?: string, extraData?: number[]) {
+  cpuValues?: number[], border?: number) {
   let stepNum = 0;
 
   const step = (label: string, code: string) => {
@@ -108,7 +108,9 @@ async function buildData(
   const built = step('build', await buildTs(srcTsCode));
 
   let assemble = built.replace('NAME', stateName).replace('("")', `('${dataEncoded}')`);
-  if (extraName) assemble = assemble.replace('let placeholder;', `state.${extraName} = [${extraData}];`);
+
+  if (cpuValues)
+    assemble = assemble.replace('let placeholder;', `state.cpu = [${cpuValues}];\nstate.brd = ${border};`);
 
   const assembled = step('assemble', assemble);
   const collapsed = step('collapse', await terserCollapse(assembled));

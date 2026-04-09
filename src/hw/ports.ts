@@ -1,4 +1,5 @@
 import { BIT0, BIT1, BIT2, BIT3, BIT4, xFF } from './constants';
+import { drawBorder } from './screen';
 import { cpuX, cpuY } from './state';
 import { world_getSignal } from './world-refs';
 
@@ -32,5 +33,6 @@ export function readPort(low: number, high: number): number {
 }
 
 export function writePort(low: number, high: number, value: number) {
-  /* TODO */
+  if (!(low & BIT0))
+    drawBorder(value & 0x07);
 }

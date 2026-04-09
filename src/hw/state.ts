@@ -3,7 +3,7 @@ import { OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
 import { fetchMemory } from './mem';
 import { clearMemoryBlock, initMemory, restoreMemoryBlock } from './mem-init';
 import { initPorts } from './ports';
-import { initScreen, refreshScreen } from './screen';
+import { drawBorder, initScreen, refreshScreen } from './screen';
 
 export let cpuX: number;
 export let cpuY: number;
@@ -55,11 +55,18 @@ export function fetchState() {
     _state.cpu = 0;
   }
 
+  if (_state.brd !== undefined) {
+    initScreen();
+    drawBorder(_state.brd);
+    _state.brd = undefined;
+  }
+
   if (_state.rom) {
     clearCpu();
     restoreMemoryBlock(0x0000, _state.rom);
     clearMemoryBlock(RAM_MIN_ADDR, xFFFF);
     refreshScreen();
+    drawBorder(0);
     _state.rom = 0;
   }
 
@@ -86,6 +93,7 @@ interface State {
   by1: number;
   max: number;
   cpu: number[] | 0;
+  brd?: number;
   rom: number[] | 0;
   ram1: number[] | 0;
   ram2: number[] | 0;

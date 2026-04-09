@@ -65,6 +65,8 @@ export function initScreen() {
 
   fillAttrCache(palXCacheDefault, palYCacheDefault, sig0CacheDefault, sig1CacheDefault, paletteX, paletteY, false);
   fillAttrCache(palXCacheFlash, palYCacheFlash, sig0CacheFlash, sig1CacheFlash, paletteX, paletteY, true);
+
+  initBorder(screenX, screenY);
 }
 
 function fillAttrCache(
@@ -185,5 +187,54 @@ function setPixels(addr: number, value: number, attr: number) {
     world_setSignal(pixelX + 1, posY + 1, sig0);
     world_setSignal(pixelX, posY + 1, sig1);
     value >>= 1;
+  }
+}
+
+// Border
+
+const borderPixelsX: number[] = [];
+const borderPixelsY: number[] = [];
+let borderColor = -1;
+
+function initBorder(screenX: number, screenY: number) {
+  const borderMinX = screenX - 32;
+  const borderMinY = screenY - 28;
+  const borderMaxX = screenX + 512 + 32 - 2;
+  const borderMaxY = screenY + 384 + 28 - 2;
+  const skipMap = [20, 14, 10, 8, 6, 4, 4, 2, 2, 2];
+
+  for (let y = borderMinY; y <= borderMaxY; y += 2) {
+    let skip = 0;
+    if (y < borderMinY + 20)
+      skip = skipMap[(y - borderMinY) >> 1];
+    else if (y > borderMaxY - 20)
+      skip = skipMap[(borderMaxY - y) >> 1];
+
+    for (let x = borderMinX + skip; x <= borderMaxX - skip; x += 2) {
+      if (x < screenX || x >= screenX + 512 || y < screenY || y >= screenY + 384) {
+        borderPixelsX.push(x);
+        borderPixelsY.push(y);
+      }
+    }
+  }
+}
+
+export function drawBorder(color: number) {
+  if (borderColor === color) return;
+  borderColor = color;
+  const index = (color << 1) | 1;
+  const palX = palXCacheDefault[index];
+  const palY = palYCacheDefault[index];
+  const sig0 = sig0CacheDefault[index];
+  const sig1 = sig1CacheDefault[index];
+
+  for (let i = 0; i < borderPixelsX.length; i++) {
+    const x = borderPixelsX[i];
+    const y = borderPixelsY[i];
+    world_copyRegion(palX, palY, palX + 1, palY + 1, x, y);
+    world_setSignal(x, y, sig0);
+    world_setSignal(x + 1, y, sig1);
+    world_setSignal(x + 1, y + 1, sig0);
+    world_setSignal(x, y + 1, sig1);
   }
 }
