@@ -1,6 +1,7 @@
 import { clearCpu, restoreCpu } from '../z80/init';
 import { RAM_MIN_ADDR, xFFFF } from './constants';
-import { resetMemoryBlock, restoreMemoryBlock } from './mem-init';
+import { clearMemoryBlock, restoreMemoryBlock } from './mem-init';
+import { refreshScreen } from './screen';
 
 export let chunkX: number;
 export let chunkY: number;
@@ -18,7 +19,8 @@ export function fetchState() {
   if (state.rom) {
     clearCpu();
     restoreMemoryBlock(0x0000, state.rom);
-    resetMemoryBlock(RAM_MIN_ADDR, xFFFF);
+    clearMemoryBlock(RAM_MIN_ADDR, xFFFF);
+    refreshScreen();
     state.rom = 0;
   }
 
@@ -29,6 +31,7 @@ export function fetchState() {
 
   if (state.ram1) {
     restoreMemoryBlock(0x4000, state.ram1);
+    refreshScreen();
     state.ram1 = 0;
   }
 

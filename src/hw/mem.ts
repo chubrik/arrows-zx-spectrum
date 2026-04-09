@@ -1,11 +1,16 @@
 import { getDirect, setMemDirect } from './arrows.ts';
-import { ATTRIBUTES_AFTER_ADDR } from './constants.ts';
+import { ATTRIBUTES_AFTER_ADDR, RAM_MIN_ADDR, xFFFF } from './constants.ts';
 import { dirtyBitmap, mem, memCtxX, memCtxY } from './mem-state.ts';
 
 const DIRTY_BITMAP_SIZE = 2048; // 0x10000 >> 5
 
+let romFetched = false;
+
 export function fetchMemory() {
-  for (let addr = 0; addr < memCtxX.length; addr++)
+  const fromAddr = romFetched ? RAM_MIN_ADDR : 0;
+  romFetched = true;
+
+  for (let addr = fromAddr; addr <= xFFFF; addr++)
     mem[addr] = getDirect(memCtxX[addr], memCtxY[addr]);
 }
 

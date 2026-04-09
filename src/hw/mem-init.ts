@@ -1,6 +1,6 @@
 import { createCtx, setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
-import { memCtxA, memCtxX, memCtxY } from './mem-state.ts';
+import { mem, memCtxA, memCtxX, memCtxY } from './mem-state.ts';
 import { chunkX, chunkY } from './state.ts';
 
 let inited = false;
@@ -34,16 +34,11 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
     // Line by line:
     x = memoryX + ((addr & 0x1F) << 3) + xShift;
     y = memoryY + ((addr & 0x3FFF) >> 5);
-
-    y += 16;
   }
   else {
     // 8x8 blocks:
     x = memoryX + (addr & 0xF8) + xShift;
     y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
-
-    if (addr >= ATTRIBUTES_MIN_ADDR && addr < 0x8000)
-      y += 16;
   }
 
   const ctx = createCtx(x, y);
@@ -52,15 +47,19 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
   memCtxA[addr] = ctx.a;
 }
 
-//todo forEach anywhere
-export function restoreMemoryBlock(fromAddr: number, data: number[]) {
-  initMemory();
-  data.forEach((value, i) => setMemDirect(fromAddr + i, value));
+export function clearMemoryBlock(fromAddr: number, toAddr: number) {
+  const data: number[] = [];
+  data.length = toAddr - fromAddr + 1;
+  restoreMemoryBlock(fromAddr, data);
 }
 
-export function resetMemoryBlock(fromAddr: number, toAddr: number) {
+export function restoreMemoryBlock(fromAddr: number, data: number[]) {
   initMemory();
 
-  for (let addr = fromAddr; addr <= toAddr; addr++)
-    setMemDirect(addr, 0);
+  for (let i = 0; i < data.length; i++) {
+    const addr = fromAddr + i;
+    const value = data[i];
+    mem[addr] = value;
+    setMemDirect(addr, value);
+  }
 }

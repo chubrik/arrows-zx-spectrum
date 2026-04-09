@@ -46,13 +46,20 @@ export function commitCpu() {
 }
 
 export function clearCpu() {
-  initCpu();
-  cacheX.forEach((_, i) => setDirect(cacheX[i], cacheY[i], cacheA[i], 0));
+  const values: number[] = [];
+  values.length = 27;
+  restoreCpu(values);
 }
 
 export function restoreCpu(values: number[]) {
   initCpu();
-  values.forEach((value, i) => setDirect(cacheX[i], cacheY[i], cacheA[i], value));
+  let i = 0;
+
+  loadCpu(() => {
+    const value = values[i];
+    setDirect(cacheX[i], cacheY[i], cacheA[i++], value);
+    return value;
+  });
 }
 
 function loadCpu(load: () => number) {

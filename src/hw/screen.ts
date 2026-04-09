@@ -95,6 +95,8 @@ function fillAttrCache(
 }
 
 export function refreshScreen() {
+  initScreen();
+
   for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < ATTRIBUTES_AFTER_ADDR >> 5; i++)
     dirtyBitmap[i] = 0xFFFFFFFF;
 
