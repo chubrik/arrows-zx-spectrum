@@ -13,7 +13,6 @@ import { eiDelay, setEIDelay } from './z80/registers';
 
 let enabled = false;
 let opCount = 0;
-let lastFrameTime = 0;
 
 initState();
 
@@ -54,12 +53,7 @@ always(() => {
     interrupt();
     incFrameCount();
 
-    if (OPTS_LIMITED_SPEED) {
-      let now: number;
-      while ((now = Date.now()) < lastFrameTime + MS_PER_FRAME) { }
-      lastFrameTime = now;
-    }
-
+    if (OPTS_LIMITED_SPEED) limitSpeed();
     break;
   }
 
@@ -67,3 +61,29 @@ always(() => {
   commitScreen();
   commitMemory();
 });
+
+const FRAME_WINDOW = 50;
+const FRAME_WINDOW_MS = FRAME_WINDOW * MS_PER_FRAME;
+const FRAME_DRIFT_MAX_MS = 5 * MS_PER_FRAME;
+const frameTimes = new Float64Array(FRAME_WINDOW);
+let frameTimesIdx = 0;
+
+function limitSpeed() {
+  let now = Date.now();
+  let target = frameTimes[frameTimesIdx] + FRAME_WINDOW_MS;
+
+  if (now - target > FRAME_DRIFT_MAX_MS) {
+    // If the buffer is not warmed up or we are more than 5 frames behind, we fill the buffer 
+    // as if the previous 50 frames were running strictly according to schedule and are ending now.
+    frameTimes[frameTimesIdx] = now;
+
+    for (let i = 1; i < FRAME_WINDOW; i++)
+      frameTimes[(frameTimesIdx + i) % FRAME_WINDOW] = now + i * MS_PER_FRAME - FRAME_WINDOW_MS;
+  }
+  else {
+    frameTimes[frameTimesIdx] = target;
+    while (now < target) now = Date.now();
+  }
+
+  if (++frameTimesIdx === FRAME_WINDOW) frameTimesIdx = 0;
+}
