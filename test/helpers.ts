@@ -7,7 +7,7 @@ import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getIXh, getIXl, getIYh, ge
 
 export function setupCpu() {
   clearCpu();
-  setRamMinAddrForTest(0); //todo
+  setRamMinAddrForTest(0);
 }
 
 export interface CpuState {

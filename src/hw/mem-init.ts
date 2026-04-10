@@ -1,4 +1,4 @@
-import { createCtx, setMemDirect } from './arrows.ts';
+import { getArrowTypes, setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
 import { mem, memCtxA, memCtxX, memCtxY } from './mem-state.ts';
 import { cpuX, cpuY } from './state.ts';
@@ -41,10 +41,9 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
     y = memoryY + ((addr & 0x3F00) >> 5) + (addr & 0x7);
   }
 
-  const ctx = createCtx(x, y);
-  memCtxX[addr] = ctx.x;
-  memCtxY[addr] = ctx.y;
-  memCtxA[addr] = ctx.a;
+  memCtxX[addr] = x;
+  memCtxY[addr] = y;
+  memCtxA[addr] = getArrowTypes(x, y);
 }
 
 export function clearMemoryBlock(fromAddr: number, toAddr: number) {

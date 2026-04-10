@@ -44,7 +44,7 @@ always(() => {
 
 const FRAME_WINDOW = 50;
 const FRAME_WINDOW_MS = FRAME_WINDOW * MS_PER_FRAME;
-const FRAME_DRIFT_MAX_MS = 5 * MS_PER_FRAME;
+const FRAME_DRIFT_MAX_MS = 25 * MS_PER_FRAME;
 const frameTimes = new Float64Array(FRAME_WINDOW);
 let frameTimesIdx = 0;
 
@@ -53,7 +53,7 @@ function limitSpeed() {
   let target = frameTimes[frameTimesIdx] + FRAME_WINDOW_MS;
 
   if (now - target > FRAME_DRIFT_MAX_MS) {
-    // If the buffer is not warmed up or we are more than 5 frames behind, we fill the buffer 
+    // If the buffer is not warmed up or we are more than 25 frames behind, we fill the buffer 
     // as if the previous 50 frames were running strictly according to schedule and are ending now.
     frameTimes[frameTimesIdx] = now;
 

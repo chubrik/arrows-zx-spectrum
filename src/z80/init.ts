@@ -1,4 +1,4 @@
-import { getDirect, setDirect } from '../hw/arrows';
+import { getArrowTypes, getDirect, setDirect } from '../hw/arrows';
 import { xFF } from '../hw/constants';
 import { cpuX, cpuY } from '../hw/state';
 import { getF, getSYS, setF, setSYS } from './flags';
@@ -28,12 +28,8 @@ export function initCpu() {
   cacheY = [O(), ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, P(), ++y, ++y, ++y, O(), ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, P(), ++y, P()];
 
   for (let i = 0; i <= cacheX.length; i++)
-    cacheA[i] = (cacheX[i] & 8) === (cacheY[i] & 8) ? arrowTypes1 : arrowTypes2; //todo common
+    cacheA[i] = getArrowTypes(cacheX[i], cacheY[i]);
 }
-
-//todo common
-const arrowTypes1 = [10, 25];
-const arrowTypes2 = [1, 18];
 
 export function fetchCpu() {
   let i = 0;

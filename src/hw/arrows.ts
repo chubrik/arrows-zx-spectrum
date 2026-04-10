@@ -1,8 +1,6 @@
 import { memCtxA, memCtxX, memCtxY } from './mem-state.ts';
 import { world_getArrow, world_setArrow } from './world-refs.ts';
 
-export type ArrowCtx = { x: number; y: number; a: number[]; };
-
 export function getDirect(x: number, y: number): number {
   let value = 0;
 
@@ -32,11 +30,10 @@ export function setDirect(x: number, y: number, arrowTypes: number[], value: num
   }
 }
 
-export function createCtx(x: number, y: number): ArrowCtx {
+export function getArrowTypes(x: number, y: number): number[] {
   const xMod = x & 8;
   const yMod = y & 8;
-  const arrowTypes = xMod === yMod ? arrowTypes1 : arrowTypes2;
-  return { x, y, a: arrowTypes };
+  return xMod === yMod ? arrowTypes1 : arrowTypes2;
 }
 
 const arrowTypes1 = [10, 25];

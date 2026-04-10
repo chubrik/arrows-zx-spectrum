@@ -21,8 +21,8 @@ export let OPTS_OP_PER_TICK = OP_PER_FRAME + 2; // +2 to guarantee interrupt han
 export let OPTS_LIMITED_SPEED = true;
 
 export function fetchState() {
-  if (!_state.todo) return;
-  _state.todo = 0;
+  if (!_state.do) return;
+  _state.do = 0;
 
   if (_state.run) {
     cpuStarted = _state.run > 0;
@@ -87,8 +87,8 @@ export function fetchState() {
   }
 }
 
-interface State {
-  todo: number;
+export type State = {
+  do: number;
   run: number;
   by1: number;
   max: number;

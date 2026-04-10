@@ -33,15 +33,6 @@ function getBuildConfig(): BuildOptions {
   };
 }
 
-export async function minifyJs(code: string): Promise<string> {
-  const inlined = inlineFunctions(code);
-  const collapsed = await terserCollapse(inlined);
-  const compressed = await terserCompress(collapsed);
-  const arrowed = arrowFunctions(compressed);
-  const final = await terserCMangle(arrowed);
-  return postProcess(remangleTopLevel(final));
-}
-
 /** Collapse code (single pass — multi-pass collapse_vars has a terser bug). */
 export async function terserCollapse(code: string): Promise<string> {
   return (await minify(code, optsCollapse)).code!;
