@@ -98,8 +98,9 @@ function fillAttrCache(
 
 export function refreshScreen() {
   initScreen();
+  const indexAfterAttrs = ATTRIBUTES_AFTER_ADDR >> 5;
 
-  for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < ATTRIBUTES_AFTER_ADDR >> 5; i++)
+  for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < indexAfterAttrs; i++)
     dirtyBitmap[i] = 0xFFFFFFFF;
 
   commitScreen();

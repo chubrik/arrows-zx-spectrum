@@ -252,8 +252,8 @@ export function inlineFunctions(code: string): string {
           inlined = '(' + sub.body + ')';
         }
 
-        // Wrap in braces if multi-statement body lands in arrow expression context
-        if (hasTopLevel(inlined, ';')) {
+        // Wrap in braces if non-expression body lands in arrow expression context
+        if (!isExpressionBody(inlined)) {
           let k = ci - 1;
           while (k >= 0 && /\s/.test(result[k])) k--;
           if (k >= 1 && result[k - 1] === '=' && result[k] === '>') {

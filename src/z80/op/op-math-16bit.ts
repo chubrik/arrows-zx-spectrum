@@ -9,8 +9,9 @@ export function ADD_HL(rr: number) {
   const result = sum & xFFFF;
   setHLXY(result);
 
-  setF5((result >> 8) & F5);
-  setF3((result >> 8) & F3);
+  const resultHi = result >> 8;
+  setF5(resultHi & F5);
+  setF3(resultHi & F3);
   setFH(((hlxy ^ rr ^ result) >> 8) & FH);
   setFN(0);
   setFC((sum >> 16) & FC);
@@ -23,10 +24,11 @@ export function ADC_HL(rr: number) {
   const result = sum & xFFFF;
   setHL(result);
 
-  setFS((result >> 8) & FS);
+  const resultHi = result >> 8;
+  setFS(resultHi & FS);
   setFZ(result ? 0 : FZ);
-  setF5((result >> 8) & F5);
-  setF3((result >> 8) & F3);
+  setF5(resultHi & F5);
+  setF3(resultHi & F3);
   setFH(((hl ^ rr ^ result) >> 8) & FH);
   setFP(((hl ^ ~rr) & (hl ^ result) & 0x8000) >> 13);
   setFN(0);
@@ -40,12 +42,14 @@ export function SBC_HL(rr: number) {
   const result = diff & xFFFF;
   setHL(result);
 
-  setFS((result >> 8) & FS);
+  const resultHi = result >> 8;
+  const hlXorRr = hl ^ rr;
+  setFS(resultHi & FS);
   setFZ(result ? 0 : FZ);
-  setF5((result >> 8) & F5);
-  setF3((result >> 8) & F3);
-  setFH(((hl ^ rr ^ result) >> 8) & FH);
-  setFP(((hl ^ rr) & (hl ^ result) & 0x8000) >> 13);
+  setF5(resultHi & F5);
+  setF3(resultHi & F3);
+  setFH(((hlXorRr ^ result) >> 8) & FH);
+  setFP((hlXorRr & (hl ^ result) & 0x8000) >> 13);
   setFN(FN);
   setFC((diff >> 16) & FC);
 }

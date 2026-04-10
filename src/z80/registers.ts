@@ -1,4 +1,4 @@
-import { BIT7, xFF } from '../hw/constants';
+import { BIT7, xFF, xFFFF } from '../hw/constants';
 
 export let a = 0;
 export let b = 0;
@@ -33,9 +33,14 @@ export let i = 0;
 /*! @__INLINE__ */ export function setLa(value: number) { la = value; }
 
 /*! @__INLINE__ */ export function getBC() { return c | (b << 8); }
-/*! @__INLINE__ */ export function getDE() { return e | (d << 8); }
 /*! @__INLINE__ */ export function setBC(value: number) { c = value & xFF; b = value >> 8; }
+/*! @__INLINE__ */ export function incBC() { if (++c > xFF) { c = 0; b = (b + 1) & xFF; } }
+/*! @__INLINE__ */ export function decBC() { if (--c < 0) { c = xFF; b = (b - 1) & xFF; } }
+
+/*! @__INLINE__ */ export function getDE() { return e | (d << 8); }
 /*! @__INLINE__ */ export function setDE(value: number) { e = value & xFF; d = value >> 8; }
+/*! @__INLINE__ */ export function incDE() { if (++e > xFF) { e = 0; d = (d + 1) & xFF; } }
+/*! @__INLINE__ */ export function decDE() { if (--e < 0) { e = xFF; d = (d - 1) & xFF; } }
 
 /*! @__INLINE__ */ export function getH() { return hlxy[H]; }
 /*! @__INLINE__ */ export function getL() { return hlxy[L]; }
@@ -54,8 +59,10 @@ export let i = 0;
 
 /*! @__INLINE__ */ export function setSP(value: number) { sp = value; }
 /*! @__INLINE__ */ export function setPC(value: number) { pc = value; }
-/*! @__INLINE__ */ export function incSP() { return sp++; }
-/*! @__INLINE__ */ export function incPC() { return pc++; }
+/*! @__INLINE__ */ export function incSP_() { return sp++; }
+/*! @__INLINE__ */ export function incPC_() { return pc++; }
+/*! @__INLINE__ */ export function normSP() { sp &= xFFFF; }
+/*! @__INLINE__ */ export function normPC() { pc &= xFFFF; }
 
 /*! @__INLINE__ */ export function setI(value: number) { i = value; }
 
@@ -83,6 +90,8 @@ let LXY = L; // L / IXl / IYl
 /*! @__INLINE__ */ export function setHL(value: number) { hlxy[L] = value & xFF; hlxy[H] = value >> 8; }
 /*! @__INLINE__ */ export function getHLXY() { return hlxy[LXY] | (hlxy[LXY + 1] << 8); }
 /*! @__INLINE__ */ export function setHLXY(value: number) { hlxy[LXY] = value & xFF; hlxy[LXY + 1] = value >> 8; }
+/*! @__INLINE__ */ export function incHLXY() { if (++hlxy[LXY] > xFF) { hlxy[LXY] = 0; hlxy[LXY + 1] = (hlxy[LXY + 1] + 1) & xFF; } }
+/*! @__INLINE__ */ export function decHLXY() { if (--hlxy[LXY] < 0) { hlxy[LXY] = xFF; hlxy[LXY + 1] = (hlxy[LXY + 1] - 1) & xFF; } }
 
 export let r7 = 0;
 export let ri = 0;

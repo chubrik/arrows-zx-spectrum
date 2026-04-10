@@ -77,9 +77,10 @@ export function SUB_SBC(operand: number, fc: number = 0) {
   const diff = a - operand - fc;
   const result = diff & xFF;
 
+  const aXorOp = a ^ operand;
   calcFSZ53(result);
-  setFH((a ^ operand ^ result) & FH);
-  setFP(((a ^ operand) & (a ^ result) & FS) >> 5);
+  setFH((aXorOp ^ result) & FH);
+  setFP((aXorOp & (a ^ result) & FS) >> 5);
   setFN(FN);
   setFC((diff >> 8) & FC);
 
@@ -91,12 +92,13 @@ export function CP(operand: number) {
   const diff = a - operand;
   const result = diff & xFF;
 
+  const aXorOp = a ^ operand;
   setFS(result & FS);
   setFZ(result ? 0 : FZ);
   setF5(operand & F5);
   setF3(operand & F3);
-  setFH((a ^ operand ^ result) & FH);
-  setFP(((a ^ operand) & (a ^ result) & FS) >> 5);
+  setFH((aXorOp ^ result) & FH);
+  setFP((aXorOp & (a ^ result) & FS) >> 5);
   setFN(FN);
   setFC((diff >> 8) & FC);
 }

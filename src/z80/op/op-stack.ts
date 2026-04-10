@@ -1,6 +1,6 @@
 import { xFF, xFFFF } from '../../hw/constants';
 import { mem, write16 } from '../../hw/mem-state';
-import { incSP, pc, setPC, setSP, sp } from '../registers';
+import { incSP_, normSP, pc, setPC, setSP, sp } from '../registers';
 
 /** RST p */
 export function RST_p(addr: number) {
@@ -19,6 +19,6 @@ export function CALL_nn() {
 
 /** RET | RET cc | RETN | RETI */
 export function RET() {
-  setPC(mem[incSP()] | (mem[incSP()] << 8));
-  setSP(sp & xFFFF);
+  setPC(mem[incSP_()] | (mem[incSP_()] << 8));
+  normSP();
 }

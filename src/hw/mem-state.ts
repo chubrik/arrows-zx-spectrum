@@ -10,12 +10,12 @@ export const dirtyBitmap = /* @__PURE__ */ new Uint32Array(DIRTY_BITMAP_SIZE);
 let ramMinAddr = RAM_MIN_ADDR;
 export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
 
-export function write16(addr: number, low: number, high: number) {
+export function write16(addr: number, lo: number, hi: number) {
   if (addr < ramMinAddr) return;
-  writeBase(addr, low);
+  writeBase(addr, lo);
   if (addr === xFFFF) return;
   addr++;
-  writeBase(addr, high);
+  writeBase(addr, hi);
 }
 
 export function write(addr: number, value: number) {
@@ -27,6 +27,6 @@ export function write(addr: number, value: number) {
 function writeBase(addr: number, value: number) {
   if (mem[addr] !== value) {
     mem[addr] = value;
-    dirtyBitmap[addr >> 5] |= (1 << (addr & 31));
+    dirtyBitmap[addr >> 5] |= 1 << addr;
   }
 }

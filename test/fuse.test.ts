@@ -17,7 +17,7 @@ const mockPorts = vi.hoisted(() => ({
 
 vi.mock('../src/hw/ports', () => ({
   readPort: () => mockPorts.readQueue[mockPorts.readIndex++] ?? xFF,
-  writePort: (low: number, high: number, value: number) => { mockPorts.writes.push({ addr: (high << 8) | low, value }); },
+  writePort: (lo: number, hi: number, value: number) => { mockPorts.writes.push({ addr: (hi << 8) | lo, value }); },
 }));
 
 // ---------------------------------------------------------------------------
@@ -52,8 +52,8 @@ const REG_NAMES_16: Array<[keyof ReturnType<typeof getState>, keyof ReturnType<t
 
 const REG_NAMES_SINGLE = ['IX', 'IY', 'SP', 'PC', 'I', 'R', 'IM', 'IFF1', 'IFF2', 'halt'] as const;
 
-function splitHigh(val16: number): number { return (val16 >> 8) & xFF; }
-function splitLow(val16: number): number { return val16 & xFF; }
+function splitHi(val16: number): number { return (val16 >> 8) & xFF; }
+function splitLo(val16: number): number { return val16 & xFF; }
 
 // ---------------------------------------------------------------------------
 // Test suite
@@ -83,14 +83,14 @@ describe('FUSE Z80 tests', () => {
 
       // 3. Set registers from input
       setState({
-        A: splitHigh(input.AF), F: splitLow(input.AF),
-        B: splitHigh(input.BC), C: splitLow(input.BC),
-        D: splitHigh(input.DE), E: splitLow(input.DE),
-        H: splitHigh(input.HL), L: splitLow(input.HL),
-        Aa: splitHigh(input.AFa), Fa: splitLow(input.AFa),
-        Ba: splitHigh(input.BCa), Ca: splitLow(input.BCa),
-        Da: splitHigh(input.DEa), Ea: splitLow(input.DEa),
-        Ha: splitHigh(input.HLa), La: splitLow(input.HLa),
+        A: splitHi(input.AF), F: splitLo(input.AF),
+        B: splitHi(input.BC), C: splitLo(input.BC),
+        D: splitHi(input.DE), E: splitLo(input.DE),
+        H: splitHi(input.HL), L: splitLo(input.HL),
+        Aa: splitHi(input.AFa), Fa: splitLo(input.AFa),
+        Ba: splitHi(input.BCa), Ca: splitLo(input.BCa),
+        Da: splitHi(input.DEa), Ea: splitLo(input.DEa),
+        Ha: splitHi(input.HLa), La: splitLo(input.HLa),
         IX: input.IX, IY: input.IY,
         SP: input.SP, PC: input.PC,
         WZ: input.WZ,
@@ -139,8 +139,8 @@ describe('FUSE Z80 tests', () => {
           default: continue;
         }
         if (gotVal !== expVal) {
-          const expHi = splitHigh(expVal);
-          const expLo = splitLow(expVal);
+          const expHi = splitHi(expVal);
+          const expLo = splitLo(expVal);
           if (gotHi !== expHi) mismatches.push(`  ${hi}: got 0x${gotHi.toString(16).padStart(2, '0')}, expected 0x${expHi.toString(16).padStart(2, '0')}`);
           if (gotLo !== expLo) mismatches.push(`  ${lo}: got 0x${gotLo.toString(16).padStart(2, '0')}, expected 0x${expLo.toString(16).padStart(2, '0')}`);
         }

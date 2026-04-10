@@ -2,50 +2,51 @@ import { xFF, xFFFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
 import { readPort, writePort } from '../../hw/ports';
 import { calcFP, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { a, b, c, getBC, getDE, getHL, getHLXY, pc, setB, setBC, setDE, setHL, setHLXY, setPC } from '../registers';
+import { a, b, c, decBC, decDE, decHLXY, getDE, getHL, getHLXY, incDE, incHLXY, pc, setB, setHL, setPC } from '../registers';
 
 /** LDI | LDD | LDIR | LDDR */
-export function LD_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
+export function LD_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
   const de = getDE();
   const hlxy = getHLXY();
-  const count = (getBC() - 1) & xFFFF;
   const value = mem[hlxy];
-  setBC(count);
-  setDE((de + inc) & xFFFF);
-  setHLXY((hlxy + inc) & xFFFF);
+  decBC();
+  if (inc) { incDE(); incHLXY(); }
+  else { decDE(); decHLXY(); }
   write(de, value);
 
   const n = (a + value) & xFF;
+  const cORb = c || b;
   setF5((n & 0x02) << 4);
   setF3(n & F3);
   setFH(0);
-  setFP(count ? FP : 0);
+  setFP(cORb ? FP : 0);
   setFN(0);
 
-  if (repeat && count)
+  if (repeat && cORb)
     setPC((pc - 2) & xFFFF);
 }
 
 /** CPI | CPD | CPIR | CPDR */
-export function CP_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
+export function CP_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
   const hlxy = getHLXY();
-  const count = (getBC() - 1) & xFFFF;
   const value = mem[hlxy];
-  setBC(count);
-  setHLXY((hlxy + inc) & xFFFF);
+  decBC();
+  if (inc) { incHLXY(); }
+  else { decHLXY(); }
 
   const diff = (a - value) & xFF;
   const fh = (a ^ value ^ diff) & FH;
   const n = (diff - (fh ? 1 : 0)) & xFF;
+  const cORb = c || b;
   setFS(diff & FS);
   setFZ(diff ? 0 : FZ);
   setF5((n & 0x02) << 4);
   setFH(fh);
   setF3(n & F3);
-  setFP(count ? FP : 0);
+  setFP(cORb ? FP : 0);
   setFN(FN);
 
-  if (repeat && count && diff)
+  if (repeat && cORb && diff)
     setPC((pc - 2) & xFFFF);
 }
 
