@@ -2,7 +2,6 @@ import { build, type BuildOptions } from 'esbuild';
 import { mkdirSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
 import { minify, type MinifyOptions } from 'terser';
-import { remangleTopLevel } from './remangle.ts';
 
 export const SRC_DIR = 'src';
 export const DIST_DIR = 'dist';
@@ -111,11 +110,13 @@ const optsCompressMangle: MinifyOptions = {
   format: formatOpts,
 };
 
-/** Inline functions annotated with \@\_\_INLINE\__. */
-// Replaces all call sites with the function body, substituting params with args.
-// Handles single-statement bodies (e.g. simple setters: sp = value).
+/** Inline functions whose body begins with the inline marker. */
+// Decl-level: `function name(...) { /*!inline*/ ... }` — body starts with marker.
+// Call-site: `/*!inline*/ name(...)` — marker right before a call expression.
+// Marker lives INSIDE the body so esbuild's tree-shaking removes it together with
+// the function — no orphaning of the comment onto adjacent declarations.
 export function inlineFunctions(code: string): string {
-  const marker = '/*! @__INLINE__ */';
+  const marker = '/*!inline*/';
 
   interface InlineDef {
     name: string;
@@ -126,30 +127,15 @@ export function inlineFunctions(code: string): string {
   }
 
   const defs: InlineDef[] = [];
-  let searchPos = 0;
+  const funcRe = /\bfunction\s+([a-zA-Z_$][\w$]*)\s*\(/g;
+  let match: RegExpExecArray | null;
 
-  while (true) {
-    const idx = code.indexOf(marker, searchPos);
-    if (idx === -1) break;
+  while ((match = funcRe.exec(code)) !== null) {
+    const defStart = match.index;
+    const name = match[1];
+    let i = match.index + match[0].length; // position right after '('
 
-    let i = idx + marker.length;
-    while (i < code.length && /\s/.test(code[i])) i++;
-
-    if (!code.startsWith('function ', i)) {
-      searchPos = idx + 1;
-      continue;
-    }
-
-    // Parse name
-    i += 'function '.length;
-    const nameStart = i;
-    while (i < code.length && /[a-zA-Z0-9_$]/.test(code[i])) i++;
-    const name = code.slice(nameStart, i);
-    if (!name) { searchPos = idx + 1; continue; }
-
-    // Parse params
-    while (i < code.length && code[i] !== '(') i++;
-    i++;
+    // Parse params (balanced parens)
     const ps = i;
     let depth = 1;
     while (i < code.length && depth > 0) {
@@ -159,32 +145,42 @@ export function inlineFunctions(code: string): string {
     }
     const params = code.slice(ps, i - 1).split(',').map(p => p.trim()).filter(Boolean);
 
-    // Parse body
+    // Skip whitespace, expect body opening brace
     while (i < code.length && /\s/.test(code[i])) i++;
-    if (code[i] !== '{') { searchPos = idx + 1; continue; }
+    if (code[i] !== '{') continue;
     i++;
-    const bs = i;
+
+    // First non-whitespace token in body must be the marker
+    let firstTok = i;
+    while (firstTok < code.length && /\s/.test(code[firstTok])) firstTok++;
+    if (!code.startsWith(marker, firstTok)) continue;
+
+    // Body content starts after the marker
+    const bs = firstTok + marker.length;
+
+    // Find matching '}' (body end)
+    let bi = bs;
     depth = 1;
-    while (i < code.length && depth > 0) {
-      const ch = code[i];
+    while (bi < code.length && depth > 0) {
+      const ch = code[bi];
       if (ch === '"' || ch === "'" || ch === '`') {
-        i++;
-        while (i < code.length && code[i] !== ch) {
-          if (code[i] === '\\') i++;
-          i++;
+        bi++;
+        while (bi < code.length && code[bi] !== ch) {
+          if (code[bi] === '\\') bi++;
+          bi++;
         }
-        i++;
+        bi++;
         continue;
       }
       if (ch === '{') depth++;
       else if (ch === '}') depth--;
-      i++;
+      bi++;
     }
 
-    let bodyExpr = code.slice(bs, i - 1).trim().replace(/;$/, '');
+    let bodyExpr = code.slice(bs, bi - 1).trim().replace(/;$/, '');
     if (bodyExpr.startsWith('return ')) bodyExpr = bodyExpr.slice(7);
-    defs.push({ name, params, bodyExpr, defStart: idx, defEnd: i });
-    searchPos = i;
+    defs.push({ name, params, bodyExpr, defStart, defEnd: bi });
+    funcRe.lastIndex = bi;
   }
 
   if (defs.length === 0)
@@ -283,7 +279,7 @@ export function inlineFunctions(code: string): string {
   return result.replaceAll(marker, '');
 }
 
-// Inline call-site markers: @__INLINE__ before a call → expand body at that call site only.
+// Inline call-site markers: marker before a call → expand body at that call site only.
 // Supports multi-statement bodies with `return`. Renames local variables (suffix `_`) to avoid
 // name conflicts with the surrounding scope. The function definition is preserved.
 function inlineCallSites(code: string, marker: string): string {
@@ -529,7 +525,8 @@ function safeSubstitute(params: string[], args: string[], bodyExpr: string): { p
     const arg = args[k];
     const occurrences = (bodyExpr.match(paramRe) || []).length;
     if (isSimpleArg(arg) || occurrences <= 1) {
-      body = body.replace(paramRe, () => arg);
+      const replacement = isSimpleArg(arg) ? arg : `(${arg})`;
+      body = body.replace(paramRe, () => replacement);
     } else {
       const tmp = `__${params[k]}_${__safeSubCounter++}`;
       preambleLines.push(`let ${tmp} = ${arg}`);

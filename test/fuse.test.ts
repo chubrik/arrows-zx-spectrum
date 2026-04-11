@@ -43,14 +43,12 @@ const REG_NAMES_16: Array<[keyof ReturnType<typeof getState>, keyof ReturnType<t
   ['A', 'F', 'AF'],
   ['B', 'C', 'BC'],
   ['D', 'E', 'DE'],
-  ['H', 'L', 'HL'],
   ['Aa', 'Fa', "AF'"],
   ['Ba', 'Ca', "BC'"],
   ['Da', 'Ea', "DE'"],
-  ['Ha', 'La', "HL'"],
 ];
 
-const REG_NAMES_SINGLE = ['IX', 'IY', 'SP', 'PC', 'I', 'R', 'IM', 'IFF1', 'IFF2', 'halt'] as const;
+const REG_NAMES_SINGLE = ['HL', 'HLa', 'IX', 'IY', 'SP', 'PC', 'I', 'R', 'IM', 'IFF1', 'IFF2', 'halt'] as const;
 
 function splitHi(val16: number): number { return (val16 >> 8) & xFF; }
 function splitLo(val16: number): number { return val16 & xFF; }
@@ -86,13 +84,15 @@ describe('FUSE Z80 tests', () => {
         A: splitHi(input.AF), F: splitLo(input.AF),
         B: splitHi(input.BC), C: splitLo(input.BC),
         D: splitHi(input.DE), E: splitLo(input.DE),
-        H: splitHi(input.HL), L: splitLo(input.HL),
+        HL: input.HL,
         Aa: splitHi(input.AFa), Fa: splitLo(input.AFa),
         Ba: splitHi(input.BCa), Ca: splitLo(input.BCa),
         Da: splitHi(input.DEa), Ea: splitLo(input.DEa),
-        Ha: splitHi(input.HLa), La: splitLo(input.HLa),
-        IX: input.IX, IY: input.IY,
-        SP: input.SP, PC: input.PC,
+        HLa: input.HLa,
+        IX: input.IX,
+        IY: input.IY,
+        SP: input.SP,
+        PC: input.PC,
         WZ: input.WZ,
         I: input.I, R: input.R,
         IM: input.im as 0 | 1 | 2,
@@ -131,11 +131,9 @@ describe('FUSE Z80 tests', () => {
           case 'AF': expVal = expected.AF; break;
           case 'BC': expVal = expected.BC; break;
           case 'DE': expVal = expected.DE; break;
-          case 'HL': expVal = expected.HL; break;
           case "AF'": expVal = expected.AFa; break;
           case "BC'": expVal = expected.BCa; break;
           case "DE'": expVal = expected.DEa; break;
-          case "HL'": expVal = expected.HLa; break;
           default: continue;
         }
         if (gotVal !== expVal) {
@@ -151,6 +149,8 @@ describe('FUSE Z80 tests', () => {
         const gotVal = got[name] as number;
         let expVal: number;
         switch (name) {
+          case 'HL': expVal = expected.HL; break;
+          case 'HLa': expVal = expected.HLa; break;
           case 'IX': expVal = expected.IX; break;
           case 'IY': expVal = expected.IY; break;
           case 'SP': expVal = expected.SP; break;
@@ -164,7 +164,7 @@ describe('FUSE Z80 tests', () => {
           default: continue;
         }
         if (gotVal !== expVal) {
-          const pad = name === 'IX' || name === 'IY' || name === 'SP' || name === 'PC' ? 4 : 2;
+          const pad = name === 'HL' || name === 'HLa' || name === 'IX' || name === 'IY' || name === 'SP' || name === 'PC' ? 4 : 2;
           mismatches.push(`  ${name}: got 0x${gotVal.toString(16).padStart(pad, '0')}, expected 0x${expVal.toString(16).padStart(pad, '0')}`);
         }
       }

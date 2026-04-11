@@ -18,7 +18,7 @@ import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 export function executeMain() {
   refresh();
   if (hlt) return;
-  const op = /*! @__INLINE__ */ next();
+  const op = /*!inline*/ next();
   opsMain[op]();
 }
 

@@ -38,7 +38,7 @@ export function remangleTopLevel(code: string): string {
     current = findParent(globalScope, current) || globalScope;
   }
 
-  const identPositions: {start: number, end: number, name: string}[] = [];
+  const identPositions: { start: number, end: number, name: string }[] = [];
 
   function walkPattern(node: any, declare: boolean) {
     if (!node) return;

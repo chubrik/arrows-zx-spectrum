@@ -45,7 +45,7 @@ function checkFlashPhase(): boolean {
 }
 
 let frameCount = 0;
-/*! @__INLINE__ */ export function incFrameCount() { frameCount++; }
+export function incFrameCount() { /*!inline*/ frameCount++; }
 
 let inited = false;
 

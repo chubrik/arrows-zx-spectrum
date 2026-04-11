@@ -20,20 +20,20 @@ export const INT = BIT0;
 export let fs = 0, fz = 0, f53 = 0, fh = 0, fp = 0, fn = 0, fc = 0;
 export let im2 = 0, im1 = 0, iff2 = 0, iff1 = 0, hlt = 0, int = 0;
 
-/*! @__INLINE__ */ export function setFS(value: number) { fs = value; }
-/*! @__INLINE__ */ export function setFZ(value: number) { fz = value; }
-/*! @__INLINE__ */ export function setF53(value: number) { f53 = value; }
-/*! @__INLINE__ */ export function setFH(value: number) { fh = value; }
-/*! @__INLINE__ */ export function setFP(value: number) { fp = value; }
-/*! @__INLINE__ */ export function setFN(value: number) { fn = value; }
-/*! @__INLINE__ */ export function setFC(value: number) { fc = value; }
+export function setFS(value: number) { /*!inline*/ fs = value; }
+export function setFZ(value: number) { /*!inline*/ fz = value; }
+export function setF53(value: number) { /*!inline*/ f53 = value; }
+export function setFH(value: number) { /*!inline*/ fh = value; }
+export function setFP(value: number) { /*!inline*/ fp = value; }
+export function setFN(value: number) { /*!inline*/ fn = value; }
+export function setFC(value: number) { /*!inline*/ fc = value; }
 
-/*! @__INLINE__ */ export function setIM2(value: number) { im2 = value; }
-/*! @__INLINE__ */ export function setIM1(value: number) { im1 = value; }
-/*! @__INLINE__ */ export function setIFF2(value: number) { iff2 = value; }
-/*! @__INLINE__ */ export function setIFF1(value: number) { iff1 = value; }
-/*! @__INLINE__ */ export function setHLT(value: number) { hlt = value; }
-/*! @__INLINE__ */ export function setINT(value: number) { int = value; }
+export function setIM2(value: number) { /*!inline*/ im2 = value; }
+export function setIM1(value: number) { /*!inline*/ im1 = value; }
+export function setIFF2(value: number) { /*!inline*/ iff2 = value; }
+export function setIFF1(value: number) { /*!inline*/ iff1 = value; }
+export function setHLT(value: number) { /*!inline*/ hlt = value; }
+export function setINT(value: number) { /*!inline*/ int = value; }
 
 export function getF(): number {
   return fs | fz | f53 | fh | fp | fn | fc;
@@ -63,16 +63,16 @@ export function setSYS(value: number) {
 }
 
 /** Set S, Z, 5, 3 flags from 8-bit result */
-/*! @__INLINE__ */
 export function calcFSZ53(value: number) {
+  /*!inline*/
   fs = value & FS;
   fz = value ? 0 : FZ;
   f53 = value & F53;
 }
 
 /** Set P flag from 8-bit result */
-/*! @__INLINE__ */
 export function calcFP(value: number) {
+  /*!inline*/
   let v = value;
   v ^= v >> 4;
   v ^= v << 2;

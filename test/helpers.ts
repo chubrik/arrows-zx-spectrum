@@ -1,9 +1,9 @@
-import { xFF, xFFFF } from '../src/hw/constants';
+import { xFFFF } from '../src/hw/constants';
 import { mem, setRamMinAddrForTest } from '../src/hw/mem-state';
 import { executeMain } from '../src/z80/execute-main';
 import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from '../src/z80/flags';
 import { clearCpu } from '../src/z80/init';
-import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getHa, getIXh, getIXl, getIYh, getIYl, getL, getLa, getR, i, pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHa, setI, setIXh, setIXl, setIYh, setIYl, setL, setLa, setPC, setR, setSP, setWZ, sp } from '../src/z80/registers';
+import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getHL, getIXh, getIXl, getIYh, getIYl, getR, hla, i, pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setHL, setHLa, setI, setIX, setIY, setPC, setR, setSP, setWZ, sp } from '../src/z80/registers';
 
 export function setupCpu() {
   clearCpu();
@@ -14,13 +14,15 @@ export interface CpuState {
   A?: number; F?: number;
   B?: number; C?: number;
   D?: number; E?: number;
-  H?: number; L?: number;
+  HL?: number;
   Aa?: number; Fa?: number;
   Ba?: number; Ca?: number;
   Da?: number; Ea?: number;
-  Ha?: number; La?: number;
-  IX?: number; IY?: number;
-  SP?: number; PC?: number;
+  HLa?: number;
+  IX?: number;
+  IY?: number;
+  SP?: number;
+  PC?: number;
   WZ?: number;
   I?: number; R?: number;
   IM?: 0 | 1 | 2;
@@ -36,18 +38,16 @@ export function setState(state: CpuState) {
   if (state.C !== undefined) setC(state.C);
   if (state.D !== undefined) setD(state.D);
   if (state.E !== undefined) setE(state.E);
-  if (state.H !== undefined) setH(state.H);
-  if (state.L !== undefined) setL(state.L);
+  if (state.HL !== undefined) setHL(state.HL);
   if (state.Aa !== undefined) setAa(state.Aa);
   if (state.Fa !== undefined) setFa(state.Fa);
   if (state.Ba !== undefined) setBa(state.Ba);
   if (state.Ca !== undefined) setCa(state.Ca);
   if (state.Da !== undefined) setDa(state.Da);
   if (state.Ea !== undefined) setEa(state.Ea);
-  if (state.Ha !== undefined) setHa(state.Ha);
-  if (state.La !== undefined) setLa(state.La);
-  if (state.IX !== undefined) { setIXl(state.IX & xFF); setIXh((state.IX >> 8) & xFF); }
-  if (state.IY !== undefined) { setIYl(state.IY & xFF); setIYh((state.IY >> 8) & xFF); }
+  if (state.HLa !== undefined) setHLa(state.HLa);
+  if (state.IX !== undefined) setIX(state.IX);
+  if (state.IY !== undefined) setIY(state.IY);
   if (state.SP !== undefined) setSP(state.SP);
   if (state.PC !== undefined) setPC(state.PC);
   if (state.WZ !== undefined) setWZ(state.WZ);
@@ -67,7 +67,7 @@ export function setState(state: CpuState) {
   }
 }
 
-export function getState() {
+export function getState(): CpuState {
   return {
     A: a,
     F: getF(),
@@ -75,16 +75,14 @@ export function getState() {
     C: c,
     D: d,
     E: e,
-    H: getH(),
-    L: getL(),
+    HL: getHL(),
     Aa: aa,
     Fa: fa,
     Ba: ba,
     Ca: ca,
     Da: da,
     Ea: ea,
-    Ha: getHa(),
-    La: getLa(),
+    HLa: hla,
     IX: getIXl() | (getIXh() << 8),
     IY: getIYl() | (getIYh() << 8),
     SP: sp,

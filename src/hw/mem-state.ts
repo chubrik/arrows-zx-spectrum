@@ -23,8 +23,8 @@ export function write(addr: number, value: number) {
   writeBase(addr, value);
 }
 
-/*! @__INLINE__ */
 function writeBase(addr: number, value: number) {
+  /*!inline*/
   if (mem[addr] !== value) {
     mem[addr] = value;
     dirtyBitmap[addr >> 5] |= 1 << addr;

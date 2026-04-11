@@ -4,8 +4,8 @@ import { calcFP, calcFSZ53, F53, FC, fc, FH, FP, FS, FZ, setF53, setFC, setFH, s
 import { a, getHL, setA } from '../registers';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
-/*! @__INLINE__ */
 export function BIT_b_r(isSet: number, f53Src: number) {
+  /*!inline*/
   setFS(isSet & FS);
   setFZ(isSet ? 0 : FZ);
   setF53(f53Src & F53);
@@ -140,16 +140,16 @@ export function SRL_val(value: number): number {
   return result;
 }
 
-/*! @__INLINE__ */
 function setFRotA(result: number, newFc: number) {
+  /*!inline*/
   setF53(result & F53);
   setFH(0);
   setFN(0);
   setFC(newFc);
 }
 
-/*! @__INLINE__ */
 function setFShift(result: number, newFc: number) {
+  /*!inline*/
   calcFSZ53(result);
   calcFP(result);
   setFH(0);
