@@ -65,16 +65,44 @@ export function setWZ(value: number) { wzl = value & xFF; wzh = value >> 8; }
 
 //#region HL / IX / IY
 
+const XY_NONE = 0;
+const XY_IX = 1;
+const XY_IY = 2;
+
 export let isXYMode = false;
+let xyMode = XY_NONE;
 export let hlxy = 0;
 let hl = 0;
 export let ix = 0;
 export let iy = 0;
 
-export function setIXMode() { /*!inline*/ isXYMode = true; hl = hlxy; hlxy = ix; }
-export function setIYMode() { /*!inline*/ isXYMode = true; hl = hlxy; hlxy = iy; }
-export function unsetIXMode() { /*!inline*/ isXYMode = false; ix = hlxy; hlxy = hl; }
-export function unsetIYMode() { /*!inline*/ isXYMode = false; iy = hlxy; hlxy = hl; }
+export function setIXMode() {
+  /*!inline*/
+  if (xyMode === XY_NONE) hl = hlxy;
+  else if (xyMode === XY_IY) iy = hlxy;
+  hlxy = ix;
+  xyMode = XY_IX;
+  isXYMode = true;
+}
+
+export function setIYMode() {
+  /*!inline*/
+  if (xyMode === XY_NONE) hl = hlxy;
+  else if (xyMode === XY_IX) ix = hlxy;
+  hlxy = iy;
+  xyMode = XY_IY;
+  isXYMode = true;
+}
+
+export function unsetXYMode() {
+  /*!inline*/
+  if (xyMode === XY_IX) ix = hlxy;
+  else if (xyMode === XY_IY) iy = hlxy;
+  else return;
+  hlxy = hl;
+  xyMode = XY_NONE;
+  isXYMode = false;
+}
 
 export function setHLXY(value: number) { /*!inline*/ hlxy = value; }
 export function setIX(value: number) { /*!inline*/ ix = value; }

@@ -16,7 +16,7 @@ import {
   a, b, c, d, decBC, decDE, decHLXY, e, getBC, getDE, getH, getHXY, getL, getLXY, hlxy, incBC,
   incDE, incHLXY, incPC_, incSP_, isXYMode, normPC, normSP, pc, refresh, setA, setB, setC, setD,
   setE, setEIDelay, setH, setHLXY, setHXY, setIXMode, setIYMode, setL, setLXY, setPC, setSP, sp,
-  unsetIXMode, unsetIYMode
+  unsetXYMode
 } from './registers';
 import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 
@@ -262,7 +262,7 @@ const opsMain = [
   /* DA JP C,nn    */ () => fc ? setPCNext16() : setPC((pc + 2) & xFFFF),
   /* DB IN A,(n)   */ () => setA(readPort(next(), a)),
   /* DC CALL C,nn  */ () => fc ? CALL_nn() : setPC((pc + 2) & xFFFF),
-  /* DD --- IX --- */ () => { setIXMode(); executeMain(); unsetIXMode(); },
+  /* DD --- IX --- */ () => { setIXMode(); executeMain(); unsetXYMode(); },
   /* DE SBC A,n    */ () => SUB_SBC(next(), fc),
   /* DF RST 18h    */ () => RST_p(0x18),
 
@@ -296,7 +296,7 @@ const opsMain = [
   /* FA JP M,nn    */ () => fs ? setPCNext16() : setPC((pc + 2) & xFFFF),
   /* FB EI         */ () => { setIFF1(IFF1); setIFF2(IFF2); setEIDelay(1); },
   /* FC CALL M,nn  */ () => fs ? CALL_nn() : setPC((pc + 2) & xFFFF),
-  /* FD --- IY --- */ () => { setIYMode(); executeMain(); unsetIYMode(); },
+  /* FD --- IY --- */ () => { setIYMode(); executeMain(); unsetXYMode(); },
   /* FE CP n       */ () => CP(next()),
   /* FF RST 38h    */ () => RST_p(0x38),
 ];
