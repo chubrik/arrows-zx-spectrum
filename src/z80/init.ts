@@ -3,9 +3,9 @@ import { xFF } from '../hw/constants';
 import { cpuX, cpuY } from '../hw/state';
 import { getF, getSYS, setF, setSYS } from './flags';
 import {
-  a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getHa, getIXh, getIXl, getIYh, getIYl, getL, getLa, getR, i,
-  pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHa, setI,
-  setIXh, setIXl, setIYh, setIYl, setL, setLa, setPC, setR, setSP, sp
+  a, aa, b, ba, c, ca, d, da, e, ea, fa, getR, hla, hlxy, i, ix, iy, pc, setA, setAa, setB, setBa,
+  setC, setCa, setD, setDa, setE, setEa, setFa, setHLa, setHLXY, setI, setIX, setIY, setPC, setR,
+  setSP, sp
 } from './registers';
 
 let inited = false;
@@ -62,16 +62,16 @@ function loadCpu(load: () => number) {
   setA(load()); setF(load());
   setB(load()); setC(load());
   setD(load()); setE(load());
-  setH(load()); setL(load());
-  setIXh(load()); setIXl(load());
+  setHLXY((load() << 8) | load());
+  setIX((load() << 8) | load());
   setSP((load() << 8) | load());
   setPC((load() << 8) | load());
 
   setAa(load()); setFa(load());
   setBa(load()); setCa(load());
   setDa(load()); setEa(load());
-  setHa(load()); setLa(load());
-  setIYh(load()); setIYl(load());
+  setHLa((load() << 8) | load());
+  setIY((load() << 8) | load());
   setI(load()); setR(load());
   setSYS(load());
 }
@@ -80,16 +80,16 @@ function saveCpu(save: (value: number) => void) {
   save(a); save(getF());
   save(b); save(c);
   save(d); save(e);
-  save(getH()); save(getL());
-  save(getIXh()); save(getIXl());
+  save(hlxy >> 8); save(hlxy & xFF);
+  save(ix >> 8); save(ix & xFF);
   save(sp >> 8); save(sp & xFF);
   save(pc >> 8); save(pc & xFF);
 
   save(aa); save(fa);
   save(ba); save(ca);
   save(da); save(ea);
-  save(getHa()); save(getLa());
-  save(getIYh()); save(getIYl());
+  save(hla >> 8); save(hla & xFF);
+  save(iy >> 8); save(iy & xFF);
   save(i); save(getR());
   save(getSYS());
 }

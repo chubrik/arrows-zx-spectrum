@@ -3,7 +3,11 @@ import { mem, setRamMinAddrForTest } from '../src/hw/mem-state';
 import { executeMain } from '../src/z80/execute-main';
 import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from '../src/z80/flags';
 import { clearCpu } from '../src/z80/init';
-import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getHL, getIXh, getIXl, getIYh, getIYl, getR, hla, i, pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setHL, setHLa, setI, setIX, setIY, setPC, setR, setSP, setWZ, sp } from '../src/z80/registers';
+import {
+  a, aa, b, ba, c, ca, d, da, e, ea, fa, getR, hla, hlxy, i, ix, iy, pc, setA, setAa, setB, setBa,
+  setC, setCa, setD, setDa, setE, setEa, setFa, setHLa, setHLXY, setI, setIX, setIY, setPC, setR,
+  setSP, setWZ, sp
+} from '../src/z80/registers';
 
 export function setupCpu() {
   clearCpu();
@@ -38,7 +42,7 @@ export function setState(state: CpuState) {
   if (state.C !== undefined) setC(state.C);
   if (state.D !== undefined) setD(state.D);
   if (state.E !== undefined) setE(state.E);
-  if (state.HL !== undefined) setHL(state.HL);
+  if (state.HL !== undefined) setHLXY(state.HL);
   if (state.Aa !== undefined) setAa(state.Aa);
   if (state.Fa !== undefined) setFa(state.Fa);
   if (state.Ba !== undefined) setBa(state.Ba);
@@ -75,7 +79,7 @@ export function getState(): CpuState {
     C: c,
     D: d,
     E: e,
-    HL: getHL(),
+    HL: hlxy,
     Aa: aa,
     Fa: fa,
     Ba: ba,
@@ -83,8 +87,8 @@ export function getState(): CpuState {
     Da: da,
     Ea: ea,
     HLa: hla,
-    IX: getIXl() | (getIXh() << 8),
-    IY: getIYl() | (getIYh() << 8),
+    IX: ix,
+    IY: iy,
     SP: sp,
     PC: pc,
     I: i,

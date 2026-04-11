@@ -1,7 +1,7 @@
 import { BIT7, xFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
 import { calcFP, calcFSZ53, F53, FC, fc, FH, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { a, getHL, setA } from '../registers';
+import { a, hlxy, setA } from '../registers';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
 export function BIT_b_r(isSet: number, f53Src: number) {
@@ -80,12 +80,11 @@ export function RR_val(value: number): number {
 
 /** RLD */
 export function RLD() {
-  const hl = getHL();
-  const value = mem[hl];
+  const value = mem[hlxy];
   const resultA = (a & 0xF0) | (value >> 4);
   const resultMem = ((value << 4) | (a & 0x0F)) & xFF;
   setA(resultA);
-  write(hl, resultMem);
+  write(hlxy, resultMem);
 
   calcFSZ53(resultA);
   calcFP(resultA);
@@ -95,12 +94,11 @@ export function RLD() {
 
 /** RRD */
 export function RRD() {
-  const hl = getHL();
-  const value = mem[hl];
+  const value = mem[hlxy];
   const resultA = (a & 0xF0) | (value & 0x0F);
   const resultMem = ((a << 4) | (value >> 4)) & xFF;
   setA(resultA);
-  write(hl, resultMem);
+  write(hlxy, resultMem);
 
   calcFSZ53(resultA);
   calcFP(resultA);

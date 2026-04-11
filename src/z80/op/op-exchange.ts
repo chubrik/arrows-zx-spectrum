@@ -1,6 +1,9 @@
-import { mem, write } from '../../hw/mem-state';
+import { mem, write16 } from '../../hw/mem-state';
 import { getF, setF } from '../flags';
-import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getHL, getHXY, getL, getLXY, hla, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHL, setHLa, setHXY, setL, setLXY, sp } from '../registers';
+import {
+  a, aa, b, ba, c, ca, d, da, e, ea, fa, getDE, getHXY, getLXY, hla, hlxy, setA, setAa, setB, setBa,
+  setC, setCa, setD, setDa, setDE, setE, setEa, setFa, setHLa, setHLXY, sp
+} from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
@@ -18,12 +21,12 @@ export function EXX() {
   const c_ = c;
   const d_ = d;
   const e_ = e;
-  const hl_ = getHL();
+  const hl_ = hlxy;
   setB(ba);
   setC(ca);
   setD(da);
   setE(ea);
-  setHL(hla);
+  setHLXY(hla);
   setBa(b_);
   setCa(c_);
   setDa(d_);
@@ -33,20 +36,14 @@ export function EXX() {
 
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
 export function EX_sp_HL() {
-  const spl = mem[sp];
-  const sph = mem[sp + 1];
-  write(sp, getLXY());
-  write(sp + 1, getHXY());
-  setLXY(spl);
-  setHXY(sph);
+  const hlxy_ = mem[sp] | (mem[sp + 1] << 8);
+  write16(sp, getLXY(), getHXY());
+  setHLXY(hlxy_);
 }
 
 /** EX DE,HL (игнорирует DD/FD префикс — всегда D/E/H/L, не HXY/LXY) */
 export function EX_DE_HL() {
-  const d_ = d;
-  const e_ = e;
-  setD(getH());
-  setE(getL());
-  setH(d_);
-  setL(e_);
+  const de = getDE();
+  setDE(hlxy);
+  setHLXY(de);
 }

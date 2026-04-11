@@ -12,7 +12,12 @@ import { ADD_HL } from './op/op-math-16bit';
 import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { CALL_nn, RET, RST_p } from './op/op-stack';
-import { a, b, c, d, decBC, decDE, decHLXY, e, getBC, getDE, getH, getHXY, getL, getLXY, hlxy, incBC, incDE, incHLXY, incPC_, incSP_, isXYMode, normPC, normSP, pc, refresh, setA, setB, setC, setD, setE, setEIDelay, setH, setHXY, setIXMode, setIYMode, setL, setLXY, setPC, setSP, sp, unsetIXMode, unsetIYMode } from './registers';
+import {
+  a, b, c, d, decBC, decDE, decHLXY, e, getBC, getDE, getH, getHXY, getL, getLXY, hlxy, incBC,
+  incDE, incHLXY, incPC_, incSP_, isXYMode, normPC, normSP, pc, refresh, setA, setB, setC, setD,
+  setE, setEIDelay, setH, setHLXY, setHXY, setIXMode, setIYMode, setL, setLXY, setPC, setSP, sp,
+  unsetIXMode, unsetIYMode
+} from './registers';
 import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 
 export function executeMain() {
@@ -58,7 +63,7 @@ const opsMain = [
   /* 1F RRA        */ RRA,
 
   /* 20 JR NZ,e    */ () => fz ? setPC((pc + 1) & xFFFF) : JR_e(),
-  /* 21 LD HL,nn   */ () => { setLXY(mem[incPC_()]); setHXY(mem[incPC_()]); normPC(); },
+  /* 21 LD HL,nn   */ () => setHLXY(next16()),
   /* 22 LD (nn),HL */ () => write16(next16(), getLXY(), getHXY()),
   /* 23 INC HL     */ () => incHLXY(),
   /* 24 INC H      */ () => setHXY(INC_r(getHXY())),
@@ -67,7 +72,7 @@ const opsMain = [
   /* 27 DAA        */ DAA,
   /* 28 JR Z,e     */ () => fz ? JR_e() : setPC((pc + 1) & xFFFF),
   /* 29 ADD HL,HL  */ () => ADD_HL(hlxy),
-  /* 2A LD HL,(nn) */ () => { const nn = next16(); setLXY(mem[nn]); setHXY(mem[nn + 1]); },
+  /* 2A LD HL,(nn) */ () => { const nn = next16(); setHLXY(mem[nn] | (mem[nn + 1] << 8)); },
   /* 2B DEC HL     */ () => decHLXY(),
   /* 2C INC L      */ () => setLXY(INC_r(getLXY())),
   /* 2D DEC L      */ () => setLXY(DEC_r(getLXY())),
@@ -131,7 +136,7 @@ const opsMain = [
   /* 63 LD H,E     */ () => setHXY(e),
   /* 64 LD H,H     */ nop,
   /* 65 LD H,L     */ () => setHXY(getLXY()),
-  /* 66 LD H,(HL)  */ () => setH(mem[getHLXYd()]),
+  /* 66 LD H,(HL)  */ () => isXYMode ? setH(mem[getHLXYd()]) : setHXY(mem[getHLXYd()]),
   /* 67 LD H,A     */ () => setHXY(a),
   /* 68 LD L,B     */ () => setLXY(b),
   /* 69 LD L,C     */ () => setLXY(c),
@@ -139,15 +144,15 @@ const opsMain = [
   /* 6B LD L,E     */ () => setLXY(e),
   /* 6C LD L,H     */ () => setLXY(getHXY()),
   /* 6D LD L,L     */ nop,
-  /* 6E LD L,(HL)  */ () => setL(mem[getHLXYd()]),
+  /* 6E LD L,(HL)  */ () => isXYMode ? setL(mem[getHLXYd()]) : setLXY(mem[getHLXYd()]),
   /* 6F LD L,A     */ () => setLXY(a),
 
   /* 70 LD (HL),B  */ () => write(getHLXYd(), b),
   /* 71 LD (HL),C  */ () => write(getHLXYd(), c),
   /* 72 LD (HL),D  */ () => write(getHLXYd(), d),
   /* 73 LD (HL),E  */ () => write(getHLXYd(), e),
-  /* 74 LD (HL),H  */ () => write(getHLXYd(), getH()),
-  /* 75 LD (HL),L  */ () => write(getHLXYd(), getL()),
+  /* 74 LD (HL),H  */ () => write(getHLXYd(), isXYMode ? getH() : getHXY()),
+  /* 75 LD (HL),L  */ () => write(getHLXYd(), isXYMode ? getL() : getLXY()),
   /* 76 HALT       */ () => { setHLT(HLT); setPC((pc - 1) & xFFFF); },
   /* 77 LD (HL),A  */ () => write(getHLXYd(), a),
   /* 78 LD A,B     */ () => setA(b),
@@ -240,7 +245,7 @@ const opsMain = [
   /* CA JP Z,nn    */ () => fz ? setPCNext16() : setPC((pc + 2) & xFFFF),
   /* CB -- BIT --- */ () => isXYMode ? executeBitXYd() : executeBit(),
   /* CC CALL Z,nn  */ () => fz ? CALL_nn() : setPC((pc + 2) & xFFFF),
-  /* CD CALL nn    */ () => CALL_nn(),
+  /* CD CALL nn    */ CALL_nn,
   /* CE ADC A,n    */ () => ADD_ADC(next(), fc),
   /* CF RST 08h    */ () => RST_p(0x08),
 
@@ -262,7 +267,7 @@ const opsMain = [
   /* DF RST 18h    */ () => RST_p(0x18),
 
   /* E0 RET PO     */ () => fp ? {} : RET(),
-  /* E1 POP HL     */ () => { setLXY(mem[incSP_()]); setHXY(mem[incSP_()]); normSP(); },
+  /* E1 POP HL     */ () => { setHLXY(mem[incSP_()] | (mem[incSP_()] << 8)); normSP(); },
   /* E2 JP PO,nn   */ () => fp ? setPC((pc + 2) & xFFFF) : setPCNext16(),
   /* E3 EX (SP),HL */ EX_sp_HL,
   /* E4 CALL PO,nn */ () => fp ? setPC((pc + 2) & xFFFF) : CALL_nn(),
@@ -270,7 +275,7 @@ const opsMain = [
   /* E6 AND n      */ () => AND_XOR_OR(a & next(), FH),
   /* E7 RST 20h    */ () => RST_p(0x20),
   /* E8 RET PE     */ () => fp ? RET() : {},
-  /* E9 JP (HL)    */ () => { setPC(getLXY() | (getHXY() << 8)); },
+  /* E9 JP (HL)    */ () => setPC(hlxy),
   /* EA JP PE,nn   */ () => fp ? setPCNext16() : setPC((pc + 2) & xFFFF),
   /* EB EX DE,HL   */ EX_DE_HL,
   /* EC CALL PE,nn */ () => fp ? CALL_nn() : setPC((pc + 2) & xFFFF),
@@ -287,7 +292,7 @@ const opsMain = [
   /* F6 OR n       */ () => AND_XOR_OR(a | next()),
   /* F7 RST 30h    */ () => RST_p(0x30),
   /* F8 RET M      */ () => fs ? RET() : {},
-  /* F9 LD SP,HL   */ () => { setSP(getLXY() | (getHXY() << 8)); },
+  /* F9 LD SP,HL   */ () => setSP(hlxy),
   /* FA JP M,nn    */ () => fs ? setPCNext16() : setPC((pc + 2) & xFFFF),
   /* FB EI         */ () => { setIFF1(IFF1); setIFF2(IFF2); setEIDelay(1); },
   /* FC CALL M,nn  */ () => fs ? CALL_nn() : setPC((pc + 2) & xFFFF),

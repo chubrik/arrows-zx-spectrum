@@ -2,7 +2,7 @@ import { xFF, xFFFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
 import { readPort, writePort } from '../../hw/ports';
 import { calcFP, F3, F5, F53, FC, FH, FN, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { a, b, c, decBC, decDE, decHLXY, getDE, getHL, hlxy, incDE, incHLXY, pc, setB, setHL, setPC } from '../registers';
+import { a, b, c, decBC, decDE, decHLXY, getDE, hlxy, incDE, incHLXY, pc, setB, setHLXY, setPC } from '../registers';
 
 /** LDI | LDD | LDIR | LDDR */
 export function LD_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
@@ -48,12 +48,11 @@ export function CP_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
 
 /** INI | IND | INIR | INDR */
 export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const hl = getHL();
   const count = (b - 1) & xFF;
   const value = readPort(c, count);
   setB(count);
-  setHL((hl + inc) & xFFFF);
-  write(hl, value);
+  write(hlxy, value);
+  setHLXY((hlxy + inc) & xFFFF);
 
   const k = value + ((c + inc) & xFF);
   const kOverflow = k > 255;
@@ -71,12 +70,11 @@ export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
 
 /** OUTI | OUTD | OTIR | OTDR */
 export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
-  const hl = getHL();
   const count = (b - 1) & xFF;
-  const newHL = (hl + inc) & xFFFF;
-  const value = mem[hl];
+  const newHL = (hlxy + inc) & xFFFF;
+  const value = mem[hlxy];
   setB(count);
-  setHL(newHL);
+  setHLXY(newHL);
   writePort(c, count, value);
 
   const k = value + (newHL & xFF);

@@ -17,6 +17,7 @@ export function next16(): number {
 }
 
 export function setPCNext16() {
+  /*!inline*/
   setPC(mem[pc] | (mem[pc + 1] << 8));
 }
 

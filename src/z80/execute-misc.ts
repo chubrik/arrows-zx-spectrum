@@ -8,7 +8,10 @@ import { in_port, ld_A_IR } from './op/op-etc';
 import { ADC_HL, SBC_HL } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
 import { RET } from './op/op-stack';
-import { a, b, c, d, e, getBC, getDE, getH, getHL, getL, getR, i, refresh, setA, setB, setC, setD, setE, setH, setI, setL, setR, setSP, sp } from './registers';
+import {
+  a, b, c, d, e, getBC, getDE, getHXY, getLXY, getR, hlxy, i, refresh, setA, setB, setC, setD, setE,
+  setHXY, setI, setLXY, setR, setSP, sp
+} from './registers';
 import { nop as _, next, next16, nop } from './utils';
 
 export function executeMisc() {
@@ -56,18 +59,18 @@ const opsMisc = [
   /* ED5E IM 2         */ () => { setIM1(0); setIM2(IM2); },
   /* ED5F LD A,R       */ () => ld_A_IR(getR()),
 
-  /* ED60 IN H,(C)     */ () => setH(in_port()),
-  /* ED61 OUT (C),H    */ () => writePort(c, b, getH()),
-  /* ED62 SBC HL,HL    */ () => SBC_HL(getHL()),
-  /* ED63 LD (nn),HL * */ () => write16(next16(), getL(), getH()),
+  /* ED60 IN H,(C)     */ () => setHXY(in_port()),
+  /* ED61 OUT (C),H    */ () => writePort(c, b, getHXY()),
+  /* ED62 SBC HL,HL    */ () => SBC_HL(hlxy),
+  /* ED63 LD (nn),HL * */ () => write16(next16(), getLXY(), getHXY()),
   /* ED64 NEG        * */ NEG,
   /* ED65 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED66 IM 0       * */ () => { setIM1(0); setIM2(0); },
   /* ED67 RRD          */ RRD,
-  /* ED68 IN L,(C)     */ () => setL(in_port()),
-  /* ED69 OUT (C),L    */ () => writePort(c, b, getL()),
-  /* ED6A ADC HL,HL    */ () => ADC_HL(getHL()),
-  /* ED6B LD HL,(nn) * */ () => { const nn = next16(); setL(mem[nn]); setH(mem[nn + 1]); },
+  /* ED68 IN L,(C)     */ () => setLXY(in_port()),
+  /* ED69 OUT (C),L    */ () => writePort(c, b, getLXY()),
+  /* ED6A ADC HL,HL    */ () => ADC_HL(hlxy),
+  /* ED6B LD HL,(nn) * */ () => { const nn = next16(); setLXY(mem[nn]); setHXY(mem[nn + 1]); },
   /* ED6C NEG        * */ NEG,
   /* ED6D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED6E IM 0       * */ () => { setIM1(0); setIM2(0); },
