@@ -1,6 +1,6 @@
 import { BIT7, xFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
-import { calcFP, calcFSZ53, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
+import { calcFP, calcFSZ53, F53, FC, FH, FN, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { a, setA } from '../registers';
 import { getHLXYd } from '../utils';
 
@@ -95,8 +95,7 @@ export function CP(operand: number) {
   const aXorOp = a ^ operand;
   setFS(result & FS);
   setFZ(result ? 0 : FZ);
-  setF5(operand & F5);
-  setF3(operand & F3);
+  setF53(operand & F53);
   setFH((aXorOp ^ result) & FH);
   setFP((aXorOp & (a ^ result) & FS) >> 5);
   setFN(FN);

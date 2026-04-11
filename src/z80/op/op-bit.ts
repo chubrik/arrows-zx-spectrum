@@ -1,6 +1,6 @@
 import { BIT7, xFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
-import { calcFP, calcFSZ53, F3, F5, FC, fc, FH, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
+import { calcFP, calcFSZ53, F53, FC, fc, FH, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { a, getHL, setA } from '../registers';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
@@ -8,9 +8,8 @@ import { a, getHL, setA } from '../registers';
 export function BIT_b_r(isSet: number, f53Src: number) {
   setFS(isSet & FS);
   setFZ(isSet ? 0 : FZ);
-  setF5(f53Src & F5);
+  setF53(f53Src & F53);
   setFH(FH);
-  setF3(f53Src & F3);
   setFP(isSet ? 0 : FP);
   setFN(0);
 }
@@ -111,48 +110,49 @@ export function RRD() {
 
 /** SLA r | SLA (HL) | SLA (IX+d) | SLA (IY+d) */
 export function SLA_val(value: number): number {
-  const fc = (value >> 7) & FC;
+  const newFc = (value >> 7) & FC;
   const result = (value << 1) & xFF;
-  setFShift(result, fc);
+  setFShift(result, newFc);
   return result;
 }
 
 /** SRA r | SRA (HL) | SRA (IX+d) | SRA (IY+d) */
 export function SRA_val(value: number): number {
-  const fc = value & FC;
+  const newFc = value & FC;
   const result = ((value & BIT7) | (value >> 1)) & xFF;
-  setFShift(result, fc);
+  setFShift(result, newFc);
   return result;
 }
 
 /** SLL r | SLL (HL) | SLL (IX+d) | SLL (IY+d) */
 export function SLL_val(value: number): number {
-  const fc = (value >> 7) & FC;
+  const newFc = (value >> 7) & FC;
   const result = ((value << 1) | 0x01) & xFF;
-  setFShift(result, fc);
+  setFShift(result, newFc);
   return result;
 }
 
 /** SRL r | SRL (HL) | SRL (IX+d) | SRL (IY+d) */
 export function SRL_val(value: number): number {
-  const fc = value & FC;
+  const newFc = value & FC;
   const result = (value >> 1) & xFF;
-  setFShift(result, fc);
+  setFShift(result, newFc);
   return result;
 }
 
-function setFRotA(result: number, fc: number) {
-  setF5(result & F5);
-  setF3(result & F3);
+/*! @__INLINE__ */
+function setFRotA(result: number, newFc: number) {
+  setF53(result & F53);
   setFH(0);
   setFN(0);
-  setFC(fc);
+  setFC(newFc);
 }
 
-function setFShift(result: number, fc: number) {
+/*! @__INLINE__ */
+function setFShift(result: number, newFc: number) {
   calcFSZ53(result);
   calcFP(result);
   setFH(0);
   setFN(0);
-  setFC(fc);
+  setFC(newFc);
 }

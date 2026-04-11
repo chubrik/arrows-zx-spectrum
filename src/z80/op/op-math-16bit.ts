@@ -1,5 +1,5 @@
 import { xFFFF } from '../../hw/constants';
-import { F3, F5, FC, fc, FH, FN, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
+import { F53, FC, fc, FH, FN, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { getHL, getHLXY, setHL, setHLXY } from '../registers';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
@@ -10,8 +10,7 @@ export function ADD_HL(rr: number) {
   setHLXY(result);
 
   const resultHi = result >> 8;
-  setF5(resultHi & F5);
-  setF3(resultHi & F3);
+  setF53(resultHi & F53);
   setFH(((hlxy ^ rr ^ result) >> 8) & FH);
   setFN(0);
   setFC((sum >> 16) & FC);
@@ -27,8 +26,7 @@ export function ADC_HL(rr: number) {
   const resultHi = result >> 8;
   setFS(resultHi & FS);
   setFZ(result ? 0 : FZ);
-  setF5(resultHi & F5);
-  setF3(resultHi & F3);
+  setF53(resultHi & F53);
   setFH(((hl ^ rr ^ result) >> 8) & FH);
   setFP(((hl ^ ~rr) & (hl ^ result) & 0x8000) >> 13);
   setFN(0);
@@ -46,8 +44,7 @@ export function SBC_HL(rr: number) {
   const hlXorRr = hl ^ rr;
   setFS(resultHi & FS);
   setFZ(result ? 0 : FZ);
-  setF5(resultHi & F5);
-  setF3(resultHi & F3);
+  setF53(resultHi & F53);
   setFH(((hlXorRr ^ result) >> 8) & FH);
   setFP((hlXorRr & (hl ^ result) & 0x8000) >> 13);
   setFN(FN);

@@ -1,7 +1,7 @@
 import { xFF, xFFFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
 import { readPort, writePort } from '../../hw/ports';
-import { calcFP, F3, F5, FC, FH, FN, FP, FS, FZ, setF3, setF5, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
+import { calcFP, F3, F5, F53, FC, FH, FN, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { a, b, c, decBC, decDE, decHLXY, getDE, getHL, getHLXY, incDE, incHLXY, pc, setB, setHL, setPC } from '../registers';
 
 /** LDI | LDD | LDIR | LDDR */
@@ -16,8 +16,7 @@ export function LD_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
 
   const n = (a + value) & xFF;
   const cORb = c || b;
-  setF5((n & 0x02) << 4);
-  setF3(n & F3);
+  setF53(((n << 4) & F5) | (n & F3));
   setFH(0);
   setFP(cORb ? FP : 0);
   setFN(0);
@@ -35,14 +34,13 @@ export function CP_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
   else { decHLXY(); }
 
   const diff = (a - value) & xFF;
-  const fh = (a ^ value ^ diff) & FH;
-  const n = (diff - (fh ? 1 : 0)) & xFF;
+  const newFh = (a ^ value ^ diff) & FH;
+  const n = (diff - (newFh ? 1 : 0)) & xFF;
   const cORb = c || b;
   setFS(diff & FS);
   setFZ(diff ? 0 : FZ);
-  setF5((n & 0x02) << 4);
-  setFH(fh);
-  setF3(n & F3);
+  setF53(((n << 4) & F5) | (n & F3));
+  setFH(newFh);
   setFP(cORb ? FP : 0);
   setFN(FN);
 
@@ -62,8 +60,7 @@ export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const k = value + ((c + inc) & xFF);
   const kOverflow = k > 255;
   setFS(count & FS);
-  setF5(count & F5);
-  setF3(count & F3);
+  setF53(count & F53);
   setFZ(count ? 0 : FZ);
   setFH(kOverflow ? FH : 0);
   calcFP((k & 7) ^ count);
@@ -87,8 +84,7 @@ export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const k = value + (newHL & xFF);
   const kOverflow = k > 255;
   setFS(count & FS);
-  setF5(count & F5);
-  setF3(count & F3);
+  setF53(count & F53);
   setFZ(count ? 0 : FZ);
   setFH(kOverflow ? FH : 0);
   calcFP((k & 7) ^ count);
