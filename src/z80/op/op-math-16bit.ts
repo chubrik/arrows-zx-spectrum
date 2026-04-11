@@ -1,19 +1,19 @@
 import { xFFFF } from '../../hw/constants';
 import { F53, FC, fc, FH, FN, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { getHL, getHLXY, setHL, setHLXY } from '../registers';
+import { getHL, hlxy, setHL, setHLXY } from '../registers';
 
 /** ADD HL,ss | ADD IX,pp | ADD IY,rr */
 export function ADD_HL(rr: number) {
-  const hlxy = getHLXY();
   const sum = hlxy + rr;
   const result = sum & xFFFF;
-  setHLXY(result);
-
+  
   const resultHi = result >> 8;
   setF53(resultHi & F53);
   setFH(((hlxy ^ rr ^ result) >> 8) & FH);
   setFN(0);
   setFC((sum >> 16) & FC);
+  
+  setHLXY(result);
 }
 
 /** ADC HL,ss */

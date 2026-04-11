@@ -12,7 +12,7 @@ import { ADD_HL } from './op/op-math-16bit';
 import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import { CALL_nn, RET, RST_p } from './op/op-stack';
-import { a, b, c, d, decBC, decDE, decHLXY, e, getBC, getDE, getH, getHLXY, getHXY, getL, getLXY, incBC, incDE, incHLXY, incPC_, incSP_, isXYMode, normPC, normSP, pc, refresh, setA, setB, setC, setD, setE, setEIDelay, setH, setHLMode, setHXY, setIXMode, setIYMode, setL, setLXY, setPC, setSP, sp } from './registers';
+import { a, b, c, d, decBC, decDE, decHLXY, e, getBC, getDE, getH, getHXY, getL, getLXY, hlxy, incBC, incDE, incHLXY, incPC_, incSP_, isXYMode, normPC, normSP, pc, refresh, setA, setB, setC, setD, setE, setEIDelay, setH, setHXY, setIXMode, setIYMode, setL, setLXY, setPC, setSP, sp, unsetIXMode, unsetIYMode } from './registers';
 import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 
 export function executeMain() {
@@ -66,7 +66,7 @@ const opsMain = [
   /* 26 LD H,n     */ () => setHXY(next()),
   /* 27 DAA        */ DAA,
   /* 28 JR Z,e     */ () => fz ? JR_e() : setPC((pc + 1) & xFFFF),
-  /* 29 ADD HL,HL  */ () => ADD_HL(getHLXY()),
+  /* 29 ADD HL,HL  */ () => ADD_HL(hlxy),
   /* 2A LD HL,(nn) */ () => { const nn = next16(); setLXY(mem[nn]); setHXY(mem[nn + 1]); },
   /* 2B DEC HL     */ () => decHLXY(),
   /* 2C INC L      */ () => setLXY(INC_r(getLXY())),
@@ -238,7 +238,7 @@ const opsMain = [
   /* C8 RET Z      */ () => fz ? RET() : {},
   /* C9 RET        */ () => RET(),
   /* CA JP Z,nn    */ () => fz ? setPCNext16() : setPC((pc + 2) & xFFFF),
-  /* CB -- BIT --- */ () => isXYMode() ? executeBitXYd() : executeBit(),
+  /* CB -- BIT --- */ () => isXYMode ? executeBitXYd() : executeBit(),
   /* CC CALL Z,nn  */ () => fz ? CALL_nn() : setPC((pc + 2) & xFFFF),
   /* CD CALL nn    */ () => CALL_nn(),
   /* CE ADC A,n    */ () => ADD_ADC(next(), fc),
@@ -257,7 +257,7 @@ const opsMain = [
   /* DA JP C,nn    */ () => fc ? setPCNext16() : setPC((pc + 2) & xFFFF),
   /* DB IN A,(n)   */ () => setA(readPort(next(), a)),
   /* DC CALL C,nn  */ () => fc ? CALL_nn() : setPC((pc + 2) & xFFFF),
-  /* DD --- IX --- */ () => { setIXMode(); executeMain(); setHLMode(); },
+  /* DD --- IX --- */ () => { setIXMode(); executeMain(); unsetIXMode(); },
   /* DE SBC A,n    */ () => SUB_SBC(next(), fc),
   /* DF RST 18h    */ () => RST_p(0x18),
 
@@ -291,7 +291,7 @@ const opsMain = [
   /* FA JP M,nn    */ () => fs ? setPCNext16() : setPC((pc + 2) & xFFFF),
   /* FB EI         */ () => { setIFF1(IFF1); setIFF2(IFF2); setEIDelay(1); },
   /* FC CALL M,nn  */ () => fs ? CALL_nn() : setPC((pc + 2) & xFFFF),
-  /* FD --- IY --- */ () => { setIYMode(); executeMain(); setHLMode(); },
+  /* FD --- IY --- */ () => { setIYMode(); executeMain(); unsetIYMode(); },
   /* FE CP n       */ () => CP(next()),
   /* FF RST 38h    */ () => RST_p(0x38),
 ];

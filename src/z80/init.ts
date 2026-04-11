@@ -3,8 +3,8 @@ import { xFF } from '../hw/constants';
 import { cpuX, cpuY } from '../hw/state';
 import { getF, getSYS, setF, setSYS } from './flags';
 import {
-  a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getIXh, getIXl, getIYh, getIYl, getL, getR, ha, i,
-  la, pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHa, setI,
+  a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getHa, getIXh, getIXl, getIYh, getIYl, getL, getLa, getR, i,
+  pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHa, setI,
   setIXh, setIXl, setIYh, setIYl, setL, setLa, setPC, setR, setSP, sp
 } from './registers';
 
@@ -88,7 +88,7 @@ function saveCpu(save: (value: number) => void) {
   save(aa); save(fa);
   save(ba); save(ca);
   save(da); save(ea);
-  save(ha); save(la);
+  save(getHa()); save(getLa());
   save(getIYh()); save(getIYl());
   save(i); save(getR());
   save(getSYS());

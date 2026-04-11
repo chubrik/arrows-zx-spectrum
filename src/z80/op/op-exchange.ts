@@ -1,6 +1,6 @@
 import { mem, write } from '../../hw/mem-state';
 import { getF, setF } from '../flags';
-import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getHXY, getL, getLXY, ha, la, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHa, setHXY, setL, setLa, setLXY, sp } from '../registers';
+import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getHL, getHXY, getL, getLXY, hla, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHL, setHLa, setHXY, setL, setLXY, sp } from '../registers';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
@@ -18,21 +18,17 @@ export function EXX() {
   const c_ = c;
   const d_ = d;
   const e_ = e;
+  const hl_ = getHL();
   setB(ba);
   setC(ca);
   setD(da);
   setE(ea);
+  setHL(hla);
   setBa(b_);
   setCa(c_);
   setDa(d_);
   setEa(e_);
-
-  const h_ = getH();
-  const l_ = getL();
-  setH(ha);
-  setL(la);
-  setHa(h_);
-  setLa(l_);
+  setHLa(hl_);
 }
 
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */

@@ -1,6 +1,6 @@
 import { xFFFF } from '../hw/constants';
 import { mem } from '../hw/mem-state';
-import { getHLXY, isXYMode, pc, setPC } from './registers';
+import { hlxy, isXYMode, pc, setPC } from './registers';
 
 export function nop() { };
 
@@ -22,13 +22,10 @@ export function setPCNext16() {
 
 /** (HL/IX+d/IY+d) */
 export function getHLXYd() {
-  const hlxyd = getHLXY();
-
-  if (isXYMode()) {
+  if (isXYMode) {
     let d = next();
     if (d >= 128) d -= 256; // -128...+127
-    return (hlxyd + d) & xFFFF;
+    return (hlxy + d) & xFFFF;
   }
-
-  return hlxyd;
+  return hlxy;
 }

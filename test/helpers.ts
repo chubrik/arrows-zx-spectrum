@@ -3,7 +3,7 @@ import { mem, setRamMinAddrForTest } from '../src/hw/mem-state';
 import { executeMain } from '../src/z80/execute-main';
 import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from '../src/z80/flags';
 import { clearCpu } from '../src/z80/init';
-import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getIXh, getIXl, getIYh, getIYl, getL, getR, ha, i, la, pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHa, setI, setIXh, setIXl, setIYh, setIYl, setL, setLa, setPC, setR, setSP, setWZ, sp } from '../src/z80/registers';
+import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getH, getHa, getIXh, getIXl, getIYh, getIYl, getL, getLa, getR, i, pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setH, setHa, setI, setIXh, setIXl, setIYh, setIYl, setL, setLa, setPC, setR, setSP, setWZ, sp } from '../src/z80/registers';
 
 export function setupCpu() {
   clearCpu();
@@ -83,8 +83,8 @@ export function getState() {
     Ca: ca,
     Da: da,
     Ea: ea,
-    Ha: ha,
-    La: la,
+    Ha: getHa(),
+    La: getLa(),
     IX: getIXl() | (getIXh() << 8),
     IY: getIYl() | (getIYh() << 8),
     SP: sp,

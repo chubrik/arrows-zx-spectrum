@@ -2,12 +2,11 @@ import { xFF, xFFFF } from '../../hw/constants';
 import { mem, write } from '../../hw/mem-state';
 import { readPort, writePort } from '../../hw/ports';
 import { calcFP, F3, F5, F53, FC, FH, FN, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { a, b, c, decBC, decDE, decHLXY, getDE, getHL, getHLXY, incDE, incHLXY, pc, setB, setHL, setPC } from '../registers';
+import { a, b, c, decBC, decDE, decHLXY, getDE, getHL, hlxy, incDE, incHLXY, pc, setB, setHL, setPC } from '../registers';
 
 /** LDI | LDD | LDIR | LDDR */
 export function LD_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
   const de = getDE();
-  const hlxy = getHLXY();
   const value = mem[hlxy];
   decBC();
   if (inc) { incDE(); incHLXY(); }
@@ -27,7 +26,6 @@ export function LD_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
 
 /** CPI | CPD | CPIR | CPDR */
 export function CP_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
-  const hlxy = getHLXY();
   const value = mem[hlxy];
   decBC();
   if (inc) { incHLXY(); }
