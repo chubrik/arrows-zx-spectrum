@@ -15,10 +15,13 @@ import { CALL_nn, RET, RST_p } from './op/op-stack';
 import { a, b, c, d, decBC, decDE, decHLXY, e, getBC, getDE, getH, getHXY, getL, getLXY, hlxy, incBC, incDE, incHLXY, incPC_, incSP_, isXYMode, normPC, normSP, pc, refresh, setA, setB, setC, setD, setE, setEIDelay, setH, setHXY, setIXMode, setIYMode, setL, setLXY, setPC, setSP, sp, unsetIXMode, unsetIYMode } from './registers';
 import { getHLXYd, next, next16, nop, setPCNext16 } from './utils';
 
+export const opStats = new Uint32Array(256);
+
 export function executeMain() {
   refresh();
   if (hlt) return;
   const op = /*! @__INLINE__ */ next();
+  opStats[op]++;
   opsMain[op]();
 }
 

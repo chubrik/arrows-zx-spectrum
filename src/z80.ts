@@ -2,19 +2,28 @@ import { MS_PER_FRAME, OP_PER_FRAME } from './hw/constants';
 import { commitMemory } from './hw/mem';
 import { commitScreen, incFrameCount } from './hw/screen';
 import { cpuStarted, fetchState, initState, OPTS_LIMITED_SPEED, OPTS_OP_PER_TICK } from './hw/state';
-import { executeMain } from './z80/execute-main';
+import { executeMain, opStats } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu } from './z80/init';
 import { interrupt } from './z80/interrupt';
 import { eiDelay, setEIDelay } from './z80/registers';
 
 let opCount = 0;
+let wasStarted = false;
 
 initState();
 
 always(() => {
   fetchState();
-  if (!cpuStarted) return;
+
+  if (!cpuStarted) {
+    if (wasStarted) {
+      wasStarted = false;
+      logOpStats();
+    }
+    return;
+  }
+  wasStarted = true;
 
   for (let i = 0; i < OPTS_OP_PER_TICK; i++) {
     opCount++;
@@ -66,4 +75,20 @@ function limitSpeed() {
   }
 
   if (++frameTimesIdx === FRAME_WINDOW) frameTimesIdx = 0;
+}
+
+function logOpStats() {
+  const entries: { op: number; count: number }[] = [];
+  for (let i = 0; i < 256; i++) {
+    if (opStats[i]) entries.push({ op: i, count: opStats[i] });
+  }
+  entries.sort((a, b) => b.count - a.count);
+
+  log('Top 20 instructions:');
+  for (let i = 0; i < 20 && i < entries.length; i++) {
+    const { op, count } = entries[i];
+    log(`  ${op.toString(16).toUpperCase().padStart(2, '0')}h  ${count}`);
+  }
+
+  opStats.fill(0);
 }
