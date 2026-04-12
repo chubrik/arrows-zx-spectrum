@@ -3,9 +3,8 @@ import { basename } from 'path';
 import { xFF } from '../src/hw/constants.ts';
 import { asciiToUnicode, bytesToUnicode } from '../src/util/encode.ts';
 import { IFF1, IFF2, IM1, IM2 } from '../src/z80/flags.ts';
-import { remangleTopLevel } from './remangle.ts';
 import { getResource } from './resources.ts';
-import { arrowFunctions, buildTs, DIST_DIR, inlineFunctions, postProcess, SRC_DIR, terserCMangle, terserCollapse, terserCompress, writeToPath } from './utils.ts';
+import { arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, postProcess, SRC_DIR, terserCMangle, terserCollapse, terserCompress, writeToPath } from './utils.ts';
 import { loadSnapshot } from './z80-snapshot.ts';
 
 await buildCpu();
@@ -23,24 +22,9 @@ console.log('');
 async function buildCpu() {
   const path = `${SRC_DIR}/z80.ts`;
   const fileName = basename(path, '.ts');
-  let stepNum = 0;
-
-  const step = (label: string, code: string) => {
-    const num = String(++stepNum).padStart(2, '0');
-    writeToPath(`${DIST_DIR}/temp/${fileName}/${fileName}.step${num}.${label}.js`, code);
-    return code;
-  };
 
   // Build pipeline
-  const srcTsCode = readFileSync(path, 'utf8');
-  const built = step('build', await buildTs(srcTsCode));
-  const inlined = step('inline', inlineFunctions(built));
-  const collapsed = step('collapse', await terserCollapse(inlined));
-  const compressed = step('compress', await terserCompress(collapsed));
-  const arrowed = step('arrows', arrowFunctions(compressed));
-  const cmangled = step('cmangle', await terserCMangle(arrowed));
-  const remangled = step('remangle', remangleTopLevel(cmangled));
-  const processed = step('postprocess', postProcess(remangled));
+  const { built, processed, step } = await cpuPipeline(path);
 
   // Decoder pipeline
   const decoderFuncName = 'unicodeToAscii';
@@ -93,17 +77,11 @@ async function buildSnapshot(z80Path: string) {
 
 async function buildData(
   distDir: string, fileName: string, stateName: string, data: Buffer,
-  cpuValues?: number[], border?: number) {
-  let stepNum = 0;
-
-  const step = (label: string, code: string) => {
-    const num = String(++stepNum).padStart(2, '0');
-    writeToPath(`${distDir}/${fileName}/${fileName}.step${num}.${label}.js`, code);
-    return code;
-  };
-
+  cpuValues?: number[], border?: number
+) {
+  const step = createStepFn(`${distDir}/${fileName}`, fileName);
+  
   const dataEncoded = bytesToUnicode(data);
-
   const srcTsCode = readFileSync(`${SRC_DIR}/data-template.ts`, 'utf8');
   const built = step('build', await buildTs(srcTsCode));
 

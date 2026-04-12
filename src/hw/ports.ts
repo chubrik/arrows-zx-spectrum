@@ -3,6 +3,11 @@ import { drawBorder } from './screen';
 import { cpuX, cpuY } from './state';
 import { world_getSignal } from './world-refs';
 
+declare const TEST: boolean;
+
+export const mockPorts: { readQueue: number[]; readIndex: number; writes: Array<{ addr: number; value: number }> } =
+  TEST ? { readQueue: [], readIndex: 0, writes: [] } : (undefined as never);
+
 let inited = false;
 let keysX: number;
 let keysY: number;
@@ -16,6 +21,8 @@ export function initPorts() {
 }
 
 export function readPort(lo: number, hi: number): number {
+  if (TEST) return mockPorts.readQueue[mockPorts.readIndex++] ?? xFF;
+
   let result = xFF;
 
   for (let i = 0; i < 8; i++) {
@@ -33,6 +40,11 @@ export function readPort(lo: number, hi: number): number {
 }
 
 export function writePort(lo: number, hi: number, value: number) {
+  if (TEST) {
+    mockPorts.writes.push({ addr: (hi << 8) | lo, value });
+    return;
+  }
+
   if (!(lo & BIT0))
     drawBorder(value & 0x07);
 }

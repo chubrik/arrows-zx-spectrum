@@ -1,27 +1,58 @@
 import { build, type BuildOptions } from 'esbuild';
-import { mkdirSync, writeFileSync } from 'fs';
-import { dirname } from 'path';
+import { mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { basename, dirname } from 'path';
 import { minify, type MinifyOptions } from 'terser';
+import { remangleTopLevel } from './remangle.ts';
 
 export const SRC_DIR = 'src';
 export const DIST_DIR = 'dist';
 
-export async function buildPath(path: string): Promise<string> {
-  const options = getBuildConfig();
+export type StepFn = (label: string, code: string) => string;
+
+export function createStepFn(tempDir: string, fileName: string): StepFn {
+  let stepNum = 0;
+  return (label: string, code: string) => {
+    const num = String(++stepNum).padStart(2, '0');
+    writeToPath(`${tempDir}/${fileName}.step${num}.${label}.js`, code);
+    return code;
+  };
+}
+
+/** Full CPU build pipeline: esbuild → inline → terser × 3 → arrows → remangle → postprocess. */
+export async function cpuPipeline(srcPath: string, opts?: { test?: boolean }) {
+  const fileName = basename(srcPath, '.ts');
+  const tempDir = `${DIST_DIR}/temp/${fileName}`;
+  const step = createStepFn(tempDir, fileName);
+
+  const srcTsCode = readFileSync(srcPath, 'utf8');
+  const built = step('build', await buildTs(srcTsCode, opts));
+  const inlined = step('inline', inlineFunctions(built));
+  const collapsed = step('collapse', await terserCollapse(inlined));
+  const compressed = step('compress', await terserCompress(collapsed));
+  const arrowed = step('arrows', arrowFunctions(compressed));
+  const cmangled = step('cmangle', await terserCMangle(arrowed));
+  const remangled = step('remangle', remangleTopLevel(cmangled));
+  const processed = step('postprocess', postProcess(remangled));
+
+  return { built, processed, step, tempDir, fileName };
+}
+
+export async function buildPath(path: string, opts?: { test?: boolean }): Promise<string> {
+  const options = getBuildConfig(opts);
   options.entryPoints = [path];
   const result = await build(options);
   return result.outputFiles![0].text;
 }
 
 /** Build TypeScript → JavaScript. */
-export async function buildTs(code: string): Promise<string> {
-  const options = getBuildConfig();
+export async function buildTs(code: string, opts?: { test?: boolean }): Promise<string> {
+  const options = getBuildConfig(opts);
   options.stdin = { contents: code, loader: 'ts', resolveDir: SRC_DIR };
   const result = await build(options);
   return result.outputFiles![0].text;
 }
 
-function getBuildConfig(): BuildOptions {
+function getBuildConfig(opts?: { test?: boolean }): BuildOptions {
   return {
     bundle: true,
     format: 'esm',
@@ -29,6 +60,7 @@ function getBuildConfig(): BuildOptions {
     drop: ['console', 'debugger'],
     treeShaking: true,
     legalComments: 'inline',
+    define: { TEST: opts?.test ? 'true' : 'false' },
   };
 }
 
@@ -286,7 +318,7 @@ export function inlineFunctions(code: string): string {
           continue;
         }
         const afterIdx = ri + name.length;
-        if (afterIdx < result.length && /[a-zA-Z0-9_$(]/.test(result[afterIdx])) {
+        if (afterIdx < result.length && /[a-zA-Z0-9_$(:.]/.test(result[afterIdx])) {
           out += result.slice(pos, afterIdx);
           pos = afterIdx;
           continue;
