@@ -1,5 +1,4 @@
-import { xFF } from '../hw/constants';
-import { mem, write16 } from '../hw/mem-state';
+import { mem, read16, write16, write88 } from '../hw/mem-state';
 import { writePort } from '../hw/ports';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
 import { RLD, RRD } from './op/op-bit';
@@ -10,7 +9,7 @@ import { NEG } from './op/op-math-etc';
 import { RET } from './op/op-stack';
 import {
   a, b, c, d, e, getBC, getDE, getHXY, getLXY, getR, hlxy, i, refresh, setA, setB, setC, setD, setE,
-  setHXY, setI, setLXY, setR, setSP, sp
+  setHLXY, setHXY, setI, setLXY, setR, setSP, sp
 } from './registers';
 import { nop as _, next, next16, nop } from './utils';
 
@@ -28,7 +27,7 @@ const opsMisc = [
   /* ED40 IN B,(C)     */ () => setB(in_port()),
   /* ED41 OUT (C),B    */ () => writePort(c, b, b),
   /* ED42 SBC HL,BC    */ () => SBC_HL(getBC()),
-  /* ED43 LD (nn),BC   */ () => write16(next16(), c, b),
+  /* ED43 LD (nn),BC   */ () => write88(next16(), c, b),
   /* ED44 NEG          */ NEG,
   /* ED45 RETN         */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED46 IM 0         */ () => { setIM1(0); setIM2(0); },
@@ -45,7 +44,7 @@ const opsMisc = [
   /* ED50 IN D,(C)     */ () => setD(in_port()),
   /* ED51 OUT (C),D    */ () => writePort(c, b, d),
   /* ED52 SBC HL,DE    */ () => SBC_HL(getDE()),
-  /* ED53 LD (nn),DE   */ () => write16(next16(), e, d),
+  /* ED53 LD (nn),DE   */ () => write88(next16(), e, d),
   /* ED54 NEG        * */ NEG,
   /* ED55 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED56 IM 1         */ () => { setIM1(IM1); setIM2(0); },
@@ -62,7 +61,7 @@ const opsMisc = [
   /* ED60 IN H,(C)     */ () => setHXY(in_port()),
   /* ED61 OUT (C),H    */ () => writePort(c, b, getHXY()),
   /* ED62 SBC HL,HL    */ () => SBC_HL(hlxy),
-  /* ED63 LD (nn),HL * */ () => write16(next16(), getLXY(), getHXY()),
+  /* ED63 LD (nn),HL * */ () => write16(next16(), hlxy),
   /* ED64 NEG        * */ NEG,
   /* ED65 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED66 IM 0       * */ () => { setIM1(0); setIM2(0); },
@@ -70,16 +69,16 @@ const opsMisc = [
   /* ED68 IN L,(C)     */ () => setLXY(in_port()),
   /* ED69 OUT (C),L    */ () => writePort(c, b, getLXY()),
   /* ED6A ADC HL,HL    */ () => ADC_HL(hlxy),
-  /* ED6B LD HL,(nn) * */ () => { const nn = next16(); setLXY(mem[nn]); setHXY(mem[nn + 1]); },
+  /* ED6B LD HL,(nn) * */ () => setHLXY(read16(next16())),
   /* ED6C NEG        * */ NEG,
   /* ED6D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED6E IM 0       * */ () => { setIM1(0); setIM2(0); },
   /* ED6F RLD          */ RLD,
 
-  /* ED70 IN (C)     * */ () => { in_port(); },
+  /* ED70 IN (C)     * */ in_port,
   /* ED71 OUT (C),0  * */ () => writePort(c, b, 0), // NMOS: 0, CMOS: 255 (undocumented)
   /* ED72 SBC HL,SP    */ () => SBC_HL(sp),
-  /* ED73 LD (nn),SP   */ () => write16(next16(), sp & xFF, sp >> 8),
+  /* ED73 LD (nn),SP   */ () => write16(next16(), sp),
   /* ED74 NEG        * */ NEG,
   /* ED75 RETN       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED76 IM 1       * */ () => { setIM1(IM1); setIM2(0); },
@@ -87,7 +86,7 @@ const opsMisc = [
   /* ED78 IN A,(C)     */ () => setA(in_port()),
   /* ED79 OUT (C),A    */ () => writePort(c, b, a),
   /* ED7A ADC HL,SP    */ () => ADC_HL(sp),
-  /* ED7B LD SP,(nn)   */ () => { const nn = next16(); setSP(mem[nn] | (mem[nn + 1] << 8)); },
+  /* ED7B LD SP,(nn)   */ () => setSP(read16(next16())),
   /* ED7C NEG        * */ NEG,
   /* ED7D RETI       * */ () => { RET(); setIFF1(iff2 ? IFF1 : 0); },
   /* ED7E IM 2       * */ () => { setIM1(0); setIM2(IM2); },

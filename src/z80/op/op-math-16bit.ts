@@ -7,8 +7,7 @@ export function ADD_HL(rr: number) {
   const sum = hlxy + rr;
   const result = sum & xFFFF;
 
-  const resultHi = result >> 8;
-  setF53(resultHi & F53);
+  setF53((result >> 8) & F53);
   setFH(((hlxy ^ rr ^ result) >> 8) & FH);
   setFN(0);
   setFC((sum >> 16) & FC);

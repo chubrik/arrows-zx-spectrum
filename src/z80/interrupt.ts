@@ -1,5 +1,5 @@
 import { xFF, xFFFF } from '../hw/constants';
-import { mem } from '../hw/mem-state';
+import { read16 } from '../hw/mem-state';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { RST_p } from './op/op-stack';
 import { i, pc, refresh, setPC } from './registers';
@@ -20,7 +20,7 @@ export function interrupt() {
 
   if (im2) {
     const vector = IM2_BUS_VALUE | (i << 8);
-    RST_p(mem[vector] | (mem[vector + 1] << 8));
+    RST_p(read16(vector));
   }
   else {
     // On ZX Spectrum IM 0 is equivalent to IM 1 (bus = 0xFF = RST 38h)

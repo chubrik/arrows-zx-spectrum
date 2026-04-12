@@ -42,11 +42,6 @@ export function decDE() { /*!inline*/ if (--e < 0) { e = xFF; d = (d - 1) & xFF;
 
 export function setSP(value: number) { /*!inline*/ sp = value; }
 export function setPC(value: number) { /*!inline*/ pc = value; }
-export function incSP_() { /*!inline*/ return sp++; }
-export function incPC_() { /*!inline*/ return pc++; }
-export function normSP() { /*!inline*/ sp &= xFFFF; }
-export function normPC() { /*!inline*/ pc &= xFFFF; }
-
 export function setI(value: number) { /*!inline*/ i = value; }
 
 export let r7 = 0;
@@ -65,43 +60,40 @@ export function setWZ(value: number) { wzl = value & xFF; wzh = value >> 8; }
 
 //#region HL / IX / IY
 
-const XY_NONE = 0;
-const XY_IX = 1;
-const XY_IY = 2;
+const enum HLMode {
+  HL,
+  IX,
+  IY,
+}
 
-export let isXYMode = false;
-let xyMode = XY_NONE;
+export let xyMode = HLMode.HL;
 export let hlxy = 0;
 let hl = 0;
 export let ix = 0;
 export let iy = 0;
 
+export function setHLMode() {
+  /*!inline*/
+  if (xyMode === HLMode.IX) ix = hlxy;
+  else if (xyMode === HLMode.IY) iy = hlxy;
+  hlxy = hl;
+  xyMode = HLMode.HL;
+}
+
 export function setIXMode() {
   /*!inline*/
-  if (xyMode === XY_NONE) hl = hlxy;
-  else if (xyMode === XY_IY) iy = hlxy;
+  if (xyMode === HLMode.HL) hl = hlxy;
+  else if (xyMode === HLMode.IY) iy = hlxy;
   hlxy = ix;
-  xyMode = XY_IX;
-  isXYMode = true;
+  xyMode = HLMode.IX;
 }
 
 export function setIYMode() {
   /*!inline*/
-  if (xyMode === XY_NONE) hl = hlxy;
-  else if (xyMode === XY_IX) ix = hlxy;
+  if (xyMode === HLMode.HL) hl = hlxy;
+  else if (xyMode === HLMode.IX) ix = hlxy;
   hlxy = iy;
-  xyMode = XY_IY;
-  isXYMode = true;
-}
-
-export function unsetXYMode() {
-  /*!inline*/
-  if (xyMode === XY_IX) ix = hlxy;
-  else if (xyMode === XY_IY) iy = hlxy;
-  else return;
-  hlxy = hl;
-  xyMode = XY_NONE;
-  isXYMode = false;
+  xyMode = HLMode.IY;
 }
 
 export function setHLXY(value: number) { /*!inline*/ hlxy = value; }

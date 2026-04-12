@@ -117,6 +117,7 @@ const optsCompressMangle: MinifyOptions = {
 // the function — no orphaning of the comment onto adjacent declarations.
 export function inlineFunctions(code: string): string {
   const marker = '/*!inline*/';
+  const hoistedVars: string[] = [];
 
   interface InlineDef {
     name: string;
@@ -239,13 +240,18 @@ export function inlineFunctions(code: string): string {
 
         // Substitute params → args in body (extract non-trivial args to temp vars)
         const sub = safeSubstitute(params, args, bodyExpr);
-        let inlined = sub.preamble + sub.body;
+        let inlined;
 
-        // Wrap expression bodies in parens to preserve operator precedence at the call site.
-        // The substituted body replaces `name(args)` (a single expression token), so without
-        // parens, e.g. body `c | b << 8` inside `(getBC() - 1)` parses as `c | (b << 7)`.
-        if (!sub.preamble && isExpressionBody(bodyExpr)) {
+        if (sub.temps.length > 0 && isExpressionBody(bodyExpr)) {
+          // Temp vars in expression context → comma expression with hoisted var
+          const assigns = sub.temps.map(t => `${t.name} = ${t.arg}`).join(', ');
+          inlined = '(' + assigns + ', ' + sub.body + ')';
+          for (const t of sub.temps) hoistedVars.push(t.name);
+        } else if (!sub.preamble && isExpressionBody(bodyExpr)) {
+          // Wrap expression bodies in parens to preserve operator precedence at the call site.
           inlined = '(' + sub.body + ')';
+        } else {
+          inlined = sub.preamble + sub.body;
         }
 
         // Wrap in braces if non-expression body lands in arrow expression context
@@ -264,6 +270,42 @@ export function inlineFunctions(code: string): string {
       result = out;
     }
 
+    // Replace bare references (inline function used as value, not called) → arrow
+    for (const { name, params, bodyExpr } of defs) {
+      let out = '';
+      let pos = 0;
+
+      while (pos < result.length) {
+        const ri = result.indexOf(name, pos);
+        if (ri === -1) { out += result.slice(pos); break; }
+
+        // Skip if part of a larger identifier or member access
+        if (ri > 0 && /[a-zA-Z0-9_$.]/.test(result[ri - 1])) {
+          out += result.slice(pos, ri + name.length);
+          pos = ri + name.length;
+          continue;
+        }
+        const afterIdx = ri + name.length;
+        if (afterIdx < result.length && /[a-zA-Z0-9_$(]/.test(result[afterIdx])) {
+          out += result.slice(pos, afterIdx);
+          pos = afterIdx;
+          continue;
+        }
+
+        // Build arrow function wrapping the inlined body
+        const fmtP = params.length === 0 ? '()' :
+                     params.length === 1 ? params[0] : `(${params.join(', ')})`;
+        const arrow = isExpressionBody(bodyExpr)
+          ? `${fmtP} => (${bodyExpr})`
+          : `${fmtP} => { ${bodyExpr} }`;
+
+        out += result.slice(pos, ri) + arrow;
+        pos = afterIdx;
+      }
+
+      result = out;
+    }
+
     if (result === prev) break;
   }
 
@@ -273,6 +315,11 @@ export function inlineFunctions(code: string): string {
     const prev = result;
     result = inlineCallSites(result, marker);
     if (result === prev) break;
+  }
+
+  // Prepend hoisted var declarations for comma-expression temps
+  if (hoistedVars.length > 0) {
+    result = `var ${hoistedVars.join(', ')};\n` + result;
   }
 
   // Remove orphaned markers (e.g. when esbuild tree-shakes the function but keeps the comment)
@@ -517,8 +564,15 @@ function isSimpleArg(expr: string): boolean {
 
 let __safeSubCounter = 0;
 
-function safeSubstitute(params: string[], args: string[], bodyExpr: string): { preamble: string; body: string } {
+interface SafeSubResult {
+  preamble: string;
+  temps: { name: string; arg: string }[];
+  body: string;
+}
+
+function safeSubstitute(params: string[], args: string[], bodyExpr: string): SafeSubResult {
   const preambleLines: string[] = [];
+  const temps: { name: string; arg: string }[] = [];
   let body = bodyExpr;
   for (let k = 0; k < params.length; k++) {
     const paramRe = new RegExp(`\\b${params[k]}\\b`, 'g');
@@ -530,10 +584,11 @@ function safeSubstitute(params: string[], args: string[], bodyExpr: string): { p
     } else {
       const tmp = `__${params[k]}_${__safeSubCounter++}`;
       preambleLines.push(`let ${tmp} = ${arg}`);
+      temps.push({ name: tmp, arg });
       body = body.replace(paramRe, () => tmp);
     }
   }
-  return { preamble: preambleLines.length > 0 ? preambleLines.join('; ') + '; ' : '', body };
+  return { preamble: preambleLines.length > 0 ? preambleLines.join('; ') + '; ' : '', temps, body };
 }
 
 interface ExtractedFunction {
