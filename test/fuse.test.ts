@@ -1,5 +1,5 @@
 import { getResource } from '../build/resources';
-import { mem } from '../src/hw/mem-state';
+import { mem } from '../src/hw/memory';
 import { mockPorts } from '../src/hw/ports';
 import { runFuseSuite } from './fuse-runner';
 import { getState, loadProgram, setState, setupCpu, step } from './helpers';

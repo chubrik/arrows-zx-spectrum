@@ -1,15 +1,15 @@
 import { xFF, xFFFF } from '../../hw/constants';
-import { mem, write } from '../../hw/mem-state';
+import { mem, write } from '../../hw/memory';
 import { readPort, writePort } from '../../hw/ports';
 import { calcFP, F3, F5, F53, FC, FH, FN, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
-import { a, b, c, decBC, decDE, decHLXY, getDE, hlxy, incDE, incHLXY, pc, setB, setHLXY, setPC } from '../registers';
+import { a, b, c, dec2PC, decBC, decDE, decHLXY, getDE, hlxy, incDE, incHLXY, setB, setHLXY } from '../registers';
 
 /** LDI | LDD | LDIR | LDDR */
-export function LD_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
+export function LD_block(isInc: boolean, repeat: 0 | 1 = 0) {
   const de = getDE();
   const value = mem[hlxy];
   decBC();
-  if (inc) { incDE(); incHLXY(); }
+  if (isInc) { incDE(); incHLXY(); }
   else { decDE(); decHLXY(); }
   write(de, value);
 
@@ -20,15 +20,14 @@ export function LD_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
   setFP(cORb ? FP : 0);
   setFN(0);
 
-  if (repeat && cORb)
-    setPC((pc - 2) & xFFFF);
+  if (repeat && cORb) dec2PC();
 }
 
 /** CPI | CPD | CPIR | CPDR */
-export function CP_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
+export function CP_block(isInc: boolean, repeat: 0 | 1 = 0) {
   const value = mem[hlxy];
   decBC();
-  if (inc) { incHLXY(); }
+  if (isInc) { incHLXY(); }
   else { decHLXY(); }
 
   const diff = (a - value) & xFF;
@@ -42,8 +41,7 @@ export function CP_block(inc: 1 | 0, repeat: 0 | 1 = 0) {
   setFP(cORb ? FP : 0);
   setFN(FN);
 
-  if (repeat && cORb && diff)
-    setPC((pc - 2) & xFFFF);
+  if (repeat && cORb && diff) dec2PC();
 }
 
 /** INI | IND | INIR | INDR */
@@ -64,8 +62,7 @@ export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   setFN(value & FS ? FN : 0);
   setFC(kOverflow ? FC : 0);
 
-  if (repeat && count)
-    setPC((pc - 2) & xFFFF);
+  if (repeat && count) dec2PC();
 }
 
 /** OUTI | OUTD | OTIR | OTDR */
@@ -87,6 +84,5 @@ export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   setFN(value & FS ? FN : 0);
   setFC(kOverflow ? FC : 0);
 
-  if (repeat && count)
-    setPC((pc - 2) & xFFFF);
+  if (repeat && count) dec2PC();
 }

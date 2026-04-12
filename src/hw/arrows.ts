@@ -1,4 +1,4 @@
-import { memCtxA, memCtxX, memCtxY } from './mem-state.ts';
+import { memCtxA, memCtxX, memCtxY } from './memory.ts';
 import { world_getArrow, world_setArrow } from './world-refs.ts';
 
 export function getDirect(x: number, y: number): number {

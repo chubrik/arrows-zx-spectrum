@@ -1,8 +1,8 @@
-import { xFF, xFFFF } from '../hw/constants';
-import { read16 } from '../hw/mem-state';
+import { xFF } from '../hw/constants';
+import { read16 } from '../hw/memory';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
-import { RST_p } from './op/op-stack';
-import { i, pc, refresh, setPC } from './registers';
+import { RST_p } from './op/op-etc';
+import { i, incPC, refresh } from './registers';
 
 const IM01_VECTOR = 0x0038;
 const IM2_BUS_VALUE = xFF;
@@ -11,7 +11,7 @@ export function interrupt() {
   if (!int) return;
   setINT(0);
   if (!iff1) return;
-  if (hlt) setPC((pc + 1) & xFFFF);
+  if (hlt) incPC();
   setIFF1(0);
   setIFF2(0);
   setHLT(0);

@@ -10,7 +10,7 @@
 
 declare const TEST: boolean;
 
-import { mem, setRamMinAddrForTest } from './hw/mem-state';
+import { mem, setRamMinAddrForTest } from './hw/memory';
 import { executeMain } from './z80/execute-main';
 import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from './z80/flags';
 import { clearCpu } from './z80/init';
@@ -19,7 +19,9 @@ import { mockPorts } from './hw/ports';
 
 if (TEST) {
   (globalThis as Record<string, unknown>).__z80 = {
-    mem, mockPorts, getF, getR,
+    mem, mockPorts,
+    getF: () => getF(),
+    getR: () => getR(),
     HLT, IFF1, IFF2, IM1, IM2,
     setRamMinAddrForTest: (v: number) => setRamMinAddrForTest(v),
     executeMain: () => executeMain(),

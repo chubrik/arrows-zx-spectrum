@@ -1,5 +1,5 @@
 import { MS_PER_FRAME, OP_PER_FRAME } from './hw/constants';
-import { commitMemory } from './hw/mem';
+import { commitMemory } from './hw/memory-init';
 import { commitScreen, incFrameCount } from './hw/screen';
 import { cpuStarted, fetchState, initState, OPTS_LIMITED_SPEED, OPTS_OP_PER_TICK } from './hw/state';
 import { executeMain } from './z80/execute-main';

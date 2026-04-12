@@ -1,6 +1,6 @@
-import { getArrowTypes, setMemDirect } from './arrows.ts';
-import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
-import { mem, memCtxA, memCtxX, memCtxY } from './mem-state.ts';
+import { getArrowTypes, getDirect, setMemDirect } from './arrows.ts';
+import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, RAM_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
+import { DIRTY_BITMAP_SIZE, dirtyBitmap, mem, memCtxA, memCtxX, memCtxY } from './memory.ts';
 import { cpuX, cpuY } from './state.ts';
 
 let inited = false;
@@ -46,13 +46,41 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
   memCtxA[addr] = getArrowTypes(x, y);
 }
 
-export function clearMemoryBlock(fromAddr: number, toAddr: number) {
-  const data: number[] = [];
-  data.length = toAddr - fromAddr + 1;
-  restoreMemoryBlock(fromAddr, data);
+let romFetched = false;
+
+export function fetchMemory() {
+  const fromAddr = romFetched ? RAM_MIN_ADDR : 0;
+  romFetched = true;
+
+  for (let addr = fromAddr; addr <= xFFFF; addr++)
+    mem[addr] = getDirect(memCtxX[addr], memCtxY[addr]);
 }
 
-export function restoreMemoryBlock(fromAddr: number, data: number[]) {
+export function commitMemory() {
+  for (let i = ATTRIBUTES_AFTER_ADDR >> 5; i < DIRTY_BITMAP_SIZE; i++) {
+    let bits = dirtyBitmap[i];
+    if (bits === 0) continue;
+    dirtyBitmap[i] = 0;
+    const addrBase = i << 5;
+
+    while (bits) {
+      const bit = bits & -bits;
+      const offset = 31 - Math.clz32(bit);
+      bits ^= bit;
+
+      const addr = addrBase + offset;
+      setMemDirect(addr, mem[addr]);
+    }
+  }
+}
+
+export function clearMemory(fromAddr: number, toAddr: number) {
+  const data: number[] = [];
+  data.length = toAddr - fromAddr + 1;
+  restoreMemory(fromAddr, data);
+}
+
+export function restoreMemory(fromAddr: number, data: number[]) {
   initMemory();
 
   for (let i = 0; i < data.length; i++) {

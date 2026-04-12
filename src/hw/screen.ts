@@ -1,6 +1,6 @@
 import { setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
-import { dirtyBitmap, mem } from './mem-state.ts';
+import { dirtyBitmap, mem } from './memory.ts';
 import { cpuX, cpuY } from './state.ts';
 import { world_copyRegion, world_setSignal } from './world-refs.ts';
 
@@ -101,7 +101,7 @@ export function refreshScreen() {
   const indexAfterAttrs = ATTRIBUTES_AFTER_ADDR >> 5;
 
   for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < indexAfterAttrs; i++)
-    dirtyBitmap[i] = 0xFFFFFFFF;
+    dirtyBitmap[i] = -1;
 
   commitScreen();
 }
@@ -129,7 +129,7 @@ export function commitScreen() {
         else if (value & BIT7) attrBits |= bit;
       }
     } else {
-      // Hot path (15 out of 16 frames): save dirty attributes to world
+      // Hot path (15 of 16 frames): save dirty attributes to world
       let ab = attrBits;
       while (ab) {
         const bit = ab & -ab;

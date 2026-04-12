@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
-import { describe } from 'vitest';
 import { getResource } from '../build/resources';
+import { xFFFF } from '../src/hw/constants';
 import { runFuseSuite, type CpuApi, type MockPorts } from './fuse-runner';
 import type { CpuState } from './helpers';
 
@@ -106,7 +106,7 @@ function getState(): CpuState {
 
 function loadProgram(addr: number, bytes: number[]) {
   for (let i = 0; i < bytes.length; i++) {
-    z80.mem[(addr + i) & 0xFFFF] = bytes[i];
+    z80.mem[(addr + i) & xFFFF] = bytes[i];
   }
 }
 

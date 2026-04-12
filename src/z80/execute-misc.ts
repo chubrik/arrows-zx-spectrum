@@ -1,12 +1,11 @@
-import { mem, read16, write16, write88 } from '../hw/mem-state';
+import { mem, read16, write16, write88 } from '../hw/memory';
 import { writePort } from '../hw/ports';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
 import { RLD, RRD } from './op/op-bit';
 import { CP_block, IN_block, LD_block, OUT_block } from './op/op-block';
-import { in_port, ld_A_IR } from './op/op-etc';
+import { in_port, ld_A_IR, RET } from './op/op-etc';
 import { ADC_HL, SBC_HL } from './op/op-math-16bit';
 import { NEG } from './op/op-math-etc';
-import { RET } from './op/op-stack';
 import {
   a, b, c, d, e, getBC, getDE, getHXY, getLXY, getR, hlxy, i, refresh, setA, setB, setC, setD, setE,
   setHLXY, setHXY, setI, setLXY, setR, setSP, sp
@@ -95,24 +94,24 @@ const opsMisc = [
   /* ED80 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
   /* ED90 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
 
-  /* EDA0 LDI         */ () => LD_block(1),
-  /* EDA1 CPI         */ () => CP_block(1),
+  /* EDA0 LDI         */ () => LD_block(true),
+  /* EDA1 CPI         */ () => CP_block(true),
   /* EDA2 INI         */ () => IN_block(+1),
   /* EDA3 OUTI        */ () => OUT_block(+1),
   /* EDA4 */ _, _, _, _,
-  /* EDA8 LDD         */ () => LD_block(0),
-  /* EDA9 CPD         */ () => CP_block(0),
+  /* EDA8 LDD         */ () => LD_block(false),
+  /* EDA9 CPD         */ () => CP_block(false),
   /* EDAA IND         */ () => IN_block(-1),
   /* EDAB OUTD        */ () => OUT_block(-1),
   /* EDAC */ _, _, _, _,
 
-  /* EDB0 LDIR        */ () => LD_block(1, 1),
-  /* EDB1 CPIR        */ () => CP_block(1, 1),
+  /* EDB0 LDIR        */ () => LD_block(true, 1),
+  /* EDB1 CPIR        */ () => CP_block(true, 1),
   /* EDB2 INIR        */ () => IN_block(+1, 1),
   /* EDB3 OTIR        */ () => OUT_block(+1, 1),
   /* EDB4 */ _, _, _, _,
-  /* EDB8 LDDR        */ () => LD_block(0, 1),
-  /* EDB9 CPDR        */ () => CP_block(0, 1),
+  /* EDB8 LDDR        */ () => LD_block(false, 1),
+  /* EDB9 CPDR        */ () => CP_block(false, 1),
   /* EDBA INDR        */ () => IN_block(-1, 1),
   /* EDBB OTDR        */ () => OUT_block(-1, 1),
   /* EDBC */ _, _, _, _,

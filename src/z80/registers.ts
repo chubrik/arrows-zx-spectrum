@@ -41,13 +41,23 @@ export function incDE() { /*!inline*/ if (++e > xFF) { e = 0; d = (d + 1) & xFF;
 export function decDE() { /*!inline*/ if (--e < 0) { e = xFF; d = (d - 1) & xFF; } }
 
 export function setSP(value: number) { /*!inline*/ sp = value; }
+export function incSP() { /*!inline*/ sp = (sp + 1) & xFFFF; }
+export function decSP() { /*!inline*/ sp = (sp - 1) & xFFFF; }
+export function inc2SP() { /*!inline*/ sp = (sp + 2) & xFFFF; }
+export function dec2SP() { /*!inline*/ sp = (sp - 2) & xFFFF; }
+
 export function setPC(value: number) { /*!inline*/ pc = value; }
+export function incPC() { /*!inline*/ pc = (pc + 1) & xFFFF; }
+export function decPC() { /*!inline*/ pc = (pc - 1) & xFFFF; }
+export function inc2PC() { /*!inline*/ pc = (pc + 2) & xFFFF; }
+export function dec2PC() { /*!inline*/ pc = (pc - 2) & xFFFF; }
+
 export function setI(value: number) { /*!inline*/ i = value; }
 
 export let r7 = 0;
 export let ri = 0;
-export function getR() { return (r7 & BIT7) | (ri &= 0x7F); }
-export function setR(value: number) { r7 = ri = value; }
+export function getR() { /*!inline*/ return (r7 & BIT7) | (ri &= 0x7F); }
+export function setR(value: number) { /*!inline*/ r7 = ri = value; }
 export function refresh() { /*!inline*/ ri++; }
 
 export let eiDelay: 0 | 1 = 0;

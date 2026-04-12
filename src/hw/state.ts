@@ -1,7 +1,6 @@
 import { clearCpu, fetchCpu, initCpu, restoreCpu } from '../z80/init';
 import { OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
-import { fetchMemory } from './mem';
-import { clearMemoryBlock, initMemory, restoreMemoryBlock } from './mem-init';
+import { clearMemory, fetchMemory, initMemory, restoreMemory } from './memory-init';
 import { initPorts } from './ports';
 import { drawBorder, initScreen, refreshScreen } from './screen';
 
@@ -63,26 +62,26 @@ export function fetchState() {
 
   if (_state.rom) {
     clearCpu();
-    restoreMemoryBlock(0x0000, _state.rom);
-    clearMemoryBlock(RAM_MIN_ADDR, xFFFF);
+    restoreMemory(0x0000, _state.rom);
+    clearMemory(RAM_MIN_ADDR, xFFFF);
     refreshScreen();
     drawBorder(0);
     _state.rom = 0;
   }
 
   if (_state.ram1) {
-    restoreMemoryBlock(0x4000, _state.ram1);
+    restoreMemory(0x4000, _state.ram1);
     refreshScreen();
     _state.ram1 = 0;
   }
 
   if (_state.ram2) {
-    restoreMemoryBlock(0x8000, _state.ram2);
+    restoreMemory(0x8000, _state.ram2);
     _state.ram2 = 0;
   }
 
   if (_state.ram3) {
-    restoreMemoryBlock(0xC000, _state.ram3);
+    restoreMemory(0xC000, _state.ram3);
     _state.ram3 = 0;
   }
 }

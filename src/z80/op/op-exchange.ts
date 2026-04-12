@@ -1,4 +1,4 @@
-import { read16, write16 } from '../../hw/mem-state';
+import { read16, write16 } from '../../hw/memory';
 import { getF, setF } from '../flags';
 import {
   a, aa, b, ba, c, ca, d, da, e, ea, fa, getDE, hla, hlxy, setA, setAa, setB, setBa, setC, setCa,
