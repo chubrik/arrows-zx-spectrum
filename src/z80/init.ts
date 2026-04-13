@@ -83,7 +83,7 @@ function saveCpu(save: (value: number) => void) {
   save(hlxy >> 8); save(hlxy & xFF);
   save(ix >> 8); save(ix & xFF);
   save(sp >> 8); save(sp & xFF);
-  save(pc >> 8); save(pc & xFF);
+  save((pc >> 8) & xFF); save(pc & xFF);
 
   save(aa); save(fa);
   save(ba); save(ca);

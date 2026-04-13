@@ -46,11 +46,15 @@ export function decSP() { /*!inline*/ sp = (sp - 1) & xFFFF; }
 export function inc2SP() { /*!inline*/ sp = (sp + 2) & xFFFF; }
 export function dec2SP() { /*!inline*/ sp = (sp - 2) & xFFFF; }
 
+// PC is not masked with & 0xFFFF to save operations. Instead, the mem[] array mirrors the first
+// 8 bytes of ROM at addresses 0x10000–0x10007, so reading mem[pc] works correctly even when PC
+// crosses the 0xFFFF boundary. In places where the PC value is exposed externally (stack push
+// in CALL/RST, state save), the & 0xFFFF mask is applied explicitly.
 export function setPC(value: number) { /*!inline*/ pc = value; }
-export function incPC() { /*!inline*/ pc = (pc + 1) & xFFFF; }
-export function decPC() { /*!inline*/ pc = (pc - 1) & xFFFF; }
-export function inc2PC() { /*!inline*/ pc = (pc + 2) & xFFFF; }
-export function dec2PC() { /*!inline*/ pc = (pc - 2) & xFFFF; }
+export function incPC() { /*!inline*/ return pc++; }
+export function decPC() { /*!inline*/ pc--; }
+export function inc2PC() { /*!inline*/ pc += 2; }
+export function dec2PC() { /*!inline*/ pc -= 2; }
 
 export function setI(value: number) { /*!inline*/ i = value; }
 

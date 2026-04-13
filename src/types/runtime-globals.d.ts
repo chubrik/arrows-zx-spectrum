@@ -1,3 +1,5 @@
+declare const TEST: boolean;
+
 // Fires when the command block is activated
 declare function onActive(callback: () => void): void;
 

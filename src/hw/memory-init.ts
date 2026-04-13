@@ -15,10 +15,13 @@ export function initMemory() {
   for (let addr = 0; addr <= xFFFF; addr++)
     initAddrCtx(addr, memoryX, memoryY);
 
-  // Mirror 0x0000 address for easier access to byte pairs
-  memCtxX[0x10000] = memCtxX[0];
-  memCtxY[0x10000] = memCtxY[0];
-  memCtxA[0x10000] = memCtxA[0];
+  // Mirror the first 8 bytes of ROM at addresses 0x10000–0x10007 so that PC can cross the 0xFFFF
+  // boundary without an & 0xFFFF mask on every increment (see registers.ts).
+  for (let i = 0; i < 8; i++) {
+    memCtxX[0x10000 + i] = memCtxX[i];
+    memCtxY[0x10000 + i] = memCtxY[i];
+    memCtxA[0x10000 + i] = memCtxA[i];
+  }
 }
 
 function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
@@ -50,10 +53,16 @@ let romFetched = false;
 
 export function fetchMemory() {
   const fromAddr = romFetched ? RAM_MIN_ADDR : 0;
-  romFetched = true;
 
   for (let addr = fromAddr; addr <= xFFFF; addr++)
     mem[addr] = getDirect(memCtxX[addr], memCtxY[addr]);
+
+  // Mirror the first 8 bytes of ROM
+  if (!romFetched)
+    for (let i = 0; i < 8; i++)
+      mem[0x10000 + i] = mem[i];
+
+  romFetched = true;
 }
 
 export function commitMemory() {
@@ -89,4 +98,9 @@ export function restoreMemory(fromAddr: number, data: number[]) {
     mem[addr] = value;
     setMemDirect(addr, value);
   }
+
+  // Mirror the first 8 bytes of ROM
+  if (fromAddr < 8)
+    for (let i = 0; i < 8; i++)
+      mem[0x10000 + i] = mem[i];
 }

@@ -3,8 +3,6 @@ import { drawBorder } from './screen';
 import { cpuX, cpuY } from './state';
 import { world_getSignal } from './world-refs';
 
-declare const TEST: boolean;
-
 export const mockPorts: { readQueue: number[]; readIndex: number; writes: Array<{ addr: number; value: number }> } =
   TEST ? { readQueue: [], readIndex: 0, writes: [] } : (undefined as never);
 

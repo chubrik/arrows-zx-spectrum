@@ -1,27 +1,17 @@
 import { xFFFF } from '../hw/constants';
 import { mem } from '../hw/memory';
-import { hlxy, inc2PC, incPC, pc, xyMode } from './registers';
+import { hlxy, incPC, xyMode } from './registers';
 
 export function nop() { };
 
-export function next(): number {
-  const value = mem[pc];
-  incPC();
-  return value;
-}
-
-export function next16(): number {
-  const value = mem[pc] | (mem[pc + 1] << 8);
-  inc2PC();
-  return value;
-}
+export function next() { /*!inline*/ return mem[incPC()]; }
+export function next16() { /*!inline*/ return next() | (next() << 8); }
 
 /** (HL/IX+d/IY+d) */
 export function getHLXYd(): number {
   if (xyMode) {
-    let d = next();
-    if (d >= 128) d -= 256; // -128...+127
-    return (hlxy + d) & xFFFF;
+    const d = next();
+    return (hlxy + (d < 128 ? d : d - 256)) & xFFFF; // -128...+127 relative to HL/IX/IY
   }
   return hlxy;
 }

@@ -8,8 +8,6 @@
 // shorthand `setHLT` would be a dangling reference after inlineFunctions removes
 // the declaration.
 
-declare const TEST: boolean;
-
 import { mem, setRamMinAddrForTest } from './hw/memory';
 import { executeMain } from './z80/execute-main';
 import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from './z80/flags';

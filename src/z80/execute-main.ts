@@ -3,7 +3,7 @@ import { readPort, writePort } from '../hw/ports';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';
-import { fc, FH, fp, fs, fz, getF, HLT, hlt, IFF1, IFF2, setF, setHLT, setIFF1, setIFF2 } from './flags';
+import { fc, FH, fp, fs, fz, getF, HLT, IFF1, IFF2, setF, setHLT, setIFF1, setIFF2 } from './flags';
 import { RLA, RLCA, RRA, RRCA } from './op/op-bit';
 import { CALL_nn, DJNZ_e, JP_nn, JR_e, RET, RST_p } from './op/op-etc';
 import { EX_AF_AF, EX_DE_HL, EX_sp_HL, EXX } from './op/op-exchange';
@@ -12,7 +12,7 @@ import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from '
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import {
   a, b, c, d, dec2SP, decBC, decDE, decHLXY, decPC, decSP, e, getBC, getDE, getH, getHXY, getL,
-  getLXY, hlxy, inc2PC, inc2SP, incBC, incDE, incHLXY, incPC, incSP, pc, refresh, setA, setB, setC,
+  getLXY, hlxy, inc2PC, inc2SP, incBC, incDE, incHLXY, incPC, incSP, refresh, setA, setB, setC,
   setD, setE, setEIDelay, setH, setHLMode, setHLXY, setHXY, setIXMode, setIYMode, setL, setLXY,
   setPC, setSP, sp, xyMode
 } from './registers';
@@ -20,13 +20,12 @@ import { getHLXYd, next, next16, nop } from './utils';
 
 export function executeMain() {
   refresh();
-  const op = /*!inline*/ next();
-  opsMain[op]();
+  opsMain[next()]();
 }
 
 const opsMain = [
   /* 00 NOP        */ nop,
-  /* 01 LD BC,nn   */ () => { setC(mem[pc]); setB(mem[pc + 1]); inc2PC(); },
+  /* 01 LD BC,nn   */ () => { setC(next()); setB(next()); },
   /* 02 LD (BC),A  */ () => write(getBC(), a),
   /* 03 INC BC     */ incBC,
   /* 04 INC B      */ () => setB(INC_r(b)),
@@ -43,7 +42,7 @@ const opsMain = [
   /* 0F RRCA       */ RRCA,
 
   /* 10 DJNZ e     */ DJNZ_e,
-  /* 11 LD DE,nn   */ () => { setE(mem[pc]); setD(mem[pc + 1]); inc2PC(); },
+  /* 11 LD DE,nn   */ () => { setE(next()); setD(next()); },
   /* 12 LD (DE),A  */ () => write(getDE(), a),
   /* 13 INC DE     */ incDE,
   /* 14 INC D      */ () => setD(INC_r(d)),

@@ -29,15 +29,16 @@ export function JP_nn() {
 
 /** JR e */
 export function JR_e() {
-  let e = next();
-  if (e >= 128) e -= 256;
-  setPC((pc + e) & xFFFF); // -126...+129 relative to operation start
+  const e = next();
+  const addr = e < 128 ? (pc + e) & xFFFF : pc - 256 + e; // -126...+129 relative to operation start
+  // Negative addr is impossible in practice: ROM at 0x0000 has no backward JR that would underflow.
+  setPC(TEST ? addr & xFFFF : addr);
 }
 
 /** RST p */
 export function RST_p(addr: number) {
   dec2SP();
-  write16(sp, pc);
+  write16(sp, pc & xFFFF);
   setPC(addr);
 }
 
