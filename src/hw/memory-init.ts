@@ -1,6 +1,6 @@
-import { getArrowTypes, getDirect, setMemDirect } from './arrows.ts';
+import { getCacheX, getDirect, initDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, RAM_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
-import { DIRTY_BITMAP_SIZE, dirtyBitmap, mem, memCtxA, memCtxX, memCtxY } from './memory.ts';
+import { DIRTY_BITMAP_SIZE, dirtyBitmap, mem, memCacheX, memCtxX, memCtxY, setMemDirect } from './memory.ts';
 import { cpuX, cpuY } from './state.ts';
 
 let inited = false;
@@ -8,6 +8,8 @@ let inited = false;
 export function initMemory() {
   if (inited) return;
   inited = true;
+
+  initDirect();
 
   const memoryX = cpuX - 272;
   const memoryY = cpuY + 32;
@@ -20,7 +22,6 @@ export function initMemory() {
   for (let i = 0; i < 8; i++) {
     memCtxX[0x10000 + i] = memCtxX[i];
     memCtxY[0x10000 + i] = memCtxY[i];
-    memCtxA[0x10000 + i] = memCtxA[i];
   }
 }
 
@@ -46,7 +47,7 @@ function initAddrCtx(addr: number, memoryX: number, memoryY: number) {
 
   memCtxX[addr] = x;
   memCtxY[addr] = y;
-  memCtxA[addr] = getArrowTypes(x, y);
+  memCacheX[addr] = getCacheX(x, y);
 }
 
 let romFetched = false;

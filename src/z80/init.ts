@@ -1,4 +1,4 @@
-import { getArrowTypes, getDirect, setDirect } from '../hw/arrows';
+import { getCacheX, getDirect, initDirect, setDirect } from '../hw/arrows';
 import { xFF } from '../hw/constants';
 import { cpuX, cpuY } from '../hw/state';
 import { getF, getSYS, setF, setSYS } from './flags';
@@ -11,11 +11,13 @@ import {
 let inited = false;
 let cacheX: number[];
 let cacheY: number[];
-const cacheA: number[][] = [];
+const cacheA: number[] = [];
 
 export function initCpu() {
   if (inited) return;
   inited = true;
+
+  initDirect();
 
   const x0_ = cpuX;
   const x1_ = x0_ + 8;
@@ -28,7 +30,7 @@ export function initCpu() {
   cacheY = [O(), ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, P(), ++y, ++y, ++y, O(), ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, P(), ++y, P()];
 
   for (let i = 0; i <= cacheX.length; i++)
-    cacheA[i] = getArrowTypes(cacheX[i], cacheY[i]);
+    cacheA[i] = getCacheX(cacheX[i], cacheY[i]);
 }
 
 export function fetchCpu() {
@@ -38,7 +40,10 @@ export function fetchCpu() {
 
 export function commitCpu() {
   let i = 0;
-  saveCpu(value => setDirect(cacheX[i], cacheY[i], cacheA[i++], value));
+  saveCpu(value => {
+    setDirect(cacheX[i], cacheY[i], cacheA[i], value);
+    i++;
+  });
 }
 
 export function clearCpu() {
@@ -54,7 +59,8 @@ export function restoreCpu(values: number[]) {
 
   loadCpu(() => {
     const value = values[i];
-    setDirect(cacheX[i], cacheY[i], cacheA[i++], value);
+    setDirect(cacheX[i], cacheY[i], cacheA[i], value);
+    i++;
     return value;
   });
 }

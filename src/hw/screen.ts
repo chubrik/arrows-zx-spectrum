@@ -1,6 +1,5 @@
-import { setMemDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
-import { dirtyBitmap, mem } from './memory.ts';
+import { dirtyBitmap, mem, setMemDirect } from './memory.ts';
 import { cpuX, cpuY } from './state.ts';
 import { world_copyRegion, world_getArrow, world_setSignal } from './world-refs.ts';
 
@@ -119,7 +118,7 @@ export function commitScreen() {
         const bit = 1 << offset;
         const attrAddr = attrAddrBase + offset;
         const value = mem[attrAddr];
-        if (attrBits & bit) setMemDirect(attrAddr, value);
+        if (attrBits & bit) { setMemDirect(attrAddr, value); }
         else if (value & BIT7) attrBits |= bit;
       }
     } else {
@@ -149,8 +148,9 @@ export function commitScreen() {
         const addr = addrBase + offset;
         const value = mem[addr];
 
-        if (pixelBits & bit)
+        if (pixelBits & bit) {
           setMemDirect(addr, value);
+        }
 
         const attrAddr = attrAddrBase + offset;
         const attr = mem[attrAddr];
