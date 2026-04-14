@@ -86,6 +86,7 @@ export function commitMemory() {
 export function clearMemory(fromAddr: number, toAddr: number) {
   const data: number[] = [];
   data.length = toAddr - fromAddr + 1;
+  data.fill(0);
   restoreMemory(fromAddr, data);
 }
 

@@ -44,6 +44,7 @@ export function commitCpu() {
 export function clearCpu() {
   const values: number[] = [];
   values.length = 27;
+  values.fill(0);
   restoreCpu(values);
 }
 

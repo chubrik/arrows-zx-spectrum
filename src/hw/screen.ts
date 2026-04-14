@@ -1,46 +1,22 @@
 import { setMemDirect } from './arrows.ts';
-import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
+import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
 import { dirtyBitmap, mem } from './memory.ts';
 import { cpuX, cpuY } from './state.ts';
-import { world_copyRegion, world_setSignal } from './world-refs.ts';
+import { world_copyRegion, world_getArrow, world_setSignal } from './world-refs.ts';
 
 const posXCache: number[] = [];
 const posYCache: number[] = [];
 
-const palXCacheDefault: number[] = [];
-const palYCacheDefault: number[] = [];
-const sig0CacheDefault: number[] = [];
-const sig1CacheDefault: number[] = [];
-
-const palXCacheFlash: number[] = [];
-const palYCacheFlash: number[] = [];
-const sig0CacheFlash: number[] = [];
-const sig1CacheFlash: number[] = [];
-
-let palXCache: number[] = palXCacheDefault;
-let palYCache: number[] = palYCacheDefault;
-let sig0Cache: number[] = sig0CacheDefault;
-let sig1Cache: number[] = sig1CacheDefault;
-
+const palCacheDefault: number[][] = [];
+const palCacheFlash: number[][] = [];
+let palCache = palCacheDefault;
 let flashPhase = 0; // 0 | BIT4
 
 function checkFlashPhase(): boolean {
   const newPhase = frameCount & BIT4;
   if (flashPhase === newPhase) return false;
   flashPhase = newPhase;
-
-  if (newPhase) {
-    palXCache = palXCacheFlash;
-    palYCache = palYCacheFlash;
-    sig0Cache = sig0CacheFlash;
-    sig1Cache = sig1CacheFlash;
-  } else {
-    palXCache = palXCacheDefault;
-    palYCache = palYCacheDefault;
-    sig0Cache = sig0CacheDefault;
-    sig1Cache = sig1CacheDefault;
-  }
-
+  palCache = flashPhase ? palCacheFlash : palCacheDefault;
   return true;
 }
 
@@ -63,36 +39,54 @@ export function initScreen() {
     posYCache[addr] = screenY + ((addr & 0x1800) >> 4) + ((addr & 0x0700) >> 7) + ((addr & 0xE0) >> 1);
   }
 
-  fillAttrCache(palXCacheDefault, palYCacheDefault, sig0CacheDefault, sig1CacheDefault, paletteX, paletteY, false);
-  fillAttrCache(palXCacheFlash, palYCacheFlash, sig0CacheFlash, sig1CacheFlash, paletteX, paletteY, true);
-
+  initPalette(paletteX, paletteY);
   initBorder(screenX, screenY);
 }
 
-function fillAttrCache(
-  palX: number[], palY: number[], sig0: number[], sig1: number[],
-  paletteX: number, paletteY: number, flashPhase: boolean,
-) {
-  const sig0Table = [0, 2, 1, 6, 4, 2, 3, 6];
-  const sig1Table = [0, 2, 1, 6, 4, 4, 3, 4];
+function initPalette(paletteX: number, paletteY: number) {
+  const palette: number[][] = [];
 
+  for (let i = 0; i < 16; i++) {
+    const x = paletteX + ((i & 7) << 1);
+    const y = paletteY + ((i & 8) >> 2);
+    const arrow0 = world_getArrow(x, y);
+    const arrow1 = world_getArrow(x + 1, y);
+    const arrow2 = world_getArrow(x + 1, y + 1);
+    const arrow3 = world_getArrow(x, y + 1);
+    const arrowAlt = world_getArrow(x, y + 4);
+
+    palette[i] = [
+      x,
+      arrowAlt ? y + 4 : y,
+      arrow0 ? arrow0.extra & 7 : 0,
+      arrow1 ? arrow1.extra & 7 : 0,
+      arrow2 ? arrow2.extra & 7 : 0,
+      arrow3 ? arrow3.extra & 7 : 0,
+    ];
+  }
+
+  initPalCache(false, palCacheDefault, palette);
+  initPalCache(true, palCacheFlash, palette);
+}
+
+function initPalCache(isFlash: boolean, palCache: number[][], palette: number[][]) {
   for (let attr = 0; attr < 256; attr++) {
     const rawInk = attr & 0x07;
     const rawPaper = (attr & 0x38) >> 3;
-    const flash = (attr & BIT7) !== 0 && flashPhase;
+    const rawFlash = (attr & BIT7) !== 0;
+
+    const flash = rawFlash && isFlash;
     const ink = flash ? rawPaper : rawInk;
     const paper = flash ? rawInk : rawPaper;
-    const bright = (attr & 0x40) >> 6;
-    const brightY = paletteY + (bright << 1);
-    const base = attr << 1;
-    palX[base] = paletteX + (paper << 1);
-    palY[base] = brightY;
-    palX[base | 1] = paletteX + (ink << 1);
-    palY[base | 1] = brightY;
-    sig0[base] = sig0Table[paper];
-    sig1[base] = sig1Table[paper];
-    sig0[base | 1] = sig0Table[ink];
-    sig1[base | 1] = sig1Table[ink];
+    const bright = (attr & BIT6) >> 3;
+
+    const inkPal = palette[bright | ink];
+    const paperPal = palette[bright | paper];
+
+    palCache[attr] = [
+      inkPal[0], inkPal[1], inkPal[2], inkPal[3], inkPal[4], inkPal[5],
+      paperPal[0], paperPal[1], paperPal[2], paperPal[3], paperPal[4], paperPal[5],
+    ];
   }
 }
 
@@ -160,7 +154,7 @@ export function commitScreen() {
 
         const attrAddr = attrAddrBase + offset;
         const attr = mem[attrAddr];
-        setPixels(addr, value, attr);
+        setPixels(addr, attr, value);
       }
     }
 
@@ -171,22 +165,44 @@ export function commitScreen() {
   }
 }
 
-function setPixels(addr: number, value: number, attr: number) {
+function setPixels(addr: number, attr: number, value: number) {
   const posX = posXCache[addr];
-  const posY = posYCache[addr];
-  const base = attr << 1;
+  const y = posYCache[addr];
+  const pal = palCache[attr];
 
-  for (let pixelX = posX + 14; pixelX >= posX; pixelX -= 2) {
-    const index = base | (value & 1);
-    const palX = palXCache[index];
-    const palY = palYCache[index];
-    const sig0 = sig0Cache[index];
-    const sig1 = sig1Cache[index];
-    world_copyRegion(palX, palY, palX + 1, palY + 1, pixelX, posY);
-    world_setSignal(pixelX, posY, sig0);
-    world_setSignal(pixelX + 1, posY, sig1);
-    world_setSignal(pixelX + 1, posY + 1, sig0);
-    world_setSignal(pixelX, posY + 1, sig1);
+  const inkX0 = pal[0];
+  const inkY0 = pal[1];
+  const inkX1 = inkX0 + 1;
+  const inkY1 = inkY0 + 1;
+  const inkSig0 = pal[2];
+  const inkSig1 = pal[3];
+  const inkSig2 = pal[4];
+  const inkSig3 = pal[5];
+
+  const paperX0 = pal[6];
+  const paperY0 = pal[7];
+  const paperX1 = paperX0 + 1;
+  const paperY1 = paperY0 + 1;
+  const paperSig0 = pal[8];
+  const paperSig1 = pal[9];
+  const paperSig2 = pal[10];
+  const paperSig3 = pal[11];
+
+  for (let x = posX + 14; x >= posX; x -= 2) {
+    if (value & 1) {
+      world_copyRegion(inkX0, inkY0, inkX1, inkY1, x, y);
+      world_setSignal(x, y, inkSig0);
+      world_setSignal(x + 1, y, inkSig1);
+      world_setSignal(x + 1, y + 1, inkSig2);
+      world_setSignal(x, y + 1, inkSig3);
+    }
+    else {
+      world_copyRegion(paperX0, paperY0, paperX1, paperY1, x, y);
+      world_setSignal(x, y, paperSig0);
+      world_setSignal(x + 1, y, paperSig1);
+      world_setSignal(x + 1, y + 1, paperSig2);
+      world_setSignal(x, y + 1, paperSig3);
+    }
     value >>= 1;
   }
 }
@@ -223,19 +239,24 @@ function initBorder(screenX: number, screenY: number) {
 export function drawBorder(color: number) {
   if (borderColor === color) return;
   borderColor = color;
-  const index = (color << 1) | 1;
-  const palX = palXCacheDefault[index];
-  const palY = palYCacheDefault[index];
-  const sig0 = sig0CacheDefault[index];
-  const sig1 = sig1CacheDefault[index];
+  const pal = palCacheDefault[color];
+
+  const palX0 = pal[0];
+  const palY0 = pal[1];
+  const palX1 = palX0 + 1;
+  const palY1 = palY0 + 1;
+  const sig0 = pal[2];
+  const sig1 = pal[3];
+  const sig2 = pal[4];
+  const sig3 = pal[5];
 
   for (let i = 0; i < borderPixelsX.length; i++) {
     const x = borderPixelsX[i];
     const y = borderPixelsY[i];
-    world_copyRegion(palX, palY, palX + 1, palY + 1, x, y);
+    world_copyRegion(palX0, palY0, palX1, palY1, x, y);
     world_setSignal(x, y, sig0);
     world_setSignal(x + 1, y, sig1);
-    world_setSignal(x + 1, y + 1, sig0);
-    world_setSignal(x, y + 1, sig1);
+    world_setSignal(x + 1, y + 1, sig2);
+    world_setSignal(x, y + 1, sig3);
   }
 }
