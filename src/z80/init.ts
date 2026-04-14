@@ -53,6 +53,16 @@ export function clearCpu() {
   restoreCpu(values);
 }
 
+export function resetCpu() {
+  initCpu();
+  fetchCpu();
+  setPC(0);
+  setI(0);
+  setR(0);
+  setSYS(0);
+  commitCpu();
+}
+
 export function restoreCpu(values: number[]) {
   initCpu();
   let i = 0;

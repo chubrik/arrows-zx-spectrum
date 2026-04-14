@@ -1,4 +1,4 @@
-import { clearCpu, fetchCpu, initCpu, restoreCpu } from '../z80/init';
+import { clearCpu, fetchCpu, initCpu, resetCpu, restoreCpu } from '../z80/init';
 import { OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, initMemory, restoreMemory } from './memory-init';
 import { initPorts } from './ports';
@@ -37,6 +37,11 @@ export function fetchState() {
       fetchMemory();
       refreshScreen();
     }
+  }
+
+  if (_state.res) {
+    resetCpu();
+    _state.res = 0;
   }
 
   if (_state.by1) {
@@ -89,6 +94,7 @@ export function fetchState() {
 export type State = {
   do: number;
   run: number;
+  res: number;
   by1: number;
   max: number;
   cpu: number[] | 0;
