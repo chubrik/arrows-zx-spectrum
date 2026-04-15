@@ -1,8 +1,8 @@
 import { clearCpu, fetchCpu, initCpu, resetCpu, restoreCpu } from '../z80/init';
-import { OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
+import { ATTRIBUTES_AFTER_ADDR, OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, initMemory, restoreMemory } from './memory-init';
 import { initPorts } from './ports';
-import { commitBorder, initScreen, refreshScreen, setBorder } from './screen';
+import { clearScreen, commitBorder, initScreen, refreshScreen, setBorder } from './screen';
 
 export let cpuX: number;
 export let cpuY: number;
@@ -16,8 +16,10 @@ export function initState() {
   _state = state as State;
 }
 
-export let OPTS_OP_PER_TICK = OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
-export let OPTS_LIMITED_SPEED = true;
+export let opPerTick = OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
+export let speedLimited = true;
+export let screenEnabled = true;
+export let memoryCommitFromAddr = ATTRIBUTES_AFTER_ADDR;
 
 export function fetchState() {
   if (!_state.do) return;
@@ -45,12 +47,12 @@ export function fetchState() {
   }
 
   if (_state.by1) {
-    OPTS_OP_PER_TICK = _state.by1 > 0 ? 1 : OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
+    opPerTick = _state.by1 > 0 ? 1 : OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
     _state.by1 = 0;
   }
 
   if (_state.max) {
-    OPTS_LIMITED_SPEED = _state.max < 0;
+    speedLimited = _state.max < 0;
     _state.max = 0;
   }
 
@@ -62,7 +64,7 @@ export function fetchState() {
   if (_state.brd !== undefined) {
     initScreen();
     setBorder(_state.brd);
-    commitBorder();
+    if (screenEnabled) commitBorder();
     _state.brd = undefined;
   }
 
@@ -70,8 +72,7 @@ export function fetchState() {
     clearCpu();
     restoreMemory(0x0000, _state.rom);
     clearMemory(RAM_MIN_ADDR, xFFFF);
-    setBorder(0);
-    refreshScreen();
+    clearScreen();
     _state.rom = 0;
   }
 
@@ -90,6 +91,20 @@ export function fetchState() {
     restoreMemory(0xC000, _state.ram3);
     _state.ram3 = 0;
   }
+
+  if (_state.src) {
+    if (_state.src > 0) {
+      screenEnabled = true;
+      memoryCommitFromAddr = ATTRIBUTES_AFTER_ADDR;
+      refreshScreen();
+    }
+    else {
+      clearScreen();
+      screenEnabled = false;
+      memoryCommitFromAddr = RAM_MIN_ADDR;
+    }
+    _state.src = 0;
+  }
 }
 
 export type State = {
@@ -104,4 +119,5 @@ export type State = {
   ram1: number[] | 0;
   ram2: number[] | 0;
   ram3: number[] | 0;
+  src: number;
 }

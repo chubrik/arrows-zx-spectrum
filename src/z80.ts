@@ -1,7 +1,7 @@
 import { MS_PER_FRAME, OP_PER_FRAME } from './hw/constants';
 import { commitMemory } from './hw/memory-init';
 import { commitScreen, incFrameCount } from './hw/screen';
-import { cpuStarted, fetchState, initState, OPTS_LIMITED_SPEED, OPTS_OP_PER_TICK } from './hw/state';
+import { cpuStarted, fetchState, initState, opPerTick, screenEnabled, speedLimited } from './hw/state';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu } from './z80/init';
@@ -16,7 +16,7 @@ always(() => {
   fetchState();
   if (!cpuStarted) return;
 
-  for (let i = 0; i < OPTS_OP_PER_TICK; i++) {
+  for (let i = 0; i < opPerTick; i++) {
     opCount++;
     executeMain();
 
@@ -33,12 +33,12 @@ always(() => {
     interrupt();
     incFrameCount();
 
-    if (OPTS_LIMITED_SPEED) limitSpeed();
+    if (speedLimited) limitSpeed();
     break;
   }
 
   commitCpu();
-  commitScreen();
+  if (screenEnabled) commitScreen();
   commitMemory();
 });
 

@@ -1,7 +1,7 @@
 import { getCacheX, getDirect, initDirect } from './arrows.ts';
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, RAM_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
 import { DIRTY_BITMAP_SIZE, dirtyBitmap, mem, memCacheX, memCtxX, memCtxY, setMemDirect } from './memory.ts';
-import { cpuX, cpuY } from './state.ts';
+import { cpuX, cpuY, memoryCommitFromAddr } from './state.ts';
 
 let inited = false;
 
@@ -67,7 +67,7 @@ export function fetchMemory() {
 }
 
 export function commitMemory() {
-  for (let i = ATTRIBUTES_AFTER_ADDR >> 5; i < DIRTY_BITMAP_SIZE; i++) {
+  for (let i = memoryCommitFromAddr >> 5; i < DIRTY_BITMAP_SIZE; i++) {
     let bits = dirtyBitmap[i];
     if (bits === 0) continue;
     dirtyBitmap[i] = 0;

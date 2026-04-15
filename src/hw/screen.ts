@@ -1,8 +1,10 @@
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
 import { dirtyBitmap, mem, setMemDirect } from './memory.ts';
-import { cpuX, cpuY } from './state.ts';
+import { cpuX, cpuY, screenEnabled } from './state.ts';
 import { world_copyRegion, world_getArrow, world_setSignal } from './world-refs.ts';
 
+let screenX: number;
+let screenY: number;
 const posXCache: number[] = [];
 const posYCache: number[] = [];
 
@@ -28,8 +30,8 @@ export function initScreen() {
   if (inited) return;
   inited = true;
 
-  const screenX = cpuX + 80;
-  const screenY = cpuY - 400;
+  screenX = cpuX + 80;
+  screenY = cpuY - 400;
   const paletteX = cpuX;
   const paletteY = cpuY - 32;
 
@@ -39,7 +41,7 @@ export function initScreen() {
   }
 
   initPalette(paletteX, paletteY);
-  initBorder(screenX, screenY);
+  initBorder();
 }
 
 function initPalette(paletteX: number, paletteY: number) {
@@ -89,7 +91,16 @@ function initPalCache(isFlash: boolean, palCache: number[][], palette: number[][
   }
 }
 
+export function clearScreen() {
+  if (!screenEnabled) return;
+  initScreen();
+  clearBorder();
+  const emptyAreaX = screenX + 560;
+  world_copyRegion(emptyAreaX, screenY, emptyAreaX + 512, screenY + 384, screenX, screenY);
+}
+
 export function refreshScreen() {
+  if (!screenEnabled) return;
   initScreen();
   const indexAfterAttrs = ATTRIBUTES_AFTER_ADDR >> 5;
 
@@ -214,7 +225,7 @@ function setPixels(addr: number, attr: number, value: number) {
 const borderPixelsX: number[] = [];
 const borderPixelsY: number[] = [];
 
-function initBorder(screenX: number, screenY: number) {
+function initBorder() {
   const borderMinX = screenX - 32;
   const borderMinY = screenY - 28;
   const borderMaxX = screenX + 512 + 32 - 2;
@@ -239,6 +250,13 @@ function initBorder(screenX: number, screenY: number) {
 
 let borderCommited = -1;
 let borderColor = -1;
+
+function clearBorder() {
+  const color = borderColor;
+  setBorder(0);
+  commitBorder();
+  setBorder(color);
+}
 
 export function setBorder(color: number) {
   /*!inline*/
