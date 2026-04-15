@@ -100,6 +100,8 @@ export function refreshScreen() {
 }
 
 export function commitScreen() {
+  commitBorder();
+
   const flashChanged = checkFlashPhase();
   const minAttrIndex = ATTRIBUTES_MIN_ADDR >> 5;
   let pixelBase = SCREEN_MIN_ADDR >> 5;
@@ -211,7 +213,6 @@ function setPixels(addr: number, attr: number, value: number) {
 
 const borderPixelsX: number[] = [];
 const borderPixelsY: number[] = [];
-let borderColor = -1;
 
 function initBorder(screenX: number, screenY: number) {
   const borderMinX = screenX - 32;
@@ -236,10 +237,19 @@ function initBorder(screenX: number, screenY: number) {
   }
 }
 
-export function drawBorder(color: number) {
-  if (borderColor === color) return;
+let borderCommited = -1;
+let borderColor = -1;
+
+export function setBorder(color: number) {
+  /*!inline*/
   borderColor = color;
-  const pal = palCacheDefault[color];
+}
+
+export function commitBorder() {
+  if (borderCommited === borderColor) return;
+  borderCommited = borderColor;
+
+  const pal = palCacheDefault[borderColor];
 
   const palX0 = pal[0];
   const palY0 = pal[1];

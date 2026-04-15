@@ -2,7 +2,7 @@ import { clearCpu, fetchCpu, initCpu, resetCpu, restoreCpu } from '../z80/init';
 import { OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, initMemory, restoreMemory } from './memory-init';
 import { initPorts } from './ports';
-import { drawBorder, initScreen, refreshScreen } from './screen';
+import { commitBorder, initScreen, refreshScreen, setBorder } from './screen';
 
 export let cpuX: number;
 export let cpuY: number;
@@ -61,7 +61,8 @@ export function fetchState() {
 
   if (_state.brd !== undefined) {
     initScreen();
-    drawBorder(_state.brd);
+    setBorder(_state.brd);
+    commitBorder();
     _state.brd = undefined;
   }
 
@@ -69,8 +70,8 @@ export function fetchState() {
     clearCpu();
     restoreMemory(0x0000, _state.rom);
     clearMemory(RAM_MIN_ADDR, xFFFF);
+    setBorder(0);
     refreshScreen();
-    drawBorder(0);
     _state.rom = 0;
   }
 

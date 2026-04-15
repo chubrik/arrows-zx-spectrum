@@ -1,5 +1,5 @@
 import { BIT0, BIT1, BIT2, BIT3, BIT4, xFF } from './constants';
-import { drawBorder } from './screen';
+import { setBorder } from './screen';
 import { cpuX, cpuY } from './state';
 import { world_getSignal } from './world-refs';
 
@@ -44,5 +44,5 @@ export function writePort(lo: number, hi: number, value: number) {
   }
 
   if (!(lo & BIT0))
-    drawBorder(value & 0x07);
+    setBorder(value & 0x07);
 }
