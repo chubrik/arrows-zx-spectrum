@@ -4,7 +4,7 @@ import { xFFFF } from '../src/hw/constants';
 import { runFuseSuite, type CpuApi, type MockPorts } from './fuse-runner';
 import type { CpuState } from './helpers';
 
-const distPath = 'dist/temp/z80-test/z80-test.step08.postprocess.js';
+const distPath = 'dist/temp/z80-test/z80-test.step09.subst.js';
 const code = readFileSync(distPath, 'utf-8');
 
 // Bundle is ESM; eval'ing in a fresh function scope assigns globalThis.__z80

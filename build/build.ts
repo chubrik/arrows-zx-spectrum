@@ -4,7 +4,7 @@ import { xFF } from '../src/hw/constants.ts';
 import { asciiToUnicode, bytesToUnicode } from '../src/util/encode.ts';
 import { IFF1, IFF2, IM1, IM2 } from '../src/z80/flags.ts';
 import { getResource } from './resources.ts';
-import { arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, postProcess, SRC_DIR, terserCMangle, terserCollapse, terserCompress, writeToPath } from './utils.ts';
+import { arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, simplifyCode, SRC_DIR, terserCMangle, terserCollapse, terserCompress, writeToPath } from './utils.ts';
 import { loadSnapshot } from './z80-snapshot.ts';
 
 await buildCpu();
@@ -24,7 +24,7 @@ async function buildCpu() {
   const fileName = basename(path, '.ts');
 
   // Build pipeline
-  const { built, processed, step } = await cpuPipeline(path);
+  const { built, minified, substed, step } = await cpuPipeline(path);
 
   // Decoder pipeline
   const decoderFuncName = 'unicodeToAscii';
@@ -33,19 +33,20 @@ async function buildCpu() {
   const decoderStripped = step('decoder-strip', decoderBuilt.replace(/^export\s*\{[^}]*\}\s*;?\s*$/gm, ''));
 
   // Packing pipeline
-  const packEncoded = asciiToUnicode(processed);
+  const packEncoded = asciiToUnicode(substed);
   const packAssembled = step('pack-assemble', `${decoderStripped};\neval(${decoderFuncName}('${packEncoded}'));`);
   const packCollapsed = step('pack-collapse', await terserCollapse(packAssembled));
   const packArrowed = step('pack-arrows', arrowFunctions(packCollapsed));
   const packCmangled = step('pack-cmangle', await terserCMangle(packArrowed));
-  const packProcessed = step('pack-postprocess', postProcess(packCmangled));
+  const packed = step('pack-simplify', simplifyCode(packCmangled, { constToLet: true }));
 
-  writeToPath(`${DIST_DIR}/${fileName}.pack.js`, packProcessed);
+  writeToPath(`${DIST_DIR}/${fileName}.pack.js`, packed);
 
   console.log(
     `${path}: ${built.length} bytes → ` +
-    `minified: ${[...processed].length} bytes → ` +
-    `packed: ${packProcessed.length} bytes (${[...packProcessed].length} chars)`);
+    `minified: ${minified.length} bytes → ` +
+    `substed: ${substed.length} bytes → ` +
+    `packed: ${[...packed].length} chars`);
 }
 
 async function buildRom() {
@@ -56,7 +57,7 @@ async function buildRom() {
 async function buildSnapshot(z80Path: string) {
   const fileName = basename(z80Path, '.z80');
   const snap = loadSnapshot(z80Path);
-  console.log(`\n${fileName}:`);
+  console.log(``);
 
   const cpuSYS =
     (snap.IM === 2 ? IM2 : snap.IM === 1 ? IM1 : 0) |
@@ -80,7 +81,7 @@ async function buildData(
   cpuValues?: number[], border?: number
 ) {
   const step = createStepFn(`${distDir}/${fileName}`, fileName);
-  
+
   const dataEncoded = bytesToUnicode(data);
   const srcTsCode = readFileSync(`${SRC_DIR}/data-template.ts`, 'utf8');
   const built = step('build', await buildTs(srcTsCode));
@@ -95,11 +96,11 @@ async function buildData(
   const compressed = step('compress', await terserCompress(collapsed));
   const arrowed = step('arrows', arrowFunctions(compressed));
   const cmangled = step('cmangle', await terserCMangle(arrowed));
-  const processed = step('postprocess', postProcess(cmangled));
+  const simplified = step('simplify', simplifyCode(cmangled, { constToLet: true }));
 
-  writeToPath(`${distDir}/${fileName}.js`, processed);
+  writeToPath(`${distDir}/${fileName}.js`, simplified);
 
   console.log(
     `${fileName}: ${built.length + data.length} bytes → ` +
-    `packed: ${processed.length} bytes (${[...processed].length} chars)`);
+    `packed: ${[...simplified].length} chars`);
 }

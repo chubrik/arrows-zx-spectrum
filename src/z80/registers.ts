@@ -70,7 +70,7 @@ export function setEIDelay(value: 0 | 1) { /*!inline*/ eiDelay = value; }
 //todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
 export let wzh = 0;
 let wzl = 0;
-export function setWZ(value: number) { wzl = value & xFF; wzh = value >> 8; }
+export function setWZ(value: number) { /*!inline*/ wzl = value & xFF; wzh = value >> 8; }
 
 //#region HL / IX / IY
 

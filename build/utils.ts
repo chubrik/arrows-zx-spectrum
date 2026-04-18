@@ -2,6 +2,7 @@ import { build, type BuildOptions } from 'esbuild';
 import { mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { basename, dirname } from 'path';
 import { minify, type MinifyOptions } from 'terser';
+import { check } from '../src/util/check.ts';
 import { remangleTopLevel } from './remangle.ts';
 
 export const SRC_DIR = 'src';
@@ -32,9 +33,10 @@ export async function cpuPipeline(srcPath: string, opts?: { test?: boolean }) {
   const arrowed = step('arrows', arrowFunctions(compressed));
   const cmangled = step('cmangle', await terserCMangle(arrowed));
   const remangled = step('remangle', remangleTopLevel(cmangled));
-  const processed = step('postprocess', postProcess(remangled));
+  const minified = step('simplify', simplifyCode(remangled));
+  const substed = step('subst', substCode(minified));
 
-  return { built, processed, step, tempDir, fileName };
+  return { built, minified, substed, step, tempDir, fileName };
 }
 
 export async function buildPath(path: string, opts?: { test?: boolean }): Promise<string> {
@@ -325,8 +327,12 @@ export function inlineFunctions(code: string): string {
         }
 
         // Build arrow function wrapping the inlined body
-        const fmtP = params.length === 0 ? '()' :
-                     params.length === 1 ? params[0] : `(${params.join(', ')})`;
+        const fmtP = params.length === 0
+          ? '()'
+          : params.length === 1
+            ? params[0]
+            : `(${params.join(', ')})`;
+
         const arrow = isExpressionBody(bodyExpr)
           ? `${fmtP} => (${bodyExpr})`
           : `${fmtP} => { ${bodyExpr} }`;
@@ -765,7 +771,71 @@ function hasTopLevel(code: string, target: string): boolean {
   return false;
 }
 
-/** Post-process: const → let, === → ==, !== → != */
-export function postProcess(code: string): string {
-  return code.replaceAll('const ', 'let ').replaceAll('!==', '!=').replaceAll('===', '==');
+/** === → ==, !== → != */
+export function simplifyCode(code: string, opts?: { constToLet?: boolean }): string {
+  // Don't replace "const/var" to "let" in main code.
+  // It adds a TDZ check on every top-level binding read, slowing runtime by ~15%.
+
+  let simplified = code
+    .replaceAll('!==', '!=')
+    .replaceAll('===', '==')
+    .replace(/;$/, '');
+
+  if (opts?.constToLet)
+    simplified = simplified.replaceAll('const ', 'let ');
+
+  return simplified;
+}
+
+function substCode(code: string): string {
+  const useLogs = true;
+  const toRegExp = (str: string) => new RegExp(str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+
+  let replacedCode = code;
+  let restoreSuffix = '';
+
+  function subst(
+    replaceFrom: string | RegExp, replaceTo: string,
+    restoreFrom?: string | RegExp, restoreTo?: string,
+  ) {
+    const isReplaceFromStr = typeof replaceFrom === 'string';
+    restoreFrom = restoreFrom ?? replaceTo;
+    restoreTo = restoreTo ?? (isReplaceFromStr ? replaceFrom : replaceFrom.source);
+
+    const replaceFromRegExp = isReplaceFromStr ? toRegExp(replaceFrom) : replaceFrom;
+    const restoreFromRegExp = typeof restoreFrom === 'string' ? toRegExp(restoreFrom) : restoreFrom;
+
+    const beforeLength = replacedCode.length;
+    replacedCode = replacedCode.replace(replaceFromRegExp, replaceTo);
+    const restorePart = `.replace(${restoreFromRegExp},'${restoreTo}')`;
+    restoreSuffix = restorePart + restoreSuffix;
+
+    if (useLogs) {
+      const logReplaceFrom = isReplaceFromStr ? `'${replaceFrom}'` : replaceFrom.toString();
+      const logReplaceTo = `'${replaceTo}'`;
+      const savedChars = beforeLength - replacedCode.length - restorePart.length;
+      console.log(`Replace ${logReplaceFrom.padEnd(11)} → ${logReplaceTo.padEnd(5)} saves ${savedChars} chars`);
+    }
+  }
+
+  // Unused single-char: "`#@/ ; Extra (tricky): '\
+  subst(',()=>'     /**/, '@');
+  subst(/\((.)\)@/g /**/, '#$1', /#(.)/g, '($1)@');
+  subst('const '    /**/, '"');
+  subst(')@'        /**/, '`');
+  subst('=0,'       /**/, '/');
+  subst('=65280&'   /**/, '@@');
+  subst(')<<8'      /**/, '@#');
+  subst('for(let '  /**/, '@/');
+  subst('()=>'      /**/, '#"');
+
+  const codeResult = `'${replacedCode}'${restoreSuffix}`;
+  check(eval(codeResult) === code, 'Restored code does not match original');
+
+  const selfExtracted = `eval(${codeResult})`;
+
+  if (useLogs)
+    console.log(`Total saves ${code.length - selfExtracted.length} chars\n`);
+
+  return selfExtracted;
 }
