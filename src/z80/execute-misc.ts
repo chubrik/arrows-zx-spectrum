@@ -12,16 +12,29 @@ import {
 } from './registers';
 import { nop as _, next, next16, nop } from './utils';
 
+let inited: boolean;
+
+export function initMisc() {
+  if (inited) return;
+  inited = true;
+
+  spliceMisc(0x00, 64); // ED00-ED3F
+  spliceMisc(0x80, 32); // ED80-ED9F
+  spliceMisc(0xC0, 64); // EDC0-EDFF
+}
+
+function spliceMisc(start: number, count: number) {
+  for (let i = 0; i < count; i++)
+    opsMisc.splice(start, 0, nop);
+}
+
 export function executeMisc() {
   refresh();
   opsMisc[next()]();
 }
 
 const opsMisc = [
-  /* ED00 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-  /* ED10 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-  /* ED20 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-  /* ED30 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
+  /* ED00-ED3F */
 
   /* ED40 IN B,(C)     */ () => setB(in_port()),
   /* ED41 OUT (C),B    */ () => writePort(c, b, b),
@@ -91,8 +104,7 @@ const opsMisc = [
   /* ED7E IM 2       * */ () => { setIM1(0); setIM2(IM2); },
   /* ED7F ---          */ nop,
 
-  /* ED80 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-  /* ED90 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
+  /* ED80-ED9F */
 
   /* EDA0 LDI         */ () => LD_block(true),
   /* EDA1 CPI         */ () => CP_block(true),
@@ -116,8 +128,5 @@ const opsMisc = [
   /* EDBB OTDR        */ () => OUT_block(-1, 1),
   /* EDBC */ _, _, _, _,
 
-  /* EDC0 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-  /* EDD0 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-  /* EDE0 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-  /* EDF0 */ _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
+  /* EDC0-EDFF */
 ];

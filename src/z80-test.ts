@@ -9,13 +9,20 @@
 // the declaration.
 
 import { mem, setRamMinAddrForTest } from './hw/memory';
+import { mockPorts } from './hw/ports';
 import { executeMain } from './z80/execute-main';
+import { initMisc } from './z80/execute-misc';
 import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from './z80/flags';
 import { clearCpu } from './z80/init';
-import { a, aa, b, ba, c, ca, d, da, e, ea, fa, getR, hla, hlxy, i, ix, iy, pc, setA, setAa, setB, setBa, setC, setCa, setD, setDa, setE, setEa, setFa, setHLa, setHLXY, setI, setIX, setIY, setPC, setR, setSP, setWZ, sp } from './z80/registers';
-import { mockPorts } from './hw/ports';
+import {
+  a, aa, b, ba, c, ca, d, da, e, ea, fa, getR, hla, hlxy, i, ix, iy, pc, setA, setAa, setB, setBa,
+  setC, setCa, setD, setDa, setE, setEa, setFa, setHLa, setHLXY, setI, setIX, setIY, setPC, setR,
+  setSP, setWZ, sp
+} from './z80/registers';
 
 if (TEST) {
+  initMisc();
+
   (globalThis as Record<string, unknown>).__z80 = {
     mem, mockPorts,
     getF: () => getF(),

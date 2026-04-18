@@ -8,10 +8,10 @@ import {
   setSP, sp
 } from './registers';
 
-let inited = false;
-let cacheX: number[];
-let cacheY: number[];
-const cacheA: number[] = [];
+let inited: boolean;
+let regsX: number[];
+let regsY: number[];
+const cacheX: number[] = [];
 
 export function initCpu() {
   if (inited) return;
@@ -19,29 +19,26 @@ export function initCpu() {
 
   initDirect();
 
-  const x0_ = cpuX;
-  const x1_ = x0_ + 8;
-  let y = cpuY;
-  const O = () => y = cpuY;
-  const P = () => y += 2;
+  //       A  F  B  C  D  E  H  L  [IX]  [SP]  [PC]      Aa Fa Ba Ca Da Ea Ha La [IY]  I  R SYS
+  regsX = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,/**/ 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8];
+  regsY = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14];
 
-  //        A    F    B    C    D    E    H    L    IXh  IXl  SPh  SPl  PCh  PCl  Aa   Fa   Ba   Ca   Da   Ea   Ha   La   IYh  IYl  I    R    SYS
-  cacheX = [x0_, x0_, x0_, x0_, x0_, x0_, x0_, x0_, x0_, x0_, x0_, x0_, x0_, x0_, x1_, x1_, x1_, x1_, x1_, x1_, x1_, x1_, x1_, x1_, x1_, x1_, x1_];
-  cacheY = [O(), ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, P(), ++y, ++y, ++y, O(), ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, ++y, P(), ++y, P()];
-
-  for (let i = 0; i <= cacheX.length; i++)
-    cacheA[i] = getCacheX(cacheX[i], cacheY[i]);
+  regsX.forEach((_, i) => {
+    regsX[i] += cpuX;
+    regsY[i] += cpuY;
+    cacheX[i] = getCacheX(regsX[i], regsY[i]);
+  });
 }
 
 export function fetchCpu() {
   let i = 0;
-  loadCpu(() => getDirect(cacheX[i], cacheY[i++]));
+  loadCpu(() => getDirect(regsX[i], regsY[i++]));
 }
 
 export function commitCpu() {
   let i = 0;
   saveCpu(value => {
-    setDirect(cacheX[i], cacheY[i], cacheA[i], value);
+    setDirect(regsX[i], regsY[i], cacheX[i], value);
     i++;
   });
 }
@@ -69,7 +66,7 @@ export function restoreCpu(values: number[]) {
 
   loadCpu(() => {
     const value = values[i];
-    setDirect(cacheX[i], cacheY[i], cacheA[i], value);
+    setDirect(regsX[i], regsY[i], cacheX[i], value);
     i++;
     return value;
   });

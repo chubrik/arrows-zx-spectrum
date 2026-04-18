@@ -24,7 +24,7 @@ function checkFlashPhase(): boolean {
 let frameCount = 0;
 export function incFrameCount() { /*!inline*/ frameCount++; }
 
-let inited = false;
+let inited: boolean;
 
 export function initScreen() {
   if (inited) return;
@@ -278,13 +278,12 @@ export function commitBorder() {
   const sig2 = pal[4];
   const sig3 = pal[5];
 
-  for (let i = 0; i < borderPixelsX.length; i++) {
-    const x = borderPixelsX[i];
+  borderPixelsX.forEach((x, i) => {
     const y = borderPixelsY[i];
     world_copyRegion(palX0, palY0, palX1, palY1, x, y);
     world_setSignal(x, y, sig0);
     world_setSignal(x + 1, y, sig1);
     world_setSignal(x + 1, y + 1, sig2);
     world_setSignal(x, y + 1, sig3);
-  }
+  });
 }

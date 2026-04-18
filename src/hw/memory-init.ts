@@ -3,7 +3,7 @@ import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, RAM_MIN_ADDR, SCREEN_MIN_AD
 import { DIRTY_BITMAP_SIZE, dirtyBitmap, mem, memCacheX, memCtxX, memCtxY, setMemDirect } from './memory.ts';
 import { cpuX, cpuY, memoryCommitFromAddr } from './state.ts';
 
-let inited = false;
+let inited: boolean;
 
 export function initMemory() {
   if (inited) return;
@@ -94,12 +94,11 @@ export function clearMemory(fromAddr: number, toAddr: number) {
 export function restoreMemory(fromAddr: number, data: number[]) {
   initMemory();
 
-  for (let i = 0; i < data.length; i++) {
+  data.forEach((value, i) => {
     const addr = fromAddr + i;
-    const value = data[i];
     mem[addr] = value;
     setMemDirect(addr, value);
-  }
+  });
 
   // Mirror the first 8 bytes of ROM
   if (fromAddr < 8)

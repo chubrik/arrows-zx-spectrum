@@ -1,3 +1,4 @@
+import { initMisc } from '../z80/execute-misc';
 import { clearCpu, fetchCpu, initCpu, resetCpu, restoreCpu } from '../z80/init';
 import { ATTRIBUTES_AFTER_ADDR, OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, initMemory, restoreMemory } from './memory-init';
@@ -34,6 +35,7 @@ export function fetchState() {
       initMemory();
       initScreen();
       initPorts();
+      initMisc();
 
       fetchCpu();
       fetchMemory();
@@ -61,11 +63,11 @@ export function fetchState() {
     _state.cpu = 0;
   }
 
-  if (_state.brd !== undefined) {
+  if (_state.brd != null) {
     initScreen();
     setBorder(_state.brd);
     if (screenEnabled) commitBorder();
-    _state.brd = undefined;
+    _state.brd = null;
   }
 
   if (_state.rom) {
@@ -114,7 +116,7 @@ export type State = {
   by1: number;
   max: number;
   cpu: number[] | 0;
-  brd?: number;
+  brd: number | null;
   rom: number[] | 0;
   ram1: number[] | 0;
   ram2: number[] | 0;

@@ -6,7 +6,7 @@ import { world_getSignal } from './world-refs';
 export const mockPorts: { readQueue: number[]; readIndex: number; writes: Array<{ addr: number; value: number }> } =
   TEST ? { readQueue: [], readIndex: 0, writes: [] } : (undefined as never);
 
-let inited = false;
+let inited: boolean;
 let keysX: number;
 let keysY: number;
 

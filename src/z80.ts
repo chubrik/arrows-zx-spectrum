@@ -50,7 +50,7 @@ let frameTimesIdx = 0;
 
 function limitSpeed() {
   let now = Date.now();
-  let target = frameTimes[frameTimesIdx] + FRAME_WINDOW_MS;
+  const target = frameTimes[frameTimesIdx] + FRAME_WINDOW_MS;
 
   if (now - target > FRAME_DRIFT_MAX_MS) {
     // If the buffer is not warmed up or we are more than 25 frames behind, we fill the buffer 

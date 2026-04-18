@@ -1,7 +1,7 @@
 import { cpuX, cpuY } from './state.ts';
 import { world_copyRegion, world_getArrow } from './world-refs.ts';
 
-let inited = false;
+let inited: boolean;
 let cacheX0: number;
 let cacheX1: number;
 let cacheY: number;
