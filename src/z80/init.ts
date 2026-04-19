@@ -31,6 +31,7 @@ export function initCpu() {
 }
 
 export function fetchCpu() {
+  initCpu();
   let i = 0;
   loadCpu(() => fetchValue(regXs[i], regYs[i++]));
 }
@@ -51,7 +52,6 @@ export function clearCpu() {
 }
 
 export function resetCpu() {
-  initCpu();
   fetchCpu();
   setPC(0);
   setI(0);

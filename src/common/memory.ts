@@ -69,6 +69,7 @@ function initMemoryAddr(addr: number, memoryX: number, memoryY: number) {
 let romFetched = false;
 
 export function fetchMemory() {
+  initMemory();
   const fromAddr = romFetched ? RAM_MIN_ADDR : 0;
 
   for (let addr = fromAddr; addr <= xFFFF; addr++)

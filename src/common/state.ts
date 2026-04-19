@@ -31,12 +31,8 @@ export function fetchState() {
     _state.run = 0;
 
     if (cpuStarted) {
-      initCpu();
-      initMemory();
-      initScreen();
       initPorts();
       initOpsMisc();
-
       fetchCpu();
       fetchMemory();
       refreshScreen();
