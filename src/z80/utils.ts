@@ -1,5 +1,5 @@
-import { xFFFF } from '../hw/constants';
-import { mem } from '../hw/memory';
+import { xFFFF } from '../common/constants';
+import { mem } from '../common/memory';
 import { hlxy, incPC, xyMode } from './registers';
 
 export function nop() { };

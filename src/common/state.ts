@@ -1,7 +1,7 @@
-import { initMisc } from '../z80/execute-misc';
+import { initOpsMisc } from '../z80/execute-misc';
 import { clearCpu, fetchCpu, initCpu, resetCpu, restoreCpu } from '../z80/init';
 import { ATTRIBUTES_AFTER_ADDR, OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
-import { clearMemory, fetchMemory, initMemory, restoreMemory } from './memory-init';
+import { clearMemory, fetchMemory, initMemory, restoreMemory } from './memory';
 import { initPorts } from './ports';
 import { clearScreen, commitBorder, initScreen, refreshScreen, setBorder } from './screen';
 
@@ -35,7 +35,7 @@ export function fetchState() {
       initMemory();
       initScreen();
       initPorts();
-      initMisc();
+      initOpsMisc();
 
       fetchCpu();
       fetchMemory();

@@ -1,7 +1,7 @@
-import { MS_PER_FRAME, OP_PER_FRAME } from './hw/constants';
-import { commitMemory } from './hw/memory-init';
-import { commitScreen, incFrameCount } from './hw/screen';
-import { cpuStarted, fetchState, initState, opPerTick, screenEnabled, speedLimited } from './hw/state';
+import { MS_PER_FRAME, OP_PER_FRAME } from './common/constants';
+import { commitMemory } from './common/memory';
+import { commitScreen, incFrameCount } from './common/screen';
+import { cpuStarted, fetchState, initState, opPerTick, screenEnabled, speedLimited } from './common/state';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu } from './z80/init';

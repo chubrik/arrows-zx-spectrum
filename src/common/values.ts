@@ -6,7 +6,7 @@ let cacheX0: number;
 let cacheX1: number;
 let cacheY: number;
 
-export function initDirect() {
+export function initValues() {
   if (inited) return;
   inited = true;
 
@@ -15,13 +15,13 @@ export function initDirect() {
   cacheY = cpuY + 32;
 }
 
-export function getCacheX(x: number, y: number): number {
+export function getValuesCacheX(x: number, y: number): number {
   const xMod = x & 8;
   const yMod = y & 8;
   return xMod === yMod ? cacheX0 : cacheX1;
 }
 
-export function getDirect(x: number, y: number): number {
+export function fetchValue(x: number, y: number): number {
   let value = 0;
 
   for (let i = 0; i < 8; i++) {
@@ -35,7 +35,7 @@ export function getDirect(x: number, y: number): number {
   return value;
 }
 
-export function setDirect(x: number, y: number, cacheX: number, value: number) {
+export function commitValue(x: number, y: number, cacheX: number, value: number) {
   /*!inline*/
   const valueCacheY = cacheY + value;
   world_copyRegion(cacheX, valueCacheY, cacheX + 7, valueCacheY, x, y);

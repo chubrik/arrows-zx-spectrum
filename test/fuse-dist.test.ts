@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { getResource } from '../build/resources';
-import { xFFFF } from '../src/hw/constants';
+import { xFFFF } from '../src/common/constants';
 import { runFuseSuite, type CpuApi, type MockPorts } from './fuse-runner';
 import type { CpuState } from './helpers';
 

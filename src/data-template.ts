@@ -1,4 +1,4 @@
-import { State } from './hw/state';
+import { State } from './common/state';
 import { unicodeToBytes } from './util/encode';
 
 let cache: number[] | undefined;

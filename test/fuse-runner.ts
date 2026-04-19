@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { xFF, xFFFF } from '../src/hw/constants';
+import { xFF, xFFFF } from '../src/common/constants';
 import { FuseTestExpected, parseTestsExpected, parseTestsIn } from './fuse-parse';
 import type { CpuState } from './helpers';
 

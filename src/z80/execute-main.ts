@@ -1,5 +1,5 @@
-import { mem, read16, write, write16, write88 } from '../hw/memory';
-import { readPort, writePort } from '../hw/ports';
+import { mem, read16, write, write16, write88 } from '../common/memory';
+import { readPort, writePort } from '../common/ports';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';

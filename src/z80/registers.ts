@@ -1,4 +1,4 @@
-import { BIT7, xFF, xFFFF } from '../hw/constants';
+import { BIT7, xFF, xFFFF } from '../common/constants';
 
 export let a = 0;
 export let b = 0;

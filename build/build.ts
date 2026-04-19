@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'fs';
 import { basename } from 'path';
-import { xFF } from '../src/hw/constants.ts';
+import { xFF } from '../src/common/constants.ts';
 import { asciiToUnicode, bytesToUnicode } from '../src/util/encode.ts';
 import { IFF1, IFF2, IM1, IM2 } from '../src/z80/flags.ts';
 import { getResource } from './resources.ts';

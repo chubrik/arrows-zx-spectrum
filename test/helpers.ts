@@ -1,5 +1,5 @@
-import { xFFFF } from '../src/hw/constants';
-import { mem, setRamMinAddrForTest } from '../src/hw/memory';
+import { xFFFF } from '../src/common/constants';
+import { mem, setRamMinAddrForTest } from '../src/common/memory';
 import { executeMain } from '../src/z80/execute-main';
 import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from '../src/z80/flags';
 import { clearCpu } from '../src/z80/init';

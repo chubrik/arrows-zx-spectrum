@@ -1,5 +1,5 @@
-import { xFF } from '../hw/constants';
-import { read16 } from '../hw/memory';
+import { xFF } from '../common/constants';
+import { read16 } from '../common/memory';
 import { hlt, iff1, im2, int, setHLT, setIFF1, setIFF2, setINT } from './flags';
 import { RST_p } from './op/op-etc';
 import { i, incPC, refresh } from './registers';

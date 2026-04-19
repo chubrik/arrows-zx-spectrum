@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { xFFFF } from '../src/hw/constants.ts';
+import { xFFFF } from '../src/common/constants.ts';
 import { check } from '../src/util/check.ts';
 
 const PAGE_SIZE = 16384;

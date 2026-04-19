@@ -1,28 +1,19 @@
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
-import { dirtyBitmap, mem, setMemDirect } from './memory.ts';
+import { commitMemoryValue, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, screenEnabled } from './state.ts';
 import { world_copyRegion, world_getArrow, world_setSignal } from './world-refs.ts';
 
 let screenX: number;
 let screenY: number;
-const posXCache: number[] = [];
-const posYCache: number[] = [];
+const addrXs: number[] = [];
+const addrYs: number[] = [];
+const borderXs: number[] = [];
+const borderYs: number[] = [];
+const palettesDefault: number[][] = [];
+const palettesFlash: number[][] = [];
+let currentPalettes = palettesDefault;
 
-const palCacheDefault: number[][] = [];
-const palCacheFlash: number[][] = [];
-let palCache = palCacheDefault;
-let flashPhase = 0; // 0 | BIT4
-
-function checkFlashPhase(): boolean {
-  const newPhase = frameCount & BIT4;
-  if (flashPhase === newPhase) return false;
-  flashPhase = newPhase;
-  palCache = flashPhase ? palCacheFlash : palCacheDefault;
-  return true;
-}
-
-let frameCount = 0;
-export function incFrameCount() { /*!inline*/ frameCount++; }
+//#region Init
 
 let inited: boolean;
 
@@ -36,16 +27,39 @@ export function initScreen() {
   const paletteY = cpuY - 32;
 
   for (let addr = SCREEN_MIN_ADDR; addr < ATTRIBUTES_MIN_ADDR; addr++) {
-    posXCache[addr] = screenX + ((addr & 0x1F) << 4);
-    posYCache[addr] = screenY + ((addr & 0x1800) >> 4) + ((addr & 0x0700) >> 7) + ((addr & 0xE0) >> 1);
+    addrXs[addr] = screenX + ((addr & 0x1F) << 4);
+    addrYs[addr] = screenY + ((addr & 0x1800) >> 4) + ((addr & 0x0700) >> 7) + ((addr & 0xE0) >> 1);
   }
 
-  initPalette(paletteX, paletteY);
   initBorder();
+  initPalettes(paletteX, paletteY);
 }
 
-function initPalette(paletteX: number, paletteY: number) {
-  const palette: number[][] = [];
+function initBorder() {
+  const minX = screenX - 32;
+  const minY = screenY - 28;
+  const maxX = screenX + 512 + 32 - 2;
+  const maxY = screenY + 384 + 28 - 2;
+  const skips = [20, 14, 10, 8, 6, 4, 4, 2, 2, 2];
+
+  for (let y = minY; y <= maxY; y += 2) {
+    let skip = 0;
+    if (y < minY + 20)
+      skip = skips[(y - minY) >> 1];
+    else if (y > maxY - 20)
+      skip = skips[(maxY - y) >> 1];
+
+    for (let x = minX + skip; x <= maxX - skip; x += 2) {
+      if (x < screenX || x >= screenX + 512 || y < screenY || y >= screenY + 384) {
+        borderXs.push(x);
+        borderYs.push(y);
+      }
+    }
+  }
+}
+
+function initPalettes(paletteX: number, paletteY: number) {
+  const palSrc: number[][] = [];
 
   for (let i = 0; i < 16; i++) {
     const x = paletteX + ((i & 7) << 1);
@@ -56,7 +70,7 @@ function initPalette(paletteX: number, paletteY: number) {
     const arrow3 = world_getArrow(x, y + 1);
     const arrowAlt = world_getArrow(x, y + 4);
 
-    palette[i] = [
+    palSrc[i] = [
       x,
       arrowAlt ? y + 4 : y,
       arrow0 ? arrow0.extra & 7 : 0,
@@ -66,11 +80,11 @@ function initPalette(paletteX: number, paletteY: number) {
     ];
   }
 
-  initPalCache(false, palCacheDefault, palette);
-  initPalCache(true, palCacheFlash, palette);
+  initPalettesPhase(false, palettesDefault, palSrc);
+  initPalettesPhase(true, palettesFlash, palSrc);
 }
 
-function initPalCache(isFlash: boolean, palCache: number[][], palette: number[][]) {
+function initPalettesPhase(isFlash: boolean, palettes: number[][], palSrc: number[][]) {
   for (let attr = 0; attr < 256; attr++) {
     const rawInk = attr & 0x07;
     const rawPaper = (attr & 0x38) >> 3;
@@ -81,14 +95,29 @@ function initPalCache(isFlash: boolean, palCache: number[][], palette: number[][
     const paper = flash ? rawInk : rawPaper;
     const bright = (attr & BIT6) >> 3;
 
-    const inkPal = palette[bright | ink];
-    const paperPal = palette[bright | paper];
+    const inkPal = palSrc[bright | ink];
+    const paperPal = palSrc[bright | paper];
 
-    palCache[attr] = [
+    palettes[attr] = [
       inkPal[0], inkPal[1], inkPal[2], inkPal[3], inkPal[4], inkPal[5],
       paperPal[0], paperPal[1], paperPal[2], paperPal[3], paperPal[4], paperPal[5],
     ];
   }
+}
+
+//#endregion
+
+let frameCount = 0;
+export function incFrameCount() { /*!inline*/ frameCount++; }
+
+let flashPhase = 0; // 0 | BIT4
+
+function checkFlashPhase(): boolean {
+  const newPhase = frameCount & BIT4;
+  if (flashPhase === newPhase) return false;
+  flashPhase = newPhase;
+  currentPalettes = flashPhase ? palettesFlash : palettesDefault;
+  return true;
 }
 
 export function clearScreen() {
@@ -105,10 +134,22 @@ export function refreshScreen() {
   const indexAfterAttrs = ATTRIBUTES_AFTER_ADDR >> 5;
 
   for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < indexAfterAttrs; i++)
-    dirtyBitmap[i] = -1;
+    memoryDirtyBitmap[i] = -1;
 
   commitScreen();
 }
+
+let borderColor = -1;
+export function setBorder(color: number) { /*!inline*/ borderColor = color; }
+
+function clearBorder() {
+  const color = borderColor;
+  setBorder(0);
+  commitBorder();
+  setBorder(color);
+}
+
+//#region Commit
 
 export function commitScreen() {
   commitBorder();
@@ -120,8 +161,8 @@ export function commitScreen() {
 
   for (let i = 0; i < 24; i++) {
     const attrIndex = minAttrIndex + i;
-    let attrBits = dirtyBitmap[attrIndex];
-    dirtyBitmap[attrIndex] = 0;
+    let attrBits = memoryDirtyBitmap[attrIndex];
+    memoryDirtyBitmap[attrIndex] = 0;
     const attrAddrBase = attrIndex << 5;
 
     if (flashChanged) {
@@ -131,7 +172,7 @@ export function commitScreen() {
         const bit = 1 << offset;
         const attrAddr = attrAddrBase + offset;
         const value = mem[attrAddr];
-        if (attrBits & bit) { setMemDirect(attrAddr, value); }
+        if (attrBits & bit) { commitMemoryValue(attrAddr, value); }
         else if (value & BIT7) attrBits |= bit;
       }
     } else {
@@ -141,16 +182,16 @@ export function commitScreen() {
         const bit = ab & -ab;
         ab ^= bit;
         const attrAddr = attrAddrBase + 31 - Math.clz32(bit);
-        setMemDirect(attrAddr, mem[attrAddr]);
+        commitMemoryValue(attrAddr, mem[attrAddr]);
       }
     }
 
     for (let j = 0; j < 64; j += 8) {
       const pixelIndex = pixelBase + i + j;
-      const pixelBits = dirtyBitmap[pixelIndex];
+      const pixelBits = memoryDirtyBitmap[pixelIndex];
       let bits = attrBits | pixelBits;
       if (bits === 0) continue;
-      dirtyBitmap[pixelIndex] = 0;
+      memoryDirtyBitmap[pixelIndex] = 0;
       const addrBase = pixelIndex << 5;
 
       while (bits) {
@@ -162,12 +203,12 @@ export function commitScreen() {
         const value = mem[addr];
 
         if (pixelBits & bit) {
-          setMemDirect(addr, value);
+          commitMemoryValue(addr, value);
         }
 
         const attrAddr = attrAddrBase + offset;
         const attr = mem[attrAddr];
-        setPixels(addr, attr, value);
+        commitScreenValue(addr, attr, value);
       }
     }
 
@@ -178,10 +219,10 @@ export function commitScreen() {
   }
 }
 
-function setPixels(addr: number, attr: number, value: number) {
-  const posX = posXCache[addr];
-  const y = posYCache[addr];
-  const pal = palCache[attr];
+function commitScreenValue(addr: number, attr: number, value: number) {
+  const posX = addrXs[addr];
+  const y = addrYs[addr];
+  const pal = currentPalettes[attr];
 
   const inkX0 = pal[0];
   const inkY0 = pal[1];
@@ -220,54 +261,13 @@ function setPixels(addr: number, attr: number, value: number) {
   }
 }
 
-// Border
-
-const borderPixelsX: number[] = [];
-const borderPixelsY: number[] = [];
-
-function initBorder() {
-  const borderMinX = screenX - 32;
-  const borderMinY = screenY - 28;
-  const borderMaxX = screenX + 512 + 32 - 2;
-  const borderMaxY = screenY + 384 + 28 - 2;
-  const skipMap = [20, 14, 10, 8, 6, 4, 4, 2, 2, 2];
-
-  for (let y = borderMinY; y <= borderMaxY; y += 2) {
-    let skip = 0;
-    if (y < borderMinY + 20)
-      skip = skipMap[(y - borderMinY) >> 1];
-    else if (y > borderMaxY - 20)
-      skip = skipMap[(borderMaxY - y) >> 1];
-
-    for (let x = borderMinX + skip; x <= borderMaxX - skip; x += 2) {
-      if (x < screenX || x >= screenX + 512 || y < screenY || y >= screenY + 384) {
-        borderPixelsX.push(x);
-        borderPixelsY.push(y);
-      }
-    }
-  }
-}
-
 let borderCommited = -1;
-let borderColor = -1;
-
-function clearBorder() {
-  const color = borderColor;
-  setBorder(0);
-  commitBorder();
-  setBorder(color);
-}
-
-export function setBorder(color: number) {
-  /*!inline*/
-  borderColor = color;
-}
 
 export function commitBorder() {
   if (borderCommited === borderColor) return;
   borderCommited = borderColor;
 
-  const pal = palCacheDefault[borderColor];
+  const pal = palettesDefault[borderColor];
 
   const palX0 = pal[0];
   const palY0 = pal[1];
@@ -278,8 +278,8 @@ export function commitBorder() {
   const sig2 = pal[4];
   const sig3 = pal[5];
 
-  borderPixelsX.forEach((x, i) => {
-    const y = borderPixelsY[i];
+  borderXs.forEach((x, i) => {
+    const y = borderYs[i];
     world_copyRegion(palX0, palY0, palX1, palY1, x, y);
     world_setSignal(x, y, sig0);
     world_setSignal(x + 1, y, sig1);
@@ -287,3 +287,5 @@ export function commitBorder() {
     world_setSignal(x, y + 1, sig3);
   });
 }
+
+//#endregion

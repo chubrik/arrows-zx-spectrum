@@ -1,5 +1,5 @@
-import { mem, read16, write16, write88 } from '../hw/memory';
-import { writePort } from '../hw/ports';
+import { mem, read16, write16, write88 } from '../common/memory';
+import { writePort } from '../common/ports';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
 import { RLD, RRD } from './op/op-bit';
 import { CP_block, IN_block, LD_block, OUT_block } from './op/op-block';
@@ -14,7 +14,7 @@ import { nop as _, next, next16, nop } from './utils';
 
 let inited: boolean;
 
-export function initMisc() {
+export function initOpsMisc() {
   if (inited) return;
   inited = true;
 

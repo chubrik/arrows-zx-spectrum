@@ -1,5 +1,5 @@
-import { BIT7, xFF } from '../../hw/constants';
-import { mem, write } from '../../hw/memory';
+import { BIT7, xFF } from '../../common/constants';
+import { mem, write } from '../../common/memory';
 import { calcFP, calcFSZ53, F53, FC, fc, FH, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { a, hlxy, setA } from '../registers';
 

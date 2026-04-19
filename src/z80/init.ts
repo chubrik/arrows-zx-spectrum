@@ -1,6 +1,6 @@
-import { getCacheX, getDirect, initDirect, setDirect } from '../hw/arrows';
-import { xFF } from '../hw/constants';
-import { cpuX, cpuY } from '../hw/state';
+import { xFF } from '../common/constants';
+import { cpuX, cpuY } from '../common/state';
+import { commitValue, fetchValue, getValuesCacheX, initValues } from '../common/values';
 import { getF, getSYS, setF, setSYS } from './flags';
 import {
   a, aa, b, ba, c, ca, d, da, e, ea, fa, getR, hla, hlxy, i, ix, iy, pc, setA, setAa, setB, setBa,
@@ -9,36 +9,36 @@ import {
 } from './registers';
 
 let inited: boolean;
-let regsX: number[];
-let regsY: number[];
-const cacheX: number[] = [];
+let regXs: number[];
+let regYs: number[];
+const cacheXs: number[] = [];
 
 export function initCpu() {
   if (inited) return;
   inited = true;
 
-  initDirect();
+  initValues();
 
   //       A  F  B  C  D  E  H  L  [IX]  [SP]  [PC]      Aa Fa Ba Ca Da Ea Ha La [IY]  I  R SYS
-  regsX = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,/**/ 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8];
-  regsY = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14];
+  regXs = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,/**/ 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8];
+  regYs = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 13, 14, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12, 14];
 
-  regsX.forEach((_, i) => {
-    regsX[i] += cpuX;
-    regsY[i] += cpuY;
-    cacheX[i] = getCacheX(regsX[i], regsY[i]);
+  regXs.forEach((_, i) => {
+    regXs[i] += cpuX;
+    regYs[i] += cpuY;
+    cacheXs[i] = getValuesCacheX(regXs[i], regYs[i]);
   });
 }
 
 export function fetchCpu() {
   let i = 0;
-  loadCpu(() => getDirect(regsX[i], regsY[i++]));
+  loadCpu(() => fetchValue(regXs[i], regYs[i++]));
 }
 
 export function commitCpu() {
   let i = 0;
   saveCpu(value => {
-    setDirect(regsX[i], regsY[i], cacheX[i], value);
+    commitValue(regXs[i], regYs[i], cacheXs[i], value);
     i++;
   });
 }
@@ -66,7 +66,7 @@ export function restoreCpu(values: number[]) {
 
   loadCpu(() => {
     const value = values[i];
-    setDirect(regsX[i], regsY[i], cacheX[i], value);
+    commitValue(regXs[i], regYs[i], cacheXs[i], value);
     i++;
     return value;
   });

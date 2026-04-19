@@ -1,6 +1,6 @@
-import { xFF, xFFFF } from '../../hw/constants';
-import { mem, read16, write16 } from '../../hw/memory';
-import { readPort } from '../../hw/ports';
+import { xFF, xFFFF } from '../../common/constants';
+import { mem, read16, write16 } from '../../common/memory';
+import { readPort } from '../../common/ports';
 import { calcFP, calcFSZ53, FP, iff2, setFH, setFN, setFP } from '../flags';
 import { b, c, dec2SP, inc2SP, incPC, pc, setA, setB, setPC, sp } from '../registers';
 import { next } from '../utils';

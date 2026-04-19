@@ -1,4 +1,4 @@
-import { xFF } from '../hw/constants.ts';
+import { xFF } from '../common/constants.ts';
 import { check } from './check.ts';
 
 const bits = 20;
