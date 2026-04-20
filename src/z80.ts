@@ -1,7 +1,8 @@
+import { commitBeeper } from './common/beeper';
 import { MS_PER_FRAME, OP_PER_FRAME } from './common/constants';
 import { commitMemory } from './common/memory';
 import { commitScreen, incFrameCount } from './common/screen';
-import { cpuStarted, fetchState, initState, opPerTick, screenEnabled, speedLimited } from './common/state';
+import { cpuStarted, fetchState, initState, opPerTick, speedLimited } from './common/state';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu } from './z80/init';
@@ -38,8 +39,9 @@ always(() => {
   }
 
   commitCpu();
-  if (screenEnabled) commitScreen();
   commitMemory();
+  commitScreen();
+  commitBeeper();
 });
 
 const FRAME_WINDOW = 50;

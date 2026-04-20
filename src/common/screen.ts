@@ -152,6 +152,7 @@ function clearBorder() {
 //#region Commit
 
 export function commitScreen() {
+  if (!screenEnabled) return;
   commitBorder();
 
   const flashChanged = checkFlashPhase();

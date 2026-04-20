@@ -20,6 +20,7 @@ export function initState() {
 export let opPerTick = OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
 export let speedLimited = true;
 export let screenEnabled = true;
+export let beeperEnabled = true;
 export let memoryCommitFromAddr = ATTRIBUTES_AFTER_ADDR;
 
 export function fetchState() {
@@ -103,6 +104,11 @@ export function fetchState() {
     }
     _state.src = 0;
   }
+
+  if (_state.snd) {
+    beeperEnabled = _state.snd > 0;
+    _state.snd = 0;
+  }
 }
 
 export type State = {
@@ -118,4 +124,5 @@ export type State = {
   ram2: number[] | 0;
   ram3: number[] | 0;
   src: number;
+  snd: number;
 }
