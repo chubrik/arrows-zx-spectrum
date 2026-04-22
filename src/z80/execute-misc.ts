@@ -29,6 +29,7 @@ function spliceMisc(start: number, count: number) {
 }
 
 export function executeMisc() {
+  ts(4);
   refresh();
   const op = next();
   ts(tstatesMisc[op]);

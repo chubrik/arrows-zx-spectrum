@@ -17,6 +17,7 @@ export function ld_A_IR(value: number) {
 
 /** DJNZ e */
 export function DJNZ_e() {
+  ts(8);
   setB((b - 1) & xFF);
   if (b) {
     ts(TSTATES_EXTRA_JR);
