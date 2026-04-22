@@ -1,7 +1,7 @@
 import { initOpsMisc } from '../z80/execute-misc';
-import { clearCpu, fetchCpu, initCpu, resetCpu, restoreCpu } from '../z80/init';
-import { ATTRIBUTES_AFTER_ADDR, OP_PER_FRAME, RAM_MIN_ADDR, xFFFF } from './constants';
-import { clearMemory, fetchMemory, initMemory, restoreMemory } from './memory';
+import { clearCpu, fetchCpu, resetCpu, restoreCpu } from '../z80/init';
+import { ATTRIBUTES_AFTER_ADDR, RAM_MIN_ADDR, xFFFF } from './constants';
+import { clearMemory, fetchMemory, restoreMemory } from './memory';
 import { initPorts } from './ports';
 import { clearScreen, commitBorder, initScreen, refreshScreen, setBorder } from './screen';
 
@@ -17,7 +17,7 @@ export function initState() {
   _state = state as State;
 }
 
-export let opPerTick = OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
+export let stepMode = false;
 export let speedLimited = true;
 export let screenEnabled = true;
 export let beeperEnabled = true;
@@ -46,7 +46,7 @@ export function fetchState() {
   }
 
   if (_state.by1) {
-    opPerTick = _state.by1 > 0 ? 1 : OP_PER_FRAME + 2; // +2 to guarantee interrupt handling
+    stepMode = _state.by1 > 0;
     _state.by1 = 0;
   }
 

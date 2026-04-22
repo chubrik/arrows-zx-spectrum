@@ -7,6 +7,7 @@ import {
   setC, setCa, setD, setDa, setE, setEa, setFa, setHLa, setHLXY, setI, setIX, setIY, setPC, setR,
   setSP, sp
 } from './registers';
+import { setTStates } from './utils';
 
 let inited: boolean;
 let regXs: number[];

@@ -64,9 +64,6 @@ export function getR() { /*!inline*/ return (r7 & BIT7) | (ri &= 0x7F); }
 export function setR(value: number) { /*!inline*/ r7 = ri = value; }
 export function refresh() { /*!inline*/ ri++; }
 
-export let eiDelay: 0 | 1 = 0;
-export function setEIDelay(value: 0 | 1) { /*!inline*/ eiDelay = value; }
-
 //todo: Register WZ is not realized in the CPU state, but is used in some FUSE tests
 export let wzh = 0;
 let wzl = 0;

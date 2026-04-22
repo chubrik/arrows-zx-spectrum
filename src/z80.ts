@@ -1,15 +1,13 @@
 import { commitBeeper } from './common/beeper';
-import { MS_PER_FRAME, OP_PER_FRAME } from './common/constants';
+import { MS_PER_FRAME, TSTATES_PER_DISPLAY_CENTER, TSTATES_PER_FRAME } from './common/constants';
 import { commitMemory } from './common/memory';
 import { commitScreen, incFrameCount } from './common/screen';
-import { cpuStarted, fetchState, initState, opPerTick, speedLimited } from './common/state';
+import { cpuStarted, fetchState, initState, speedLimited, stepMode } from './common/state';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu } from './z80/init';
 import { interrupt } from './z80/interrupt';
-import { eiDelay, setEIDelay } from './z80/registers';
-
-let opCount = 0;
+import { eiTStates, setEiTStates, setTStates, tStates } from './z80/utils';
 
 initState();
 
@@ -17,30 +15,43 @@ always(() => {
   fetchState();
   if (!cpuStarted) return;
 
-  for (let i = 0; i < opPerTick; i++) {
-    opCount++;
+  if (stepMode) {
     executeMain();
+    commitScreen();
 
-    // Hack: we check interrupt only once per frame
-    if (opCount < OP_PER_FRAME) continue;
+    if (tStates >= TSTATES_PER_FRAME) {
+      setINT(INT);
 
-    if (eiDelay) {
-      setEIDelay(0);
-      continue;
+      if (eiTStates !== tStates) {
+        interrupt();
+        setTStates(tStates - TSTATES_PER_FRAME);
+        setEiTStates(0);
+        incFrameCount();
+      }
     }
+  }
+  else {
+    do executeMain(); while (tStates < TSTATES_PER_DISPLAY_CENTER);
 
-    opCount -= OP_PER_FRAME;
-    setINT(INT);
-    interrupt();
+    //todo: Unlike the rest of the memory, the synchronization of the screen area occurs as the beam moves
+    commitScreen();
     incFrameCount();
 
+    do executeMain(); while (tStates < TSTATES_PER_FRAME);
+    setINT(INT);
+
+    while (eiTStates === tStates)
+      executeMain();
+
+    interrupt();
+    setTStates(tStates - TSTATES_PER_FRAME);
+    setEiTStates(0);
+
     if (speedLimited) limitSpeed();
-    break;
   }
 
   commitCpu();
   commitMemory();
-  commitScreen();
   commitBeeper();
 });
 

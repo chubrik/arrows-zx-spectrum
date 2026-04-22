@@ -1,4 +1,4 @@
-import { initBeeper, incBeeper } from './beeper';
+import { incBeeper, initBeeper } from './beeper';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, xFF } from './constants';
 import { setBorder } from './screen';
 import { cpuX, cpuY } from './state';

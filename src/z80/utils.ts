@@ -2,6 +2,14 @@ import { xFFFF } from '../common/constants';
 import { mem } from '../common/memory';
 import { hlxy, incPC, xyMode } from './registers';
 
+export let tStates = 0;
+export function setTStates(value: number) { /*!inline*/ tStates = value; }
+function addTStates(n: number) { /*!inline*/ tStates += n; }
+export { addTStates as ts };
+
+export let eiTStates = 0;
+export function setEiTStates(value: number) { /*!inline*/ eiTStates = value; }
+
 export function nop() { };
 
 export function next() { /*!inline*/ return mem[incPC()]; }

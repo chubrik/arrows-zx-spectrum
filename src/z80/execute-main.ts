@@ -13,12 +13,18 @@ import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import {
   a, b, c, d, dec2SP, decBC, decDE, decHLXY, decPC, decSP, e, getBC, getDE, getH, getHXY, getL,
   getLXY, hlxy, inc2PC, inc2SP, incBC, incDE, incHLXY, incPC, incSP, refresh, setA, setB, setC,
-  setD, setE, setEIDelay, setH, setHLMode, setHLXY, setHXY, setIXMode, setIYMode, setL, setLXY,
-  setPC, setSP, sp, xyMode
+  setD, setE, setH, setHLMode, setHLXY, setHXY, setIXMode, setIYMode, setL, setLXY, setPC, setSP,
+  sp, xyMode
 } from './registers';
-import { getHLXYd, next, next16, nop } from './utils';
+import { getHLXYd, next, next16, nop, setEiTStates, ts, tStates } from './utils';
 
 export function executeMain() {
+  ts(7); //todo: Real T-state counting
+  executeMainProceed();
+}
+
+function executeMainProceed() {
+  /*!inline*/
   refresh();
   opsMain[next()]();
 }
@@ -258,7 +264,7 @@ const opsMain = [
   /* DA JP C,nn    */ () => fc ? JP_nn() : inc2PC(),
   /* DB IN A,(n)   */ () => setA(readPort(next(), a)),
   /* DC CALL C,nn  */ () => fc ? CALL_nn() : inc2PC(),
-  /* DD --- IX --- */ () => { setIXMode(); executeMain(); setHLMode(); },
+  /* DD --- IX --- */ () => { setIXMode(); executeMainProceed(); setHLMode(); },
   /* DE SBC A,n    */ () => SUB_SBC(next(), fc),
   /* DF RST 18h    */ () => RST_p(0x18),
 
@@ -290,9 +296,9 @@ const opsMain = [
   /* F8 RET M      */ () => fs ? RET() : {},
   /* F9 LD SP,HL   */ () => setSP(hlxy),
   /* FA JP M,nn    */ () => fs ? JP_nn() : inc2PC(),
-  /* FB EI         */ () => { setIFF1(IFF1); setIFF2(IFF2); setEIDelay(1); },
+  /* FB EI         */ () => { setIFF1(IFF1); setIFF2(IFF2); setEiTStates(tStates); },
   /* FC CALL M,nn  */ () => fs ? CALL_nn() : inc2PC(),
-  /* FD --- IY --- */ () => { setIYMode(); executeMain(); setHLMode(); },
+  /* FD --- IY --- */ () => { setIYMode(); executeMainProceed(); setHLMode(); },
   /* FE CP n       */ () => CP(next()),
   /* FF RST 38h    */ () => RST_p(0x38),
 ];
