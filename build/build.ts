@@ -7,13 +7,18 @@ import { getResource } from './resources.ts';
 import { arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, simplifyCode, SRC_DIR, terserCMangle, terserCollapse, terserCompress, writeToPath } from './utils.ts';
 import { loadSnapshot } from './z80-snapshot.ts';
 
+const cpuOnly = process.argv.includes('--cpu');
+
 await buildCpu();
-await buildRom();
 
-const z80Files = readdirSync('resources').filter(f => f.toLowerCase().endsWith('.z80'));
+if (!cpuOnly) {
+  await buildRom();
 
-for (const file of z80Files)
-  await buildSnapshot(`resources/${file}`);
+  const z80Files = readdirSync('resources').filter(f => f.toLowerCase().endsWith('.z80'));
+
+  for (const file of z80Files)
+    await buildSnapshot(`resources/${file}`);
+}
 
 console.log('');
 
