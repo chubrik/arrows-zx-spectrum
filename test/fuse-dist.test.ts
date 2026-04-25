@@ -41,11 +41,13 @@ const hook = g.__cpu as {
   setPC: (v: number) => void; setR: (v: number) => void; setSP: (v: number) => void;
   setWZ: (v: number) => void;
   getR: () => number;
+  setTStates: (v: number) => void;
 
   a: number; aa: number; b: number; ba: number; c: number; ca: number;
   d: number; da: number; e: number; ea: number; fa: number;
   hla: number; hlxy: number;
   i: number; ix: number; iy: number; pc: number; sp: number;
+  tStates: number;
 };
 
 function setupCpu() {
@@ -112,7 +114,12 @@ function loadProgram(addr: number, bytes: number[]) {
 
 function step() { hook.executeMain(); }
 
-const cpu: CpuApi = { setupCpu, setState, getState, loadProgram, step, mem: hook.mem, mockPorts: hook.mockPorts };
+const cpu: CpuApi = {
+  setupCpu, setState, getState, loadProgram, step,
+  mem: hook.mem, mockPorts: hook.mockPorts,
+  setTStates: (v) => hook.setTStates(v),
+  getTStates: () => hook.tStates,
+};
 
 const inputText = await getResource('_fuse-tests.in', 'utf-8');
 const expectedText = await getResource('_fuse-tests.expected', 'utf-8');

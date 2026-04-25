@@ -1,13 +1,15 @@
-import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../common/constants';
+import { _8, BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../common/constants';
 import { mem, write } from '../common/memory';
 import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
 import { a, b, c, d, e, getHXY, getLXY, hlxy, refresh, setA, setB, setC, setD, setE, setHXY, setLXY, wzh } from './registers';
-import { next } from './utils';
+import { next, ts } from './utils';
 
 /** Bit Instructions (CB) */
 export function executeBit() {
   refresh();
-  opsBit[next()]();
+  const op = next();
+  ts(tstatesBit[op]);
+  opsBit[op]();
 }
 
 function testBitVal(bit: number, value: number) {
@@ -298,4 +300,23 @@ const opsBit: (() => void)[] = [
   /* FD SET 7,L    */ () => setLXY(getLXY() | BIT7),
   /* FE SET 7,(HL) */ () => setBitMem(BIT7, hlxy),
   /* FF SET 7,A    */ () => setA(a | BIT7),
+];
+
+const tstatesBit = [
+  /* 0x */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* 1x */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* 2x */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* 3x */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* 4x */ _8, _8, _8, _8, _8, _8, 12, _8, _8, _8, _8, _8, _8, _8, 12, _8,
+  /* 5x */ _8, _8, _8, _8, _8, _8, 12, _8, _8, _8, _8, _8, _8, _8, 12, _8,
+  /* 6x */ _8, _8, _8, _8, _8, _8, 12, _8, _8, _8, _8, _8, _8, _8, 12, _8,
+  /* 7x */ _8, _8, _8, _8, _8, _8, 12, _8, _8, _8, _8, _8, _8, _8, 12, _8,
+  /* 8x */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* 9x */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* Ax */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* Bx */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* Cx */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* Dx */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* Ex */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
+  /* Fx */ _8, _8, _8, _8, _8, _8, 15, _8, _8, _8, _8, _8, _8, _8, 15, _8,
 ];
