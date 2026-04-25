@@ -1,4 +1,4 @@
-import { TSTATES_PER_OP } from '../common/constants';
+import { _0, _4, _5, _6, _7, _8 } from '../common/constants';
 import { mem, read16, write, write16, write88 } from '../common/memory';
 import { readPort, writePort } from '../common/ports';
 import { executeBit } from './execute-bit';
@@ -22,8 +22,9 @@ import { getHLXYd, next, next16, nop, setEiTStates, ts, tStates } from './utils'
 export function executeMain() {
   /*!inline*/
   refresh();
-  ts(TSTATES_PER_OP);
-  opsMain[next()]();
+  const op = next();
+  ts(tstatesMain[op]);
+  opsMain[op]();
 }
 
 function executeMainIX(op: number) {
@@ -32,6 +33,7 @@ function executeMainIX(op: number) {
   else {
     enterIXMode();
     refresh();
+    ts(tstatesMain[op]);
     opsMain[op]();
     leaveIXMode();
   }
@@ -43,6 +45,7 @@ function executeMainIY(op: number) {
   else {
     enterIYMode();
     refresh();
+    ts(tstatesMain[op]);
     opsMain[op]();
     leaveIYMode();
   }
@@ -51,13 +54,17 @@ function executeMainIY(op: number) {
 // Consecutive prefixes: only the last one counts
 function executePrefixChain(op: number) {
   let prefix;
-  do { prefix = op; refresh(); op = next(); } while (op === 0xDD || op === 0xFD);
+  do { prefix = op; refresh(); ts(tstatesMain[prefix]); op = next(); } while (op === 0xDD || op === 0xFD);
   if (prefix === 0xDD) enterIXMode(); else enterIYMode();
   refresh();
+  ts(tstatesMain[op]);
   opsMain[op]();
   if (prefix === 0xDD) leaveIXMode(); else leaveIYMode();
 }
 
+// T-states: the base cost of every opcode comes from tstatesMain (charged in executeMain). JR_e,
+// CALL_nn and RET charge the extra cost of a taken jump, so conditional entries need nothing. CB
+// and ED use tables in their executors, DD/FD charge 4 per prefix byte, (IX+d) adds 8 in getHLXYd.
 const opsMain = [
   /* 00 NOP        */ nop,
   /* 01 LD BC,nn   */ () => { setC(next()); setB(next()); },
@@ -116,7 +123,7 @@ const opsMain = [
   /* 33 INC SP     */ incSP,
   /* 34 INC (HL)   */ INC_hl,
   /* 35 DEC (HL)   */ DEC_hl,
-  /* 36 LD (HL),n  */ () => write(getHLXYd(), next()),
+  /* 36 LD (HL),n  */ () => { if (hlMode) ts(-3); write(getHLXYd(), next()); },
   /* 37 SCF        */ SCF,
   /* 38 JR C,e     */ () => fc ? JR_e() : incPC(),
   /* 39 ADD HL,SP  */ () => ADD_HL(sp),
@@ -330,4 +337,24 @@ const opsMain = [
   /* FD --- IY --- */ () => executeMainIY(next()),
   /* FE CP n       */ () => CP(next()),
   /* FF RST 38h    */ () => RST_p(0x38),
+];
+
+// Base cost per opcode; CB is 0 (its executor charges the whole instruction), ED is the prefix only
+const tstatesMain = [
+  /* 0x */ _4, 10, _7, _6, _4, _4, _7, _4, _4, 11, _7, _6, _4, _4, _7, _4,
+  /* 1x */ _8, 10, _7, _6, _4, _4, _7, _4, _7, 11, _7, _6, _4, _4, _7, _4,
+  /* 2x */ _7, 10, 16, _6, _4, _4, _7, _4, _7, 11, 16, _6, _4, _4, _7, _4,
+  /* 3x */ _7, 10, 13, _6, 11, 11, 10, _4, _7, 11, 13, _6, _4, _4, _7, _4,
+  /* 4x */ _4, _4, _4, _4, _4, _4, _7, _4, _4, _4, _4, _4, _4, _4, _7, _4,
+  /* 5x */ _4, _4, _4, _4, _4, _4, _7, _4, _4, _4, _4, _4, _4, _4, _7, _4,
+  /* 6x */ _4, _4, _4, _4, _4, _4, _7, _4, _4, _4, _4, _4, _4, _4, _7, _4,
+  /* 7x */ _7, _7, _7, _7, _7, _7, _4, _7, _4, _4, _4, _4, _4, _4, _7, _4,
+  /* 8x */ _4, _4, _4, _4, _4, _4, _7, _4, _4, _4, _4, _4, _4, _4, _7, _4,
+  /* 9x */ _4, _4, _4, _4, _4, _4, _7, _4, _4, _4, _4, _4, _4, _4, _7, _4,
+  /* Ax */ _4, _4, _4, _4, _4, _4, _7, _4, _4, _4, _4, _4, _4, _4, _7, _4,
+  /* Bx */ _4, _4, _4, _4, _4, _4, _7, _4, _4, _4, _4, _4, _4, _4, _7, _4,
+  /* Cx */ _5, 10, 10, 10, 10, 11, _7, 11, _5, _4, 10, _0, 10, 10, _7, 11,
+  /* Dx */ _5, 10, 10, 11, 10, 11, _7, 11, _5, _4, 10, 11, 10, _4, _7, 11,
+  /* Ex */ _5, 10, 10, 19, 10, 11, _7, 11, _5, _4, 10, _4, 10, _4, _7, 11,
+  /* Fx */ _5, 10, 10, _4, 10, 11, _7, 11, _5, _6, 10, _4, 10, _4, _7, 11,
 ];

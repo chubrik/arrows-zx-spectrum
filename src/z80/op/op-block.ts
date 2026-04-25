@@ -1,8 +1,9 @@
-import { xFF, xFFFF } from '../../common/constants';
+import { TSTATES_EXTRA_BLOCK, xFF, xFFFF } from '../../common/constants';
 import { mem, write } from '../../common/memory';
 import { readPort, writePort } from '../../common/ports';
 import { calcFP, F3, F5, F53, FC, FH, FN, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { a, b, c, dec2PC, decBC, decDE, decHLXY, getDE, hlxy, incDE, incHLXY, setB, setHLXY } from '../registers';
+import { ts } from '../utils';
 
 /** LDI | LDD | LDIR | LDDR */
 export function LD_block(isInc: boolean, repeat: 0 | 1 = 0) {
@@ -20,7 +21,10 @@ export function LD_block(isInc: boolean, repeat: 0 | 1 = 0) {
   setFP(cORb ? FP : 0);
   setFN(0);
 
-  if (repeat && cORb) dec2PC();
+  if (repeat && cORb) {
+    ts(TSTATES_EXTRA_BLOCK);
+    dec2PC();
+  }
 }
 
 /** CPI | CPD | CPIR | CPDR */
@@ -41,7 +45,10 @@ export function CP_block(isInc: boolean, repeat: 0 | 1 = 0) {
   setFP(cORb ? FP : 0);
   setFN(FN);
 
-  if (repeat && cORb && diff) dec2PC();
+  if (repeat && cORb && diff) {
+    ts(TSTATES_EXTRA_BLOCK);
+    dec2PC();
+  }
 }
 
 /** INI | IND | INIR | INDR */
@@ -62,7 +69,10 @@ export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   setFN(value & FS ? FN : 0);
   setFC(kOverflow ? FC : 0);
 
-  if (repeat && count) dec2PC();
+  if (repeat && count) {
+    ts(TSTATES_EXTRA_BLOCK);
+    dec2PC();
+  }
 }
 
 /** OUTI | OUTD | OTIR | OTDR */
@@ -84,5 +94,8 @@ export function OUT_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   setFN(value & FS ? FN : 0);
   setFC(kOverflow ? FC : 0);
 
-  if (repeat && count) dec2PC();
+  if (repeat && count) {
+    ts(TSTATES_EXTRA_BLOCK);
+    dec2PC();
+  }
 }

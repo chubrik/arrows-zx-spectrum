@@ -18,6 +18,7 @@ import {
   setC, setCa, setD, setDa, setE, setEa, setFa, setHLa, setHLXY, setI, setIX, setIY, setPC, setR,
   setSP, setWZ, sp
 } from './z80/registers';
+import { setTStates, tStates } from './z80/utils';
 
 if (TEST) {
   (globalThis as Record<string, unknown>).__z80 = {
@@ -28,6 +29,7 @@ if (TEST) {
     setRamMinAddrForTest: (v: number) => setRamMinAddrForTest(v),
     executeMain: () => executeMain(),
     clearCpu: () => clearCpu(),
+
     setF: (v: number) => setF(v),
     setHLT: (v: number) => setHLT(v),
     setIFF1: (v: number) => setIFF1(v),
@@ -54,6 +56,7 @@ if (TEST) {
     setR: (v: number) => setR(v),
     setSP: (v: number) => setSP(v),
     setWZ: (v: number) => setWZ(v),
+    setTStates: (v: number) => setTStates(v),
 
     get hlt() { return hlt; },
     get iff1() { return iff1; },
@@ -78,5 +81,6 @@ if (TEST) {
     get iy() { return iy; },
     get pc() { return pc; },
     get sp() { return sp; },
+    get tStates() { return tStates; },
   };
 }

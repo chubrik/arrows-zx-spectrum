@@ -1,3 +1,4 @@
+import { _4, _5, _8 } from '../common/constants';
 import { mem, read16, write16, write88 } from '../common/memory';
 import { writePort } from '../common/ports';
 import { IFF1, iff2, IM1, IM2, setIFF1, setIM1, setIM2 } from './flags';
@@ -10,11 +11,13 @@ import {
   a, b, c, d, e, getBC, getDE, getHXY, getLXY, getR, hlxy, i, refresh, setA, setB, setC, setD, setE,
   setHLXY, setHXY, setI, setLXY, setR, setSP, sp
 } from './registers';
-import { next, next16, nop } from './utils';
+import { next, next16, nop, ts } from './utils';
 
 export function executeMisc() {
   refresh();
-  opsMisc[next()]();
+  const op = next();
+  ts(tstatesMisc[op]);
+  opsMisc[op]();
 }
 
 function nops(count: number) {
@@ -117,4 +120,25 @@ const opsMisc = [
   /* EDBC       (void) */ ...nops(4),
 
   /* EDC0-EDFF  (void) */ ...nops(64),
+];
+
+// Cost of the second byte; the 4 of the ED prefix comes from tstatesMain. Undefined opcodes are 4
+// (two NOPs in total). RETN/RETI are 4 on top of the 6 charged inside RET.
+const tstatesMisc = [
+  /* 0x */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* 1x */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* 2x */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* 3x */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* 4x */ _8, _8, 11, 16, _4, _4, _4, _5, _8, _8, 11, 16, _4, _4, _4, _5,
+  /* 5x */ _8, _8, 11, 16, _4, _4, _4, _5, _8, _8, 11, 16, _4, _4, _4, _5,
+  /* 6x */ _8, _8, 11, 16, _4, _4, _4, 14, _8, _8, 11, 16, _4, _4, _4, 14,
+  /* 7x */ _8, _8, 11, 16, _4, _4, _4, _4, _8, _8, 11, 16, _4, _4, _4, _4,
+  /* 8x */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* 9x */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* Ax */ 12, 12, 12, 12, _4, _4, _4, _4, 12, 12, 12, 12, _4, _4, _4, _4,
+  /* Bx */ 12, 12, 12, 12, _4, _4, _4, _4, 12, 12, 12, 12, _4, _4, _4, _4,
+  /* Cx */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* Dx */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* Ex */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
+  /* Fx */ _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4, _4,
 ];
