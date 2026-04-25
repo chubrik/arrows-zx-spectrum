@@ -2,12 +2,14 @@ import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../common/consta
 import { mem, write } from '../common/memory';
 import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
 import { a, b, c, d, e, getHXY, getLXY, hlxy, refresh, setA, setB, setC, setD, setE, setHXY, setLXY, wzh } from './registers';
-import { next } from './utils';
+import { next, ts } from './utils';
 
 /** Bit Instructions (CB) */
 export function executeBit() {
   refresh();
-  opsBit[next()]();
+  const op = next();
+  ts(tstatesBit[op]);
+  opsBit[op]();
 }
 
 function testBitVal(bit: number, value: number) {
@@ -298,4 +300,23 @@ const opsBit: (() => void)[] = [
   /* FD SET 7,L    */ () => setLXY(getLXY() | BIT7),
   /* FE SET 7,(HL) */ () => setBitMem(BIT7, hlxy),
   /* FF SET 7,A    */ () => setA(a | BIT7),
+];
+
+const tstatesBit = [
+  /* 0x */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* 1x */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* 2x */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* 3x */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* 4x */ 8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8,
+  /* 5x */ 8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8,
+  /* 6x */ 8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8,
+  /* 7x */ 8, 8, 8, 8, 8, 8, 12, 8, 8, 8, 8, 8, 8, 8, 12, 8,
+  /* 8x */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* 9x */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* Ax */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* Bx */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* Cx */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* Dx */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* Ex */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
+  /* Fx */ 8, 8, 8, 8, 8, 8, 15, 8, 8, 8, 8, 8, 8, 8, 15, 8,
 ];

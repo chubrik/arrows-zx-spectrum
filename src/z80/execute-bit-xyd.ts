@@ -2,7 +2,7 @@ import { BIT0, BIT1, BIT2, BIT3, BIT4, BIT5, BIT6, BIT7 } from '../common/consta
 import { mem, write } from '../common/memory';
 import { BIT_b_r, RL_val, RLC_val, RR_val, RRC_val, SLA_val, SLL_val, SRA_val, SRL_val } from './op/op-bit';
 import { setA, setB, setC, setD, setE, setH, setL } from './registers';
-import { getHLXYd, next } from './utils';
+import { getHLXYd, next, ts } from './utils';
 
 let xydAddr = 0;
 let xydVal = 0;
@@ -11,7 +11,9 @@ let xydVal = 0;
 export function executeBitXYd() {
   xydAddr = getHLXYd();
   xydVal = mem[xydAddr];
-  opsBitXY[next()]();
+  const op = next();
+  ts(tstatesBitXY[op]);
+  opsBitXY[op]();
 }
 
 function testBitXYd(bit: number) {
@@ -295,4 +297,23 @@ const opsBitXY: (() => void)[] = [
   /* FD SET 7,(XY+d),L * */ () => setL(setXYd_undoc(xydVal | BIT7)),
   /* FE SET 7,(XY+d)     */ () => write(xydAddr, xydVal | BIT7),
   /* FF SET 7,(XY+d),A * */ () => setA(setXYd_undoc(xydVal | BIT7)),
+];
+
+const tstatesBitXY = [
+  /* 0x */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* 1x */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* 2x */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* 3x */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* 4x */  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,
+  /* 5x */  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,
+  /* 6x */  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,
+  /* 7x */  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,  8,
+  /* 8x */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* 9x */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* Ax */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* Bx */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* Cx */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* Dx */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* Ex */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+  /* Fx */ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
 ];

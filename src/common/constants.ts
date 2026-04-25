@@ -31,11 +31,17 @@ export const MS_PER_FRAME = 20; // 50 fps
 // - 24 T-states — right border
 export const TSTATES_PER_FRAME = 69888; // ≈50.08 Hz (at 3.5 MHz CPU)
 
-export const TSTATES_PER_OP = 7; //todo: Real T-state counting
-
 export const TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE = 15256; // (16 + 48 + 4) * 224 + (48 / 2)
 export const TSTATES_PER_DISPLAY_ROW = 1792;               // 8 * 224
 
 // export const TSTATES_PER_DISPLAY_BEGIN = 14408;  // (16 + 48) * 224 + 48 + 24
 // export const TSTATES_PER_DISPLAY_END = 57320;    // (16 + 48 + 192) * 224 - 24
 // export const TSTATES_PER_DISPLAY_MIDDLE = 35864; // (BEGIN + END) * 0.5
+
+export const TSTATES_EXTRA_JR = 5;    // JR cc taken: 12 vs 7
+export const TSTATES_EXTRA_CALL = 7;  // CALL cc taken: 17 vs 10
+export const TSTATES_EXTRA_RET = 6;   // RET cc taken: 11 vs 5
+export const TSTATES_EXTRA_BLOCK = 5; // LDIR/CPIR/... repeat taken: 21 vs 16
+export const TSTATES_EXTRA_XY = 8;    // (IX+d)/(IY+d) displacement fetch + compute
+export const TSTATES_INT_IM01 = 13;   // IM 0/1 interrupt acceptance
+export const TSTATES_INT_IM2 = 19;    // IM 2 interrupt acceptance

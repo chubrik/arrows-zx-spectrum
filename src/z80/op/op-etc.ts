@@ -1,9 +1,9 @@
-import { xFF, xFFFF } from '../../common/constants';
+import { TSTATES_EXTRA_JR, xFF, xFFFF } from '../../common/constants';
 import { mem, read16, write16 } from '../../common/memory';
 import { readPort } from '../../common/ports';
 import { calcFP, calcFSZ53, FP, iff2, setFH, setFN, setFP } from '../flags';
 import { b, c, dec2SP, inc2SP, incPC, pc, setA, setB, setPC, sp } from '../registers';
-import { next } from '../utils';
+import { next, ts } from '../utils';
 
 /** LD A,I | LD A,R */
 export function ld_A_IR(value: number) {
@@ -18,7 +18,10 @@ export function ld_A_IR(value: number) {
 /** DJNZ e */
 export function DJNZ_e() {
   setB((b - 1) & xFF);
-  if (b) JR_e();
+  if (b) {
+    ts(TSTATES_EXTRA_JR);
+    JR_e();
+  }
   else incPC();
 }
 

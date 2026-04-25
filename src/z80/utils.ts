@@ -1,4 +1,4 @@
-import { xFFFF } from '../common/constants';
+import { TSTATES_EXTRA_XY, xFFFF } from '../common/constants';
 import { mem } from '../common/memory';
 import { hlxy, incPC, xyMode } from './registers';
 
@@ -18,6 +18,7 @@ export function next16() { /*!inline*/ return next() | (next() << 8); }
 /** (HL/IX+d/IY+d) */
 export function getHLXYd(): number {
   if (xyMode) {
+    addTStates(TSTATES_EXTRA_XY);
     const d = next();
     return (hlxy + (d < 128 ? d : d - 256)) & xFFFF; // -128...+127 relative to HL/IX/IY
   }

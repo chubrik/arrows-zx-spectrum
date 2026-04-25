@@ -41,11 +41,13 @@ const z80 = g.__z80 as {
   setPC: (v: number) => void; setR: (v: number) => void; setSP: (v: number) => void;
   setWZ: (v: number) => void;
   getR: () => number;
+  setTStates: (v: number) => void;
 
   a: number; aa: number; b: number; ba: number; c: number; ca: number;
   d: number; da: number; e: number; ea: number; fa: number;
   hla: number; hlxy: number;
   i: number; ix: number; iy: number; pc: number; sp: number;
+  tStates: number;
 };
 
 function setupCpu() {
@@ -112,7 +114,12 @@ function loadProgram(addr: number, bytes: number[]) {
 
 function step() { z80.executeMain(); }
 
-const cpu: CpuApi = { setupCpu, setState, getState, loadProgram, step, mem: z80.mem, mockPorts: z80.mockPorts };
+const cpu: CpuApi = {
+  setupCpu, setState, getState, loadProgram, step,
+  mem: z80.mem, mockPorts: z80.mockPorts,
+  setTStates: (v) => z80.setTStates(v),
+  getTStates: () => z80.tStates,
+};
 
 const inputText = await getResource('fuse-tests.in', 'utf-8');
 const expectedText = await getResource('fuse-tests.expected', 'utf-8');

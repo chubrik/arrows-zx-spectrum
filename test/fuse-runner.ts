@@ -15,6 +15,8 @@ export interface CpuApi {
   getState: () => CpuState;
   loadProgram: (addr: number, bytes: number[]) => void;
   step: () => void;
+  setTStates: (v: number) => void;
+  getTStates: () => number;
   mem: number[];
   mockPorts: MockPorts;
 }
@@ -85,14 +87,13 @@ export function runFuseSuite(suiteName: string, cpu: CpuApi, inputText: string, 
           cpu.loadProgram(block.addr, block.bytes);
         }
 
-        if (input.tStates > 1) {
-          for (let i = 0; i < 10000; i++) {
-            cpu.step();
-            if (cpu.getState().PC === expected.PC) break;
-          }
-        } else {
+        cpu.setTStates(0);
+        // Safety cap — LDIR can legitimately take many iterations, but FUSE tests are bounded.
+        for (let i = 0; i < 10000; i++) {
           cpu.step();
+          if (cpu.getTStates() >= expected.tStates) break;
         }
+        const gotTStates = cpu.getTStates();
 
         const got = cpu.getState();
         const mismatches: string[] = [];
@@ -168,6 +169,10 @@ export function runFuseSuite(suiteName: string, cpu: CpuApi, inputText: string, 
               mismatches.push(`  port write[${j}]: got {0x${gotPW.addr.toString(16).padStart(4, '0')}, 0x${gotPW.value.toString(16).padStart(2, '0')}}, expected {0x${expPW.addr.toString(16).padStart(4, '0')}, 0x${expPW.value.toString(16).padStart(2, '0')}}`);
             }
           }
+        }
+
+        if (gotTStates !== expected.tStates) {
+          mismatches.push(`  tStates: got ${gotTStates}, expected ${expected.tStates}`);
         }
 
         if (mismatches.length > 0) {

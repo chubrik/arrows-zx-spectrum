@@ -10,7 +10,7 @@ import {
   a, b, c, d, e, getBC, getDE, getHXY, getLXY, getR, hlxy, i, refresh, setA, setB, setC, setD, setE,
   setHLXY, setHXY, setI, setLXY, setR, setSP, sp
 } from './registers';
-import { nop as _, next, next16, nop } from './utils';
+import { nop as _, next, next16, nop, ts } from './utils';
 
 let inited: boolean;
 
@@ -30,7 +30,9 @@ function spliceMisc(start: number, count: number) {
 
 export function executeMisc() {
   refresh();
-  opsMisc[next()]();
+  const op = next();
+  ts(tstatesMisc[op]);
+  opsMisc[op]();
 }
 
 const opsMisc = [
@@ -129,4 +131,23 @@ const opsMisc = [
   /* EDBC */ _, _, _, _,
 
   /* EDC0-EDFF */
+];
+
+const tstatesMisc = [
+  /* 0x */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* 1x */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* 2x */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* 3x */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* 4x */  8,  8, 11, 16,  4, 10,  4,  5,  8,  8, 11, 16,  4, 10,  4,  5,
+  /* 5x */  8,  8, 11, 16,  4, 10,  4,  5,  8,  8, 11, 16,  4, 10,  4,  5,
+  /* 6x */  8,  8, 11, 16,  4, 10,  4, 14,  8,  8, 11, 16,  4, 10,  4, 14,
+  /* 7x */  8,  8, 11, 16,  4, 10,  4,  4,  8,  8, 11, 16,  4, 10,  4,  4,
+  /* 8x */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* 9x */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* Ax */ 12, 12, 12, 12,  4,  4,  4,  4, 12, 12, 12, 12,  4,  4,  4,  4,
+  /* Bx */ 12, 12, 12, 12,  4,  4,  4,  4, 12, 12, 12, 12,  4,  4,  4,  4,
+  /* Cx */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* Dx */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* Ex */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
+  /* Fx */  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,
 ];
