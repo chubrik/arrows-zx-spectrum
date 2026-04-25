@@ -1,17 +1,20 @@
-import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, SCREEN_MIN_ADDR } from './constants.ts';
+import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, DISPLAY_MIN_ADDR, TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE, TSTATES_PER_DISPLAY_ROW } from './constants.ts';
 import { commitMemoryValue, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, screenEnabled } from './state.ts';
 import { world_copyRegion, world_getArrow, world_setSignal } from './world-refs.ts';
 
-let screenX: number;
-let screenY: number;
+// Screen = display area + border
+
+let displayX: number;
+let displayY: number;
 const addrXs: number[] = [];
 const addrYs: number[] = [];
 const borderXs: number[] = [];
 const borderYs: number[] = [];
 const palettesDefault: number[][] = [];
 const palettesFlash: number[][] = [];
-let currentPalettes = palettesDefault;
+const pixelIndexBaseByRow: number[] = [];
+export const displayCommitTStatesByRow: number[] = [];
 
 //#region Init
 
@@ -21,25 +24,40 @@ export function initScreen() {
   if (inited) return;
   inited = true;
 
-  screenX = cpuX + 80;
-  screenY = cpuY - 400;
+  displayX = cpuX + 80;
+  displayY = cpuY - 400;
   const paletteX = cpuX;
   const paletteY = cpuY - 32;
 
-  for (let addr = SCREEN_MIN_ADDR; addr < ATTRIBUTES_MIN_ADDR; addr++) {
-    addrXs[addr] = screenX + ((addr & 0x1F) << 4);
-    addrYs[addr] = screenY + ((addr & 0x1800) >> 4) + ((addr & 0x0700) >> 7) + ((addr & 0xE0) >> 1);
+  for (let addr = DISPLAY_MIN_ADDR; addr < ATTRIBUTES_MIN_ADDR; addr++) {
+    addrXs[addr] = displayX + ((addr & 0x1F) << 4);
+    addrYs[addr] = displayY + ((addr & 0x1800) >> 4) + ((addr & 0x0700) >> 7) + ((addr & 0xE0) >> 1);
   }
 
   initBorder();
   initPalettes(paletteX, paletteY);
+
+  let rowPixelIndexBase = DISPLAY_MIN_ADDR >> 5;
+  let rowCommitTStates = TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE;
+  let zoneCount = 8;
+
+  for (let i = 0; i < 24; i++) {
+    pixelIndexBaseByRow[i] = rowPixelIndexBase + i;
+    displayCommitTStatesByRow[i] = rowCommitTStates;
+    rowCommitTStates += TSTATES_PER_DISPLAY_ROW;
+
+    if (!--zoneCount) {
+      zoneCount = 8;
+      rowPixelIndexBase += 56; // 64 - 8
+    }
+  }
 }
 
 function initBorder() {
-  const minX = screenX - 32;
-  const minY = screenY - 28;
-  const maxX = screenX + 512 + 32 - 2;
-  const maxY = screenY + 384 + 28 - 2;
+  const minX = displayX - 32;
+  const minY = displayY - 28;
+  const maxX = displayX + 512 + 32 - 2;
+  const maxY = displayY + 384 + 28 - 2;
   const skips = [20, 14, 10, 8, 6, 4, 4, 2, 2, 2];
 
   for (let y = minY; y <= maxY; y += 2) {
@@ -50,7 +68,7 @@ function initBorder() {
       skip = skips[(maxY - y) >> 1];
 
     for (let x = minX + skip; x <= maxX - skip; x += 2) {
-      if (x < screenX || x >= screenX + 512 || y < screenY || y >= screenY + 384) {
+      if (x < displayX || x >= displayX + 512 || y < displayY || y >= displayY + 384) {
         borderXs.push(x);
         borderYs.push(y);
       }
@@ -108,24 +126,26 @@ function initPalettesPhase(isFlash: boolean, palettes: number[][], palSrc: numbe
 //#endregion
 
 let frameCount = 0;
-export function incFrameCount() { /*!inline*/ frameCount++; }
-
 let flashPhase = 0; // 0 | BIT4
+let flashPhaseChanged = false;
+let currentPalettes = palettesDefault;
 
-function checkFlashPhase(): boolean {
-  const newPhase = frameCount & BIT4;
-  if (flashPhase === newPhase) return false;
-  flashPhase = newPhase;
-  currentPalettes = flashPhase ? palettesFlash : palettesDefault;
-  return true;
+export function incFrameCount() {
+  const newFlashPhase = ++frameCount & BIT4;
+  flashPhaseChanged = flashPhase !== newFlashPhase;
+
+  if (flashPhaseChanged) {
+    flashPhase = newFlashPhase;
+    currentPalettes = flashPhase ? palettesFlash : palettesDefault;
+  }
 }
 
 export function clearScreen() {
   if (!screenEnabled) return;
   initScreen();
   clearBorder();
-  const emptyAreaX = screenX + 560;
-  world_copyRegion(emptyAreaX, screenY, emptyAreaX + 512, screenY + 384, screenX, screenY);
+  const emptyAreaX = displayX + 560;
+  world_copyRegion(emptyAreaX, displayY, emptyAreaX + 512, displayY + 384, displayX, displayY);
 }
 
 export function refreshScreen() {
@@ -153,74 +173,71 @@ function clearBorder() {
 
 export function commitScreen() {
   if (!screenEnabled) return;
+
+  for (let i = 0; i < 24; i++)
+    commitDisplayRow(i);
+
   commitBorder();
+}
 
-  const flashChanged = checkFlashPhase();
-  const minAttrIndex = ATTRIBUTES_MIN_ADDR >> 5;
-  let pixelBase = SCREEN_MIN_ADDR >> 5;
-  let zoneCount = 8;
+const minAttrIndex = ATTRIBUTES_MIN_ADDR >> 5;
 
-  for (let i = 0; i < 24; i++) {
-    const attrIndex = minAttrIndex + i;
-    let attrBits = memoryDirtyBitmap[attrIndex];
-    memoryDirtyBitmap[attrIndex] = 0;
-    const attrAddrBase = attrIndex << 5;
+export function commitDisplayRow(row: number) {
+  const attrIndex = minAttrIndex + row;
+  const pixelIndexBase = pixelIndexBaseByRow[row];
+  const attrAddrBase = attrIndex << 5;
+  let attrBits = memoryDirtyBitmap[attrIndex];
+  memoryDirtyBitmap[attrIndex] = 0;
 
-    if (flashChanged) {
-      // Once every 16 frames: check all 32 attributes in the line. Save dirty ones to world.
-      // Mark those with flash bit as dirty for the subsequent screen output phase.
-      for (let offset = 0; offset < 32; offset++) {
-        const bit = 1 << offset;
-        const attrAddr = attrAddrBase + offset;
-        const value = mem[attrAddr];
-        if (attrBits & bit) { commitMemoryValue(attrAddr, value); }
-        else if (value & BIT7) attrBits |= bit;
-      }
-    } else {
-      // Hot path (15 of 16 frames): save dirty attributes to world
-      let ab = attrBits;
-      while (ab) {
-        const bit = ab & -ab;
-        ab ^= bit;
-        const attrAddr = attrAddrBase + 31 - Math.clz32(bit);
-        commitMemoryValue(attrAddr, mem[attrAddr]);
-      }
+  if (flashPhaseChanged) {
+    // Once every 16 frames: check all 32 attributes in the line. Save dirty ones to world.
+    // Mark those with flash bit as dirty for the subsequent display output phase.
+    for (let offset = 0; offset < 32; offset++) {
+      const bit = 1 << offset;
+      const attrAddr = attrAddrBase + offset;
+      const value = mem[attrAddr];
+      if (attrBits & bit) { commitMemoryValue(attrAddr, value); }
+      else if (value & BIT7) attrBits |= bit;
     }
-
-    for (let j = 0; j < 64; j += 8) {
-      const pixelIndex = pixelBase + i + j;
-      const pixelBits = memoryDirtyBitmap[pixelIndex];
-      let bits = attrBits | pixelBits;
-      if (bits === 0) continue;
-      memoryDirtyBitmap[pixelIndex] = 0;
-      const addrBase = pixelIndex << 5;
-
-      while (bits) {
-        const bit = bits & -bits;
-        const offset = 31 - Math.clz32(bit);
-        bits ^= bit;
-
-        const addr = addrBase + offset;
-        const value = mem[addr];
-
-        if (pixelBits & bit) {
-          commitMemoryValue(addr, value);
-        }
-
-        const attrAddr = attrAddrBase + offset;
-        const attr = mem[attrAddr];
-        commitScreenValue(addr, attr, value);
-      }
+  } else {
+    // Hot path (15 of 16 frames): save dirty attributes to world
+    let ab = attrBits;
+    while (ab) {
+      const bit = ab & -ab;
+      ab ^= bit;
+      const attrAddr = attrAddrBase + 31 - Math.clz32(bit);
+      commitMemoryValue(attrAddr, mem[attrAddr]);
     }
+  }
 
-    if (!--zoneCount) {
-      zoneCount = 8;
-      pixelBase += 56; // 64 - 8
+  for (let i = 0; i < 64; i += 8) {
+    const pixelIndex = pixelIndexBase + i;
+    const pixelBits = memoryDirtyBitmap[pixelIndex];
+    let bits = attrBits | pixelBits;
+    if (bits === 0) continue;
+    memoryDirtyBitmap[pixelIndex] = 0;
+    const addrBase = pixelIndex << 5;
+
+    while (bits) {
+      const bit = bits & -bits;
+      const offset = 31 - Math.clz32(bit);
+      bits ^= bit;
+
+      const addr = addrBase + offset;
+      const value = mem[addr];
+
+      if (pixelBits & bit) {
+        commitMemoryValue(addr, value);
+      }
+
+      const attrAddr = attrAddrBase + offset;
+      const attr = mem[attrAddr];
+      commitDisplayValue(addr, attr, value);
     }
   }
 }
 
-function commitScreenValue(addr: number, attr: number, value: number) {
+function commitDisplayValue(addr: number, attr: number, value: number) {
   const posX = addrXs[addr];
   const y = addrYs[addr];
   const pal = currentPalettes[attr];

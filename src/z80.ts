@@ -1,8 +1,8 @@
 import { commitBeeper } from './common/beeper';
-import { MS_PER_FRAME, TSTATES_PER_DISPLAY_CENTER, TSTATES_PER_FRAME } from './common/constants';
+import { MS_PER_FRAME, TSTATES_PER_FRAME } from './common/constants';
 import { commitMemory } from './common/memory';
-import { commitScreen, incFrameCount } from './common/screen';
-import { cpuStarted, fetchState, initState, speedLimited, stepMode } from './common/state';
+import { commitBorder, commitDisplayRow, commitScreen, displayCommitTStatesByRow, incFrameCount } from './common/screen';
+import { cpuStarted, fetchState, initState, screenEnabled, speedLimited, stepMode } from './common/state';
 import { executeMain } from './z80/execute-main';
 import { INT, setINT } from './z80/flags';
 import { commitCpu } from './z80/init';
@@ -31,11 +31,16 @@ always(() => {
     }
   }
   else {
-    do executeMain(); while (tStates < TSTATES_PER_DISPLAY_CENTER);
+    if (screenEnabled) {
+      for (let displayRow = 0; displayRow < 24; displayRow++) {
+        const targetTStates = displayCommitTStatesByRow[displayRow];
+        do executeMain(); while (tStates < targetTStates);
+        // Unlike the rest of the memory, the synchronization of the display area occurs as the beam moves
+        commitDisplayRow(displayRow);
+      }
 
-    //todo: Unlike the rest of the memory, the synchronization of the screen area occurs as the beam moves
-    commitScreen();
-    incFrameCount();
+      commitBorder();
+    }
 
     do executeMain(); while (tStates < TSTATES_PER_FRAME);
     setINT(INT);
@@ -46,6 +51,7 @@ always(() => {
     interrupt();
     setTStates(tStates - TSTATES_PER_FRAME);
     setEiTStates(0);
+    incFrameCount();
 
     if (speedLimited) limitSpeed();
   }

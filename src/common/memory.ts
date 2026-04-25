@@ -1,4 +1,4 @@
-import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, RAM_MIN_ADDR, SCREEN_MIN_ADDR, xFFFF } from './constants.ts';
+import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, DISPLAY_MIN_ADDR, RAM_MIN_ADDR, xFFFF } from './constants.ts';
 import { cpuX, cpuY, memoryCommitFromAddr } from './state.ts';
 import { commitValue, fetchValue, getValuesCacheX, initValues } from './values.ts';
 
@@ -41,8 +41,8 @@ function initMemoryAddr(addr: number, memoryX: number, memoryY: number) {
   const xShift = ((addr & 0xC000) >> 14) * 272;
   let x, y: number;
 
-  if (addr >= SCREEN_MIN_ADDR && addr < ATTRIBUTES_MIN_ADDR) {
-    // Pretty screen
+  if (addr >= DISPLAY_MIN_ADDR && addr < ATTRIBUTES_MIN_ADDR) {
+    // Pretty display area:
     x = memoryX + ((addr & 0x1F) << 3) + xShift;
     y = memoryY + ((addr & 0x1800) >> 5) + ((addr & 0x0700) >> 8) + ((addr & 0xE0) >> 2);
   }

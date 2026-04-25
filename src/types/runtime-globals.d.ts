@@ -52,6 +52,9 @@ declare const world: {
 
   // Copy a region of arrows from coordinates (xSrc0, ySrc0) - (xSrc1, ySrc1) to coordinates (xDst, yDst)
   copyRegion(xSrc0: number, ySrc0: number, xSrc1: number, ySrc1: number, xDst: number, yDst: number): void;
+
+  // Copy a region of arrows with signals from coordinates (xSrc0, ySrc0) - (xSrc1, ySrc1) to coordinates (xDst, yDst)
+  copyRegionWithSignals(xSrc0: number, ySrc0: number, xSrc1: number, ySrc1: number, xDst: number, yDst: number): void;
 };
 
 declare type Arrow = {

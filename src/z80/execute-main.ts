@@ -1,3 +1,4 @@
+import { TSTATES_PER_OP } from '../common/constants';
 import { mem, read16, write, write16, write88 } from '../common/memory';
 import { readPort, writePort } from '../common/ports';
 import { executeBit } from './execute-bit';
@@ -19,7 +20,7 @@ import {
 import { getHLXYd, next, next16, nop, setEiTStates, ts, tStates } from './utils';
 
 export function executeMain() {
-  ts(7); //todo: Real T-state counting
+  ts(TSTATES_PER_OP);
   executeMainProceed();
 }
 
