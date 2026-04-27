@@ -77,7 +77,7 @@ const enum HLMode {
   IY,
 }
 
-export let xyMode = HLMode.HL;
+export let hlMode = HLMode.HL;
 export let hlxy = 0;
 let hl = 0;
 export let ix = 0;
@@ -85,26 +85,26 @@ export let iy = 0;
 
 export function setHLMode() {
   /*!inline*/
-  if (xyMode === HLMode.IX) ix = hlxy;
-  else if (xyMode === HLMode.IY) iy = hlxy;
+  if (hlMode === HLMode.IX) ix = hlxy;
+  else if (hlMode === HLMode.IY) iy = hlxy;
   hlxy = hl;
-  xyMode = HLMode.HL;
+  hlMode = HLMode.HL;
 }
 
 export function setIXMode() {
   /*!inline*/
-  if (xyMode === HLMode.HL) hl = hlxy;
-  else if (xyMode === HLMode.IY) iy = hlxy;
+  if (hlMode === HLMode.HL) hl = hlxy;
+  else if (hlMode === HLMode.IY) iy = hlxy;
   hlxy = ix;
-  xyMode = HLMode.IX;
+  hlMode = HLMode.IX;
 }
 
 export function setIYMode() {
   /*!inline*/
-  if (xyMode === HLMode.HL) hl = hlxy;
-  else if (xyMode === HLMode.IX) ix = hlxy;
+  if (hlMode === HLMode.HL) hl = hlxy;
+  else if (hlMode === HLMode.IX) ix = hlxy;
   hlxy = iy;
-  xyMode = HLMode.IY;
+  hlMode = HLMode.IY;
 }
 
 export function setHLXY(value: number) { /*!inline*/ hlxy = value; }

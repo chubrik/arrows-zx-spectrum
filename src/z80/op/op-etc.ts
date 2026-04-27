@@ -55,7 +55,7 @@ export function RET() {
   inc2SP();
 }
 
-/** IN r,(C) — reads port, returns value and updates flags */
+/** IN r,(C) */
 export function in_port(): number {
   const result = readPort(c, b);
   calcFSZ53(result);

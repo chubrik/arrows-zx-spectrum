@@ -13,9 +13,9 @@ import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from '
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import {
   a, b, c, d, dec2SP, decBC, decDE, decHLXY, decPC, decSP, e, getBC, getDE, getH, getHXY, getL,
-  getLXY, hlxy, inc2PC, inc2SP, incBC, incDE, incHLXY, incPC, incSP, refresh, setA, setB, setC,
-  setD, setE, setH, setHLMode, setHLXY, setHXY, setIXMode, setIYMode, setL, setLXY, setPC, setSP,
-  sp, xyMode
+  getLXY, hlMode, hlxy, inc2PC, inc2SP, incBC, incDE, incHLXY, incPC, incSP, refresh, setA, setB,
+  setC, setD, setE, setH, setHLMode, setHLXY, setHXY, setIXMode, setIYMode, setL, setLXY, setPC,
+  setSP, sp
 } from './registers';
 import { getHLXYd, next, next16, nop, setEiTStates, ts, tStates } from './utils';
 
@@ -139,7 +139,7 @@ const opsMain = [
   /* 63 LD H,E     */ () => setHXY(e),
   /* 64 LD H,H     */ nop,
   /* 65 LD H,L     */ () => setHXY(getLXY()),
-  /* 66 LD H,(HL)  */ () => xyMode ? setH(mem[getHLXYd()]) : setHXY(mem[getHLXYd()]),
+  /* 66 LD H,(HL)  */ () => hlMode ? setH(mem[getHLXYd()]) : setHXY(mem[getHLXYd()]),
   /* 67 LD H,A     */ () => setHXY(a),
   /* 68 LD L,B     */ () => setLXY(b),
   /* 69 LD L,C     */ () => setLXY(c),
@@ -147,15 +147,15 @@ const opsMain = [
   /* 6B LD L,E     */ () => setLXY(e),
   /* 6C LD L,H     */ () => setLXY(getHXY()),
   /* 6D LD L,L     */ nop,
-  /* 6E LD L,(HL)  */ () => xyMode ? setL(mem[getHLXYd()]) : setLXY(mem[getHLXYd()]),
+  /* 6E LD L,(HL)  */ () => hlMode ? setL(mem[getHLXYd()]) : setLXY(mem[getHLXYd()]),
   /* 6F LD L,A     */ () => setLXY(a),
 
   /* 70 LD (HL),B  */ () => write(getHLXYd(), b),
   /* 71 LD (HL),C  */ () => write(getHLXYd(), c),
   /* 72 LD (HL),D  */ () => write(getHLXYd(), d),
   /* 73 LD (HL),E  */ () => write(getHLXYd(), e),
-  /* 74 LD (HL),H  */ () => write(getHLXYd(), xyMode ? getH() : getHXY()),
-  /* 75 LD (HL),L  */ () => write(getHLXYd(), xyMode ? getL() : getLXY()),
+  /* 74 LD (HL),H  */ () => write(getHLXYd(), hlMode ? getH() : getHXY()),
+  /* 75 LD (HL),L  */ () => write(getHLXYd(), hlMode ? getL() : getLXY()),
   /* 76 HALT       */ () => { setHLT(HLT); decPC(); },
   /* 77 LD (HL),A  */ () => write(getHLXYd(), a),
   /* 78 LD A,B     */ () => setA(b),
@@ -246,7 +246,7 @@ const opsMain = [
   /* C8 RET Z      */ () => fz ? RET() : {},
   /* C9 RET        */ RET,
   /* CA JP Z,nn    */ () => fz ? JP_nn() : inc2PC(),
-  /* CB -- BIT --- */ () => { if (xyMode) { executeBitXYd(); } else { executeBit(); } },
+  /* CB -- BIT --- */ () => { if (hlMode) { executeBitXYd(); } else { executeBit(); } },
   /* CC CALL Z,nn  */ () => fz ? CALL_nn() : inc2PC(),
   /* CD CALL nn    */ CALL_nn,
   /* CE ADC A,n    */ () => ADD_ADC(next(), fc),
