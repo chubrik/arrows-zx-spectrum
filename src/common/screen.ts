@@ -1,4 +1,7 @@
-import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, DISPLAY_MIN_ADDR, TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE, TSTATES_PER_DISPLAY_ROW } from './constants.ts';
+import {
+  ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, DISPLAY_MIN_ADDR,
+  TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE, TSTATES_PER_DISPLAY_ROW
+} from './constants.ts';
 import { commitMemoryValue, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, screenEnabled } from './state.ts';
 import { world_copyRegion, world_getArrow, world_setSignal } from './world-refs.ts';

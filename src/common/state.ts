@@ -91,8 +91,8 @@ export function fetchState() {
     _state.ram3 = 0;
   }
 
-  if (_state.src) {
-    if (_state.src > 0) {
+  if (_state.scr) {
+    if (_state.scr > 0) {
       screenEnabled = true;
       memoryCommitFromAddr = ATTRIBUTES_AFTER_ADDR;
       refreshScreen();
@@ -102,7 +102,7 @@ export function fetchState() {
       screenEnabled = false;
       memoryCommitFromAddr = RAM_MIN_ADDR;
     }
-    _state.src = 0;
+    _state.scr = 0;
   }
 
   if (_state.snd) {
@@ -123,6 +123,6 @@ export type State = {
   ram1: number[] | 0;
   ram2: number[] | 0;
   ram3: number[] | 0;
-  src: number;
+  scr: number;
   snd: number;
 }
