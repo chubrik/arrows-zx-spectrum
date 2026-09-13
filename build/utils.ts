@@ -7,6 +7,7 @@ import { remangleTopLevel } from './remangle.ts';
 
 export const SRC_DIR = 'src';
 export const DIST_DIR = 'dist';
+export const SMOKE_DIR = `${DIST_DIR}/temp/smoke`; // build for test/dist-smoke.test.ts, kept apart from dist/
 
 type StepFn = (label: string, code: string) => string;
 
@@ -20,9 +21,9 @@ export function createStepFn(tempDir: string, fileName: string): StepFn {
 }
 
 /** Full CPU build pipeline: esbuild → inline → terser × 3 → arrows → remangle → postprocess. */
-export async function cpuPipeline(srcPath: string, opts?: { test?: boolean }) {
+export async function cpuPipeline(srcPath: string, opts?: { test?: boolean; tempDir?: string }) {
   const fileName = basename(srcPath, '.ts');
-  const tempDir = `${DIST_DIR}/temp/${fileName}`;
+  const tempDir = opts?.tempDir ?? `${DIST_DIR}/temp/${fileName}`;
   const step = createStepFn(tempDir, fileName);
 
   const srcTsCode = readFileSync(srcPath, 'utf8');
