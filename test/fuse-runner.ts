@@ -6,6 +6,7 @@ import type { CpuState } from './helpers';
 export interface MockPorts {
   readQueue: number[];
   readIndex: number;
+  reads: Array<{ addr: number; value: number }>;
   writes: Array<{ addr: number; value: number }>;
 }
 
@@ -44,6 +45,7 @@ export function runFuseSuite(suiteName: string, cpu: CpuApi, inputText: string, 
     beforeEach(() => {
       cpu.mockPorts.readQueue = [];
       cpu.mockPorts.readIndex = 0;
+      cpu.mockPorts.reads = [];
       cpu.mockPorts.writes = [];
     });
 
@@ -154,21 +156,8 @@ export function runFuseSuite(suiteName: string, cpu: CpuApi, inputText: string, 
           }
         }
 
-        const expectedPW = expected.events
-          .filter(e => e.type === 'PW' && e.value !== undefined)
-          .map(e => ({ addr: e.addr, value: e.value! }));
-
-        if (cpu.mockPorts.writes.length !== expectedPW.length) {
-          mismatches.push(`  port writes count: got ${cpu.mockPorts.writes.length}, expected ${expectedPW.length}`);
-        } else {
-          for (let j = 0; j < expectedPW.length; j++) {
-            const gotPW = cpu.mockPorts.writes[j];
-            const expPW = expectedPW[j];
-            if (gotPW.addr !== expPW.addr || gotPW.value !== expPW.value) {
-              mismatches.push(`  port write[${j}]: got {0x${gotPW.addr.toString(16).padStart(4, '0')}, 0x${gotPW.value.toString(16).padStart(2, '0')}}, expected {0x${expPW.addr.toString(16).padStart(4, '0')}, 0x${expPW.value.toString(16).padStart(2, '0')}}`);
-            }
-          }
-        }
+        comparePortEvents('read', cpu.mockPorts.reads, expected, 'PR', mismatches);
+        comparePortEvents('write', cpu.mockPorts.writes, expected, 'PW', mismatches);
 
         if (mismatches.length > 0) {
           expect.fail(`Register/memory mismatch:\n${mismatches.join('\n')}`);
@@ -176,4 +165,29 @@ export function runFuseSuite(suiteName: string, cpu: CpuApi, inputText: string, 
       });
     }
   });
+}
+
+/** Compare recorded port reads/writes (address and value, in order) with the expected PR/PW events. */
+function comparePortEvents(
+  kind: 'read' | 'write', got: Array<{ addr: number; value: number }>,
+  expected: FuseTestExpected, eventType: 'PR' | 'PW', mismatches: string[],
+) {
+  const exp = expected.events
+    .filter(e => e.type === eventType && e.value !== undefined)
+    .map(e => ({ addr: e.addr, value: e.value! }));
+
+  if (got.length !== exp.length) {
+    mismatches.push(`  port ${kind}s count: got ${got.length}, expected ${exp.length}`);
+    return;
+  }
+
+  for (let j = 0; j < exp.length; j++) {
+    if (got[j].addr !== exp[j].addr || got[j].value !== exp[j].value) {
+      mismatches.push(`  port ${kind}[${j}]: got ${fmtPort(got[j])}, expected ${fmtPort(exp[j])}`);
+    }
+  }
+}
+
+function fmtPort(p: { addr: number; value: number }): string {
+  return `{0x${p.addr.toString(16).padStart(4, '0')}, 0x${p.value.toString(16).padStart(2, '0')}}`;
 }

@@ -47,7 +47,7 @@ export function CP_block(isInc: boolean, repeat: 0 | 1 = 0) {
 /** INI | IND | INIR | INDR */
 export function IN_block(inc: 1 | -1, repeat: 0 | 1 = 0) {
   const count = (b - 1) & xFF;
-  const value = readPort(c, count);
+  const value = readPort(c, b);
   setB(count);
   write(hlxy, value);
   setHLXY((hlxy + inc) & xFFFF);

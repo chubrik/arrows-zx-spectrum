@@ -13,7 +13,7 @@ let regXs: number[];
 let regYs: number[];
 const cacheXs: number[] = [];
 
-export function initCpu() {
+function initCpu() {
   if (inited) return;
   inited = true;
 

@@ -1,9 +1,9 @@
-export interface FuseMemBlock {
+interface FuseMemBlock {
   addr: number;
   bytes: number[];
 }
 
-export interface FuseTestInput {
+interface FuseTestInput {
   name: string;
   AF: number; BC: number; DE: number; HL: number;
   AFa: number; BCa: number; DEa: number; HLa: number;
@@ -15,7 +15,7 @@ export interface FuseTestInput {
   memBlocks: FuseMemBlock[];
 }
 
-export interface FuseEvent {
+interface FuseEvent {
   tStates: number;
   type: string; // MC, MR, MW, PR, PW, PC
   addr: number;

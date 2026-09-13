@@ -4,8 +4,12 @@ import { setBorder } from './screen';
 import { cpuX, cpuY } from './state';
 import { world_getSignal } from './world-refs';
 
-export const mockPorts: { readQueue: number[]; readIndex: number; writes: Array<{ addr: number; value: number }> } =
-  TEST ? { readQueue: [], readIndex: 0, writes: [] } : (undefined as never);
+export const mockPorts: {
+  readQueue: number[];
+  readIndex: number;
+  reads: Array<{ addr: number; value: number }>;
+  writes: Array<{ addr: number; value: number }>;
+} = TEST ? { readQueue: [], readIndex: 0, reads: [], writes: [] } : (undefined as never);
 
 let inited: boolean;
 let keysX: number;
@@ -22,7 +26,11 @@ export function initPorts() {
 }
 
 export function readPort(lo: number, hi: number): number {
-  if (TEST) return mockPorts.readQueue[mockPorts.readIndex++] ?? xFF;
+  if (TEST) {
+    const value = mockPorts.readQueue[mockPorts.readIndex++] ?? xFF;
+    mockPorts.reads.push({ addr: (hi << 8) | lo, value });
+    return value;
+  }
 
   let result = xFF;
 

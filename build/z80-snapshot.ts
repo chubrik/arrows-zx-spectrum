@@ -10,7 +10,7 @@ const PAGE_TO_ADDR: Record<number, number> = {
   8: 0x4000,
 };
 
-export interface Z80Snapshot {
+interface Z80Snapshot {
   A: number; F: number;
   B: number; C: number;
   D: number; E: number;

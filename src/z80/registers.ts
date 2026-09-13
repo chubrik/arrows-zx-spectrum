@@ -31,7 +31,6 @@ export function setEa(value: number) { /*!inline*/ ea = value; }
 export function setHLa(value: number) { /*!inline*/ hla = value; }
 
 export function getBC() { /*!inline*/ return c | (b << 8); }
-export function setBC(value: number) { /*!inline*/ c = value & xFF; b = value >> 8; }
 export function incBC() { /*!inline*/ if (++c > xFF) { c = 0; b = (b + 1) & xFF; } }
 export function decBC() { /*!inline*/ if (--c < 0) { c = xFF; b = (b - 1) & xFF; } }
 
@@ -58,8 +57,8 @@ export function dec2PC() { /*!inline*/ pc -= 2; }
 
 export function setI(value: number) { /*!inline*/ i = value; }
 
-export let r7 = 0;
-export let ri = 0;
+let r7 = 0;
+let ri = 0;
 export function getR() { /*!inline*/ return (r7 & BIT7) | (ri &= 0x7F); }
 export function setR(value: number) { /*!inline*/ r7 = ri = value; }
 export function refresh() { /*!inline*/ ri++; }

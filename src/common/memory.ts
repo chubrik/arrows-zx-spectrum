@@ -17,7 +17,7 @@ export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
 
 let inited: boolean;
 
-export function initMemory() {
+function initMemory() {
   if (inited) return;
   inited = true;
 
@@ -26,11 +26,17 @@ export function initMemory() {
   const memoryX = cpuX - 272;
   const memoryY = cpuY + 32;
 
+  // Fill the array sequentially so the QuickJS engine keeps it dense (fast)
+  mem.length = 0x10008; // 64K + 8 mirrored bytes
+  mem.fill(0);
+
   for (let addr = 0; addr <= xFFFF; addr++)
     initMemoryAddr(addr, memoryX, memoryY);
 
   // Mirror the first 8 bytes of ROM at addresses 0x10000–0x10007 so that PC can cross the 0xFFFF
-  // boundary without an & 0xFFFF mask on every increment (see registers.ts).
+  // boundary without an & 0xFFFF mask on every increment (see registers.ts). Eight bytes suffice
+  // only because the 48K ROM starts with DI; XOR A; LD DE,FFFFh; JP 11CBh: execution that runs past
+  // 0xFFFF hits that JP. With a different ROM, PC would run off the array (mem[pc] === undefined).
   for (let i = 0; i < 8; i++) {
     addrXs[0x10000 + i] = addrXs[i];
     addrYs[0x10000 + i] = addrYs[i];
@@ -110,13 +116,10 @@ export function commitMemoryValue(addr: number, value: number) {
 }
 
 export function clearMemory(fromAddr: number, toAddr: number) {
-  const data: number[] = [];
-  data.length = toAddr - fromAddr + 1;
-  data.fill(0);
-  restoreMemory(fromAddr, data);
+  restoreMemory(fromAddr, new Uint8Array(toAddr - fromAddr + 1));
 }
 
-export function restoreMemory(fromAddr: number, data: number[]) {
+export function restoreMemory(fromAddr: number, data: number[] | Uint8Array) {
   initMemory();
 
   data.forEach((value, i) => {
@@ -129,6 +132,9 @@ export function restoreMemory(fromAddr: number, data: number[]) {
   if (fromAddr < 8)
     for (let i = 0; i < 8; i++)
       mem[0x10000 + i] = mem[i];
+
+  if (fromAddr === 0 && data.length >= RAM_MIN_ADDR)
+    romFetched = true;
 }
 
 //#endregion

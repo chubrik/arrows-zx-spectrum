@@ -7,7 +7,7 @@ import { getResource } from './resources.ts';
 import { arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, simplifyCode, SRC_DIR, terserCMangle, terserCollapse, terserCompress, writeToPath } from './utils.ts';
 import { loadSnapshot } from './z80-snapshot.ts';
 
-const cpuOnly = process.argv.includes('--cpu');
+const cpuOnly = process.argv.includes('--cpuOnly');
 
 await buildCpu();
 

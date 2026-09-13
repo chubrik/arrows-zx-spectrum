@@ -32,6 +32,12 @@ export function initScreen() {
   const paletteX = cpuX;
   const paletteY = cpuY - 32;
 
+  // Fill the arrays sequentially so the QuickJS engine keeps them dense (fast)
+  addrXs.length = ATTRIBUTES_MIN_ADDR;
+  addrYs.length = ATTRIBUTES_MIN_ADDR;
+  addrXs.fill(0);
+  addrYs.fill(0);
+
   for (let addr = DISPLAY_MIN_ADDR; addr < ATTRIBUTES_MIN_ADDR; addr++) {
     addrXs[addr] = displayX + ((addr & 0x1F) << 4);
     addrYs[addr] = displayY + ((addr & 0x1800) >> 4) + ((addr & 0x0700) >> 7) + ((addr & 0xE0) >> 1);
@@ -162,7 +168,7 @@ export function refreshScreen() {
   commitScreen();
 }
 
-let borderColor = -1;
+let borderColor = 0;
 export function setBorder(color: number) { /*!inline*/ borderColor = color; }
 
 function clearBorder() {

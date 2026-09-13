@@ -25,6 +25,7 @@ export function asciiToUnicode(str: string): string {
   return enc;
 }
 
+// Referenced by name from build/targets.ts: re-exported as the decoder of the packed CPU block
 export function unicodeToAscii(str: string): string {
   const result: number[] = [];
   for (const char of str) {

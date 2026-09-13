@@ -8,7 +8,7 @@ import { remangleTopLevel } from './remangle.ts';
 export const SRC_DIR = 'src';
 export const DIST_DIR = 'dist';
 
-export type StepFn = (label: string, code: string) => string;
+type StepFn = (label: string, code: string) => string;
 
 export function createStepFn(tempDir: string, fileName: string): StepFn {
   let stepNum = 0;
@@ -37,13 +37,6 @@ export async function cpuPipeline(srcPath: string, opts?: { test?: boolean }) {
   const substed = step('subst', substCode(minified));
 
   return { built, minified, substed, step, tempDir, fileName };
-}
-
-export async function buildPath(path: string, opts?: { test?: boolean }): Promise<string> {
-  const options = getBuildConfig(opts);
-  options.entryPoints = [path];
-  const result = await build(options);
-  return result.outputFiles![0].text;
 }
 
 /** Build TypeScript → JavaScript. */
@@ -149,7 +142,7 @@ const optsCompressMangle: MinifyOptions = {
 // Call-site: `/*!inline*/ name(...)` — marker right before a call expression.
 // Marker lives INSIDE the body so esbuild's tree-shaking removes it together with
 // the function — no orphaning of the comment onto adjacent declarations.
-export function inlineFunctions(code: string): string {
+function inlineFunctions(code: string): string {
   const marker = '/*!inline*/';
   const hoistedVars: string[] = [];
 

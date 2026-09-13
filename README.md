@@ -7,9 +7,9 @@ An emulator of the ZX Spectrum — the legendary home computer of the 1980s. It 
 inside [“Logic Arrows”](https://store.steampowered.com/app/4210250/Logic_Arrows/) — a programmable
 cellular automaton. The emulator plays real Spectrum games right on the map: the screen, the memory,
 the keyboard, and even the sound — everything is made of arrows. The project targets the new version
-of Logic Arrows, which is currently in beta testing and coming to Steam.
-[Add Logic Arrows to your wishlist](https://store.steampowered.com/app/4210250/Logic_Arrows/) so you
-don’t miss the release.
+of Logic Arrows, whose demo is already out on Steam. Add Logic Arrows to your
+[wishlist](https://store.steampowered.com/app/4210250/Logic_Arrows/) so you don’t miss the full
+release.
 
 - [Games](#games)
 - [How it works](#how-it-works)
@@ -76,7 +76,7 @@ game takes just five blocks: the CPU, the ROM initializer, and three blocks with
   on the map.
 - **Sound.** The beeper is translated into the game’s music arrows.
 - **Packing.** The build pipeline squeezes the whole CPU into a single command block of about
-  24 000 characters: esbuild → custom function inliner → three Terser passes → arrow-function
+  6 000 characters (24 KB): esbuild → custom function inliner → three Terser passes → arrow-function
   conversion → a self-extracting packed string.
 - **Games.** Games are loaded from `.z80` snapshots. Each snapshot is packed into three command
   blocks — 16K of RAM each — plus the CPU registers and the border color.
@@ -91,7 +91,7 @@ npm run build
 npm test
 ```
 
-Requires Node.js 22.6 or newer. The build automatically downloads the original ROM and the
+Requires Node.js 22.18 or newer. The build automatically downloads the original ROM and the
 FUSE test files, verifying their SHA256. Games are built from `.z80` snapshots placed into the
 `resources/` folder (not included in the repository). The results go to `dist/`: the packed CPU,
 the ROM initializer, and three RAM blocks per game — ready to be pasted into command blocks on
@@ -102,7 +102,7 @@ the map. `npm run dev` rebuilds the CPU only.
 ## <a name="links"></a>Links
 
 - [Logic Arrows on Steam](https://store.steampowered.com/app/4210250/Logic_Arrows/) – the
-  upcoming version of the game, currently in beta testing
+  new version of the game, with a demo already available
 - [Logic Arrows in the browser](https://logic-arrows.io/) – the browser version of the game
 - [Logic Arrows maps](https://github.com/chubrik/LogicArrows) – a collection of maps: computers,
   programs, and documentation
