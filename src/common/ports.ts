@@ -20,7 +20,7 @@ export function initPorts() {
   inited = true;
 
   keysX = cpuX + 8;
-  keysY = cpuY - 24;
+  keysY = cpuY - 21;
 
   initBeeper();
 }

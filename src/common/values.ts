@@ -1,4 +1,4 @@
-import { cpuX, cpuY } from './state.ts';
+import { memoryX, memoryY } from './state.ts';
 import { world_copyRegion, world_getArrow } from './world-refs.ts';
 
 let inited: boolean;
@@ -10,9 +10,9 @@ export function initValues() {
   if (inited) return;
   inited = true;
 
-  cacheX0 = cpuX - 304;
+  cacheX0 = memoryX - 32;
   cacheX1 = cacheX0 + 8;
-  cacheY = cpuY + 32;
+  cacheY = memoryY + 256;
 }
 
 export function getValuesCacheX(x: number, y: number): number {

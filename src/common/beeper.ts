@@ -12,7 +12,7 @@ export function initBeeper() {
 
   noteX0 = cpuX;
   noteX1 = noteX0 + 1;
-  noteY = cpuY - 24;
+  noteY = cpuY - 17;
 }
 
 let beeperCounter = 0;

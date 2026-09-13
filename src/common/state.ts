@@ -7,6 +7,8 @@ import { clearScreen, commitBorder, initScreen, refreshScreen, setBorder } from 
 
 export let cpuX: number;
 export let cpuY: number;
+export let memoryX: number;
+export let memoryY: number;
 export let cpuStarted = false;
 let _state: State;
 
@@ -14,6 +16,8 @@ export function initState() {
   const pos = getPosition();
   cpuX = (pos.x & ~15) + 16;
   cpuY = pos.y & ~15;
+  memoryX = cpuX - 272;
+  memoryY = cpuY + 32;
   _state = state as State;
 }
 

@@ -1,5 +1,5 @@
 import { ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, DISPLAY_MIN_ADDR, RAM_MIN_ADDR, xFFFF } from './constants.ts';
-import { cpuX, cpuY, memoryCommitFromAddr } from './state.ts';
+import { memoryCommitFromAddr, memoryX, memoryY } from './state.ts';
 import { commitValue, fetchValue, getValuesCacheX, initValues } from './values.ts';
 
 const DIRTY_BITMAP_SIZE = 2048; // 0x10000 >> 5
@@ -22,9 +22,6 @@ function initMemory() {
   inited = true;
 
   initValues();
-
-  const memoryX = cpuX - 272;
-  const memoryY = cpuY + 32;
 
   // Fill the array sequentially so the QuickJS engine keeps it dense (fast)
   mem.length = 0x10008; // 64K + 8 mirrored bytes
