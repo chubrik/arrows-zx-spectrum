@@ -2,7 +2,7 @@ import {
   ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, DISPLAY_MIN_ADDR,
   TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE, TSTATES_PER_DISPLAY_ROW
 } from './constants.ts';
-import { commitMemoryValue, mem, memoryDirtyBitmap } from './memory.ts';
+import { commitMemoryValue, initMemory, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, memoryX, memoryY, screenEnabled } from './state.ts';
 import { world_copyRegion, world_copyRegionWithSignals } from './world-refs.ts';
 
@@ -143,6 +143,7 @@ export function clearScreen() {
 
 export function refreshScreen() {
   if (!screenEnabled) return;
+  initMemory();
   initScreen();
   const indexAfterAttrs = ATTRIBUTES_AFTER_ADDR >> 5;
 

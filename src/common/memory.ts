@@ -17,7 +17,7 @@ export function setRamMinAddrForTest(value: number) { ramMinAddr = value; }
 
 let inited: boolean;
 
-function initMemory() {
+export function initMemory() {
   if (inited) return;
   inited = true;
 

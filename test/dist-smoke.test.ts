@@ -77,6 +77,8 @@ describe('dist smoke (QuickJS)', () => {
     try {
       evalOrThrow(vm, PRELUDE, 'prelude.js');
       evalOrThrow(vm, `__load(${JSON.stringify(cpu)})`, 'cpu.js');
+      // Screen enabled before anything is loaded: refreshScreen must cope with untouched memory
+      evalOrThrow(vm, `state.do = 1; state.scr = 1; __ticks(1);`, 'scr.js');
       evalOrThrow(vm, `__load(${JSON.stringify(rom)}); __activate(); __ticks(1);`, 'rom.js');
       evalOrThrow(vm, `state.do = 1; state.run = 1; state.max = 1; __ticks(1 + ${FRAMES});`, 'run.js');
 
