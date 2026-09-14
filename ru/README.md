@@ -1,4 +1,4 @@
-# <a href="../README.md"><img src="https://raw.githubusercontent.com/chubrik/LogicArrows/refs/heads/main/img/arrowcat-blue.svg" width="30"></a> ZX Spectrum на Стрелочках
+# <a href="../README.md"><img src="https://raw.githubusercontent.com/chubrik/LogicArrows/refs/heads/main/img/arrowcat-blue.svg" width="30"></a> ZX Spectrum в Стрелочках
 <sub>[![LogicArrows](https://img.shields.io/badge/logic--arrows-steam-blue?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cGF0aCBmaWxsPSIjNTAwIiBkPSJtOTkgMWMtMC44Ny0wLjg3LTIuMi0xLjMtMy42LTAuODJsLTc3IDI1Yy00LjkgMS43LTYuMyA3LjgtMi43IDExbDE1IDE1LTI5IDI5Yy0yLjcgMi43LTIuNyA3LjEgMCA5LjhsNyA3YzIuNyAyLjcgNy4xIDIuNyA5LjggMGwyOS0yOSAxNSAxNWMzLjcgMy43IDkuOCAyLjIgMTEtMi43bDI1LTc3YzAuNDktMS4zIDAuMDQ1LTIuNy0wLjgyLTMuNnoiIHN0cm9rZS13aWR0aD0iMS43Ii8+PC9zdmc+)](https://store.steampowered.com/app/4210250/Logic_Arrows/)</sub>
 &nbsp;&nbsp;&nbsp;
 🌐 [English](../README.md) | Русский
@@ -101,12 +101,14 @@ npm test
 
 ## <a name="links"></a>Ссылки
 
-- [Стрелочки в Steam](https://store.steampowered.com/app/4210250/Logic_Arrows/) – новая версия
-  игры, демо уже доступно
-- [Стрелочки в браузере](https://logic-arrows.io/) – браузерная версия игры
 - [Карты в Стрелочках](https://github.com/chubrik/LogicArrows/blob/main/ru/README.md) – коллекция
   карт: компьютеры, программы и документация
-- [Компилятор Стрелочек](https://github.com/chubrik/arrows-compiler/blob/main/ru/README.md) –
-  онлайн-компилятор для внутриигровых компьютеров
-- [Дискорд-сервер](https://discord.gg/8FMuQuMFCN) – сообщество игроков на Дискорде
-- [Телеграм-канал](https://t.me/logic_arrows) – сообщество игроков в Телеграме
+- [Стрелочки в Steam](https://store.steampowered.com/app/4210250/Logic_Arrows/) – версия игры,
+  в которой работает эмулятор
+- [Стрелочки в браузере](https://logic-arrows.io/) – браузерная версия игры
+- [Онлайн-компилятор](https://github.com/chubrik/arrows-compiler/blob/main/ru/README.md) –
+  для внутриигровых компьютеров
+- [FUSE](https://fuse-emulator.sourceforge.net/) – эмулятор ZX Spectrum, тестами которого
+  проверяется процессор
+- [Дискорд-сервер](https://discord.gg/8FMuQuMFCN) и [Телеграм-канал](https://t.me/logic_arrows) –
+  здесь обсуждают игру, делятся идеями и схемами
