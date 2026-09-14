@@ -1,4 +1,4 @@
-# <a href="ru/README.md"><img src="https://raw.githubusercontent.com/chubrik/LogicArrows/refs/heads/main/img/arrowcat-red.svg" width="30"></a> ZX Spectrum on Logic Arrows
+# <a href="ru/README.md"><img src="https://raw.githubusercontent.com/chubrik/LogicArrows/refs/heads/main/img/arrowcat-red.svg" width="30"></a> ZX Spectrum in Logic Arrows
 <sub>[![LogicArrows](https://img.shields.io/badge/logic--arrows-steam-blue?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cGF0aCBmaWxsPSIjNTAwIiBkPSJtOTkgMWMtMC44Ny0wLjg3LTIuMi0xLjMtMy42LTAuODJsLTc3IDI1Yy00LjkgMS43LTYuMyA3LjgtMi43IDExbDE1IDE1LTI5IDI5Yy0yLjcgMi43LTIuNyA3LjEgMCA5LjhsNyA3YzIuNyAyLjcgNy4xIDIuNyA5LjggMGwyOS0yOSAxNSAxNWMzLjcgMy43IDkuOCAyLjIgMTEtMi43bDI1LTc3YzAuNDktMS4zIDAuMDQ1LTIuNy0wLjgyLTMuNnoiIHN0cm9rZS13aWR0aD0iMS43Ii8+PC9zdmc+)](https://store.steampowered.com/app/4210250/Logic_Arrows/)</sub>
 &nbsp;&nbsp;&nbsp;
 🌐 English | [Русский](ru/README.md)
@@ -52,7 +52,7 @@ release.
     </tr>
   </thead>
 </table>
-<br><br>
+<br>
 
 
 ## <a name="how-it-works"></a>How it works
@@ -101,12 +101,13 @@ the map. `npm run dev` rebuilds the CPU only.
 
 ## <a name="links"></a>Links
 
-- [Logic Arrows on Steam](https://store.steampowered.com/app/4210250/Logic_Arrows/) – the
-  new version of the game, with a demo already available
-- [Logic Arrows in the browser](https://logic-arrows.io/) – the browser version of the game
 - [Logic Arrows maps](https://github.com/chubrik/LogicArrows) – a collection of maps: computers,
   programs, and documentation
-- [Arrows Compiler](https://github.com/chubrik/arrows-compiler) – online compiler for the
-  in-game computers
-- [Discord server](https://discord.gg/8FMuQuMFCN) – player community on Discord
-- [Telegram channel](https://t.me/logic_arrows) – player community on Telegram
+- [Logic Arrows on Steam](https://store.steampowered.com/app/4210250/Logic_Arrows/) – the version
+  of the game where the emulator runs
+- [Logic Arrows in browser](https://logic-arrows.io/) – browser version of the game
+- [Online compiler](https://github.com/chubrik/arrows-compiler) – for the in-game computers
+- [FUSE](https://fuse-emulator.sourceforge.net/) – ZX Spectrum emulator whose test suite verifies
+  the CPU
+- [Discord server](https://discord.gg/8FMuQuMFCN) and [Telegram channel](https://t.me/logic_arrows)
+  – where people discuss the game and share ideas and circuits
