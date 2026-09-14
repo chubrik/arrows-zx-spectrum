@@ -189,7 +189,7 @@ export function commitDisplayRow(row: number) {
       const bit = 1 << offset;
       const attrAddr = attrAddrBase + offset;
       const value = mem[attrAddr];
-      if (attrBits & bit) { commitMemoryValue(attrAddr, value); }
+      if (attrBits & bit) commitMemoryValue(attrAddr, value);
       else if (value & BIT7) attrBits |= bit;
     }
   } else {
@@ -219,9 +219,8 @@ export function commitDisplayRow(row: number) {
       const addr = addrBase + offset;
       const value = mem[addr];
 
-      if (pixelBits & bit) {
+      if (pixelBits & bit)
         commitMemoryValue(addr, value);
-      }
 
       const attrAddr = attrAddrBase + offset;
       const attr = mem[attrAddr];
@@ -267,9 +266,7 @@ export function commitBorder() {
   const palX1 = palX0 + 1;
   const palY1 = palY0 + 1;
 
-  borderXs.forEach((x, i) => {
-    world_copyRegionWithSignals(palX0, palY0, palX1, palY1, x, borderYs[i]);
-  });
+  borderXs.forEach((x, i) => world_copyRegionWithSignals(palX0, palY0, palX1, palY1, x, borderYs[i]));
 }
 
 //#endregion

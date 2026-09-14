@@ -104,6 +104,8 @@ export function commitMemory() {
   }
 }
 
+// Commit path (not per instruction): inlining this and commitValue gives no measurable speedup,
+// dropping both markers would save ~50 pack chars. Measured in quickjs-ng, 2026-09-14.
 export function commitMemoryValue(addr: number, value: number) {
   /*!inline*/
   const x = addrXs[addr];

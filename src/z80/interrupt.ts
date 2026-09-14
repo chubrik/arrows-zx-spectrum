@@ -22,8 +22,6 @@ export function interrupt() {
     const vector = IM2_BUS_VALUE | (i << 8);
     RST_p(read16(vector));
   }
-  else {
-    // On ZX Spectrum IM 0 is equivalent to IM 1 (bus = 0xFF = RST 38h)
-    RST_p(IM01_VECTOR);
-  }
+  else
+    RST_p(IM01_VECTOR); // On ZX Spectrum IM 0 is equivalent to IM 1 (bus = 0xFF = RST 38h)
 }

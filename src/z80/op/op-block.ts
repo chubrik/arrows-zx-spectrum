@@ -27,8 +27,8 @@ export function LD_block(isInc: boolean, repeat: 0 | 1 = 0) {
 export function CP_block(isInc: boolean, repeat: 0 | 1 = 0) {
   const value = mem[hlxy];
   decBC();
-  if (isInc) { incHLXY(); }
-  else { decHLXY(); }
+  if (isInc) incHLXY();
+  else decHLXY();
 
   const diff = (a - value) & xFF;
   const newFh = (a ^ value ^ diff) & FH;

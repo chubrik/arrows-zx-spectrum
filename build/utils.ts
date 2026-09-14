@@ -282,12 +282,19 @@ function inlineFunctions(code: string): string {
           inlined = sub.preamble + sub.body;
         }
 
-        // Wrap in braces if non-expression body lands in arrow expression context
+        // A non-expression body lands as bare statements when the call already sits in a block
+        // (after `{`, `;` or `}`); anywhere else — braceless if / else / do / while, arrow body — it is
+        // wrapped in a block, and the call's own trailing `;` is consumed so that `if (x) name(); else ...`
+        // does not turn into `{ ... }; else`. Blocks are not added unconditionally: terser cannot fold a
+        // block that declares const/let, which costs a few pack chars per site.
         if (!isExpressionBody(inlined)) {
           let k = ci - 1;
           while (k >= 0 && /\s/.test(result[k])) k--;
-          if (k >= 1 && result[k - 1] === '=' && result[k] === '>') {
+          if (k < 0 || !'{;}'.includes(result[k])) {
             inlined = '{ ' + inlined + ' }';
+            let e = ai;
+            while (e < result.length && (result[e] === ' ' || result[e] === '\t')) e++;
+            if (result[e] === ';') ai = e + 1;
           }
         }
 

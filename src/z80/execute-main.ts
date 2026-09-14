@@ -20,6 +20,7 @@ import {
 import { getHLXYd, next, next16, nop, setEiTStates, ts, tStates } from './utils';
 
 export function executeMain() {
+  /*!inline*/
   ts(TSTATES_PER_OP);
   executeMainProceed();
 }
@@ -246,7 +247,7 @@ const opsMain = [
   /* C8 RET Z      */ () => fz && RET(),
   /* C9 RET        */ RET,
   /* CA JP Z,nn    */ () => fz ? JP_nn() : inc2PC(),
-  /* CB -- BIT --- */ () => { if (hlMode) { executeBitXYd(); } else { executeBit(); } },
+  /* CB -- BIT --- */ () => { if (hlMode) executeBitXYd(); else executeBit(); },
   /* CC CALL Z,nn  */ () => fz ? CALL_nn() : inc2PC(),
   /* CD CALL nn    */ CALL_nn,
   /* CE ADC A,n    */ () => ADD_ADC(next(), fc),
