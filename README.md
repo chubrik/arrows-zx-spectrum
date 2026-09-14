@@ -21,36 +21,36 @@ release.
 ## <a name="games"></a>Games
 
 <table>
-  <tr>
-    <td valign="top" width="50%">
-      <h3>Target: Renegade</h3>
-      <img src="img/target-renegade.jpg" alt="Target: Renegade">
-    </td>
-    <td valign="top">
-      <h3>R-Type</h3>
-      <img src="img/r-type.jpg" alt="R-Type">
-    </td>
-  </tr>
-  <tr>
-    <td valign="top">
-      <h3>Myth: History in the Making</h3>
-      <img src="img/myth.jpg" alt="Myth: History in the Making">
-    </td>
-    <td valign="top">
-      <h3>Nebulus</h3>
-      <img src="img/nebulus.jpg" alt="Nebulus">
-    </td>
-  </tr>
-  <tr>
-    <td valign="top">
-      <h3>Star Raiders II</h3>
-      <img src="img/star-raiders-ii.jpg" alt="Star Raiders II">
-    </td>
-    <td valign="top">
-      <h3>Stop the Express</h3>
-      <img src="img/stop-the-express.jpg" alt="Stop the Express">
-    </td>
-  </tr>
+  <thead>
+    <tr>
+      <td valign="top" width="33%">
+        <img src="img/target-renegade.jpg" alt="Target: Renegade"><br>
+        <b>Target: Renegade</b><br><br>
+      </td>
+      <td valign="top" width="33%">
+        <img src="img/r-type.jpg" alt="R-Type"><br>
+        <b>R-Type</b><br><br>
+      </td>
+      <td valign="top" width="33%">
+        <img src="img/myth.jpg" alt="Myth: History in the Making"><br>
+        <b>Myth: History in the Making</b><br><br>
+      </td>
+    </tr>
+    <tr>
+      <td valign="top">
+        <img src="img/nebulus.jpg" alt="Nebulus"><br>
+        <b>Nebulus</b><br><br>
+      </td>
+      <td valign="top">
+        <img src="img/star-raiders-ii.jpg" alt="Star Raiders II"><br>
+        <b>Star Raiders II</b><br><br>
+      </td>
+      <td valign="top">
+        <img src="img/stop-the-express.jpg" alt="Stop the Express"><br>
+        <b>Stop the Express</b><br><br>
+      </td>
+    </tr>
+  </thead>
 </table>
 <br><br>
 
