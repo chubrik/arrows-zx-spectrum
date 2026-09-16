@@ -237,8 +237,8 @@ function inlineFunctions(code: string): string {
         const ci = result.indexOf(token, pos);
         if (ci === -1) { out += result.slice(pos); break; }
 
-        // Skip if part of a larger identifier or member access
-        if (ci > 0 && /[a-zA-Z0-9_$.]/.test(result[ci - 1])) {
+        // Skip if part of a larger identifier or a member access (`...name(` is a spread, not a member)
+        if (ci > 0 && /[a-zA-Z0-9_$.]/.test(result[ci - 1]) && result.slice(ci - 3, ci) !== '...') {
           out += result.slice(pos, ci + token.length);
           pos = ci + token.length;
           continue;

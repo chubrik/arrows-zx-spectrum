@@ -1,4 +1,3 @@
-import { initOpsMisc } from '../z80/execute-misc';
 import { clearCpu, fetchCpu, resetCpu, restoreCpu } from '../z80/init';
 import { ATTRIBUTES_AFTER_ADDR, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, restoreMemory } from './memory';
@@ -37,7 +36,6 @@ export function fetchState() {
 
     if (cpuStarted) {
       initPorts();
-      initOpsMisc();
       fetchCpu();
       fetchMemory();
       refreshScreen();
