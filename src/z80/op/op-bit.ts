@@ -2,6 +2,7 @@ import { BIT7, xFF } from '../../common/constants';
 import { mem, write } from '../../common/memory';
 import { calcFP, calcFSZ53, F53, FC, fc, FH, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { a, hlxy, setA } from '../registers';
+import { ts } from '../utils';
 
 /** BIT b,r | BIT b,(HL) | BIT b,(IX+d) | BIT b,(IY+d) */
 export function BIT_b_r(isSet: number, f53Src: number) {
@@ -16,6 +17,7 @@ export function BIT_b_r(isSet: number, f53Src: number) {
 
 /** RLCA */
 export function RLCA() {
+  ts(4);
   const newFc = (a >> 7) & FC;
   const result = ((a << 1) | newFc) & xFF;
   setA(result);
@@ -32,6 +34,7 @@ export function RLC_val(value: number): number {
 
 /** RRCA */
 export function RRCA() {
+  ts(4);
   const newFc = a & FC;
   const result = ((a >> 1) | (newFc << 7)) & xFF;
   setA(result);
@@ -48,6 +51,7 @@ export function RRC_val(value: number): number {
 
 /** RLA */
 export function RLA() {
+  ts(4);
   const newFc = (a >> 7) & FC;
   const result = ((a << 1) | fc) & xFF;
   setA(result);
@@ -64,6 +68,7 @@ export function RL_val(value: number): number {
 
 /** RRA */
 export function RRA() {
+  ts(4);
   const newFc = a & FC;
   const result = ((a >> 1) | (fc << 7)) & xFF;
   setA(result);
