@@ -1,8 +1,6 @@
 export const _0 = 0;
 export const _4 = 4;
 export const _5 = 5;
-export const _6 = 6;
-export const _7 = 7;
 export const _8 = 8;
 
 export const BIT7 = 0x80;

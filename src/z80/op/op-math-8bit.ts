@@ -2,7 +2,7 @@ import { BIT7, xFF } from '../../common/constants';
 import { mem, write } from '../../common/memory';
 import { calcFP, calcFSZ53, F53, FC, FH, FN, FP, FS, FZ, setF53, setFC, setFH, setFN, setFP, setFS, setFZ } from '../flags';
 import { a, setA } from '../registers';
-import { getHLXYd } from '../utils';
+import { getHLXYd, ts } from '../utils';
 
 /** INC r */
 export function INC_r(value: number): number {
@@ -17,6 +17,7 @@ export function INC_r(value: number): number {
 
 /** INC (HL) | INC (IX+d) | INC (IY+d) */
 export function INC_hl() {
+  ts(11);
   const addr = getHLXYd();
   const value = mem[addr];
   const result = (value + 1) & xFF;
@@ -41,6 +42,7 @@ export function DEC_r(value: number): number {
 
 /** DEC (HL) | DEC (IX+d) | DEC (IY+d) */
 export function DEC_hl() {
+  ts(11);
   const addr = getHLXYd();
   const value = mem[addr];
   const result = (value - 1) & xFF;
