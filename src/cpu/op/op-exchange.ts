@@ -4,9 +4,11 @@ import {
   a, aa, b, ba, c, ca, d, da, e, ea, fa, getDE, hla, hlxy, setA, setAa, setB, setBa, setC, setCa,
   setD, setDa, setDE, setE, setEa, setFa, setHLa, setHLXY, sp
 } from '../registers';
+import { ts } from '../utils';
 
 /** EX AF,AF' */
 export function EX_AF_AF() {
+  ts(4);
   const a_ = a;
   const f_ = getF();
   setA(aa);
@@ -17,6 +19,7 @@ export function EX_AF_AF() {
 
 /** EXX */
 export function EXX() {
+  ts(4);
   const b_ = b;
   const c_ = c;
   const d_ = d;
@@ -36,6 +39,7 @@ export function EXX() {
 
 /** EX (SP),HL | EX (SP),IX | EX (SP),IY */
 export function EX_sp_HL() {
+  ts(19);
   const hlxy_ = read16(sp);
   write16(sp, hlxy);
   setHLXY(hlxy_);
@@ -43,6 +47,7 @@ export function EX_sp_HL() {
 
 /** EX DE,HL */
 export function EX_DE_HL() {
+  ts(4);
   const de = getDE();
   setDE(hlxy);
   setHLXY(de);
