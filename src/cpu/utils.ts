@@ -10,7 +10,7 @@ export { addTStates as ts };
 export let eiTStates = 0;
 export function setEiTStates(value: number) { /*!inline*/ eiTStates = value; }
 
-export function nop() { };
+export function nop() { addTStates(4); }
 
 export function next() { /*!inline*/ return mem[incPC()]; }
 export function next16() { /*!inline*/ return next() | (next() << 8); }
