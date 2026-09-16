@@ -836,7 +836,7 @@ function substCode(code: string): string {
   const selfExtracted = `eval(${codeResult})`;
 
   if (useLogs)
-    console.log(`Total saves ${code.length - selfExtracted.length} chars\n`);
+    console.log(`Replaces total save ${code.length - selfExtracted.length} chars\n`);
 
   return selfExtracted;
 }
