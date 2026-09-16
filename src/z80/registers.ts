@@ -82,29 +82,11 @@ let hl = 0;
 export let ix = 0;
 export let iy = 0;
 
-export function setHLMode() {
-  /*!inline*/
-  if (hlMode === HLMode.IX) ix = hlxy;
-  else if (hlMode === HLMode.IY) iy = hlxy;
-  hlxy = hl;
-  hlMode = HLMode.HL;
-}
-
-export function setIXMode() {
-  /*!inline*/
-  if (hlMode === HLMode.HL) hl = hlxy;
-  else if (hlMode === HLMode.IY) iy = hlxy;
-  hlxy = ix;
-  hlMode = HLMode.IX;
-}
-
-export function setIYMode() {
-  /*!inline*/
-  if (hlMode === HLMode.HL) hl = hlxy;
-  else if (hlMode === HLMode.IX) ix = hlxy;
-  hlxy = iy;
-  hlMode = HLMode.IY;
-}
+// The handlers collapse prefix chains first, no checks of the current mode are needed
+export function enterIXMode() { /*!inline*/ hlMode = HLMode.IX; hl = hlxy; hlxy = ix; }
+export function leaveIXMode() { /*!inline*/ hlMode = HLMode.HL; ix = hlxy; hlxy = hl; }
+export function enterIYMode() { /*!inline*/ hlMode = HLMode.IY; hl = hlxy; hlxy = iy; }
+export function leaveIYMode() { /*!inline*/ hlMode = HLMode.HL; iy = hlxy; hlxy = hl; }
 
 export function setHLXY(value: number) { /*!inline*/ hlxy = value; }
 export function setIX(value: number) { /*!inline*/ ix = value; }

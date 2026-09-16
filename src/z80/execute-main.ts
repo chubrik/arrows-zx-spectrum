@@ -12,23 +12,50 @@ import { ADD_HL } from './op/op-math-16bit';
 import { ADD_ADC, AND_XOR_OR, CP, DEC_hl, DEC_r, INC_hl, INC_r, SUB_SBC } from './op/op-math-8bit';
 import { CCF, CPL, DAA, SCF } from './op/op-math-etc';
 import {
-  a, b, c, d, dec2SP, decBC, decDE, decHLXY, decPC, decSP, e, getBC, getDE, getH, getHXY, getL,
-  getLXY, hlMode, hlxy, inc2PC, inc2SP, incBC, incDE, incHLXY, incPC, incSP, refresh, setA, setB,
-  setC, setD, setE, setH, setHLMode, setHLXY, setHXY, setIXMode, setIYMode, setL, setLXY, setPC,
-  setSP, sp
+  a, b, c, d, dec2SP, decBC, decDE, decHLXY, decPC, decSP, e, enterIXMode, enterIYMode, getBC,
+  getDE, getH, getHXY, getL, getLXY, hlMode, hlxy, inc2PC, inc2SP, incBC, incDE, incHLXY, incPC,
+  incSP, leaveIXMode, leaveIYMode, refresh, setA, setB, setC, setD, setE, setH, setHLXY, setHXY,
+  setL, setLXY, setPC, setSP, sp
 } from './registers';
 import { getHLXYd, next, next16, nop, setEiTStates, ts, tStates } from './utils';
 
 export function executeMain() {
   /*!inline*/
   ts(TSTATES_PER_OP);
-  executeMainProceed();
-}
-
-function executeMainProceed() {
-  /*!inline*/
   refresh();
   opsMain[next()]();
+}
+
+function executeMainIX(op: number) {
+  /*!inline*/
+  if (op === 0xDD || op === 0xFD) executePrefixChain(op);
+  else {
+    enterIXMode();
+    refresh();
+    opsMain[op]();
+    leaveIXMode();
+  }
+}
+
+function executeMainIY(op: number) {
+  /*!inline*/
+  if (op === 0xDD || op === 0xFD) executePrefixChain(op);
+  else {
+    enterIYMode();
+    refresh();
+    opsMain[op]();
+    leaveIYMode();
+  }
+}
+
+// Consecutive prefixes: only the last one counts
+function executePrefixChain(op: number) {
+  let prefix;
+  do { prefix = op; refresh(); op = next(); } while (op === 0xDD || op === 0xFD);
+  if (prefix === 0xDD) enterIXMode(); else enterIYMode();
+  refresh();
+  opsMain[op]();
+  if (prefix === 0xDD) leaveIXMode(); else leaveIYMode();
 }
 
 const opsMain = [
@@ -266,7 +293,7 @@ const opsMain = [
   /* DA JP C,nn    */ () => fc ? JP_nn() : inc2PC(),
   /* DB IN A,(n)   */ () => setA(readPort(next(), a)),
   /* DC CALL C,nn  */ () => fc ? CALL_nn() : inc2PC(),
-  /* DD --- IX --- */ () => { setIXMode(); executeMainProceed(); setHLMode(); },
+  /* DD --- IX --- */ () => executeMainIX(next()),
   /* DE SBC A,n    */ () => SUB_SBC(next(), fc),
   /* DF RST 18h    */ () => RST_p(0x18),
 
@@ -300,7 +327,7 @@ const opsMain = [
   /* FA JP M,nn    */ () => fs ? JP_nn() : inc2PC(),
   /* FB EI         */ () => { setIFF1(IFF1); setIFF2(IFF2); setEiTStates(tStates); },
   /* FC CALL M,nn  */ () => fs ? CALL_nn() : inc2PC(),
-  /* FD --- IY --- */ () => { setIYMode(); executeMainProceed(); setHLMode(); },
+  /* FD --- IY --- */ () => executeMainIY(next()),
   /* FE CP n       */ () => CP(next()),
   /* FF RST 38h    */ () => RST_p(0x38),
 ];

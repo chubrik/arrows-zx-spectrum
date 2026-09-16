@@ -53,7 +53,6 @@ export async function buildRom(distDir = DIST_DIR, tempDir = `${distDir}/temp`):
 export async function buildSnapshot(z80Path: string) {
   const fileName = basename(z80Path, '.z80');
   const snap = loadSnapshot(z80Path);
-  console.log(``);
 
   const cpuSYS =
     (snap.IM === 2 ? IM2 : snap.IM === 1 ? IM1 : 0) |
@@ -71,6 +70,8 @@ export async function buildSnapshot(z80Path: string) {
   await buildData(distDir, distDir, `${fileName}.pack1`, 'ram1', snap.ram4000, cpuValues, snap.border);
   await buildData(distDir, distDir, `${fileName}.pack2`, 'ram2', snap.ram8000);
   await buildData(distDir, distDir, `${fileName}.pack3`, 'ram3', snap.ramC000);
+
+  console.log('');
 }
 
 /** Builds a data command block → `<distDir>/<fileName>.js` (steps → `<tempDir>/<fileName>/`). */
