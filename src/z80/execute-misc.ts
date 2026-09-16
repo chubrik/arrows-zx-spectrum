@@ -10,31 +10,19 @@ import {
   a, b, c, d, e, getBC, getDE, getHXY, getLXY, getR, hlxy, i, refresh, setA, setB, setC, setD, setE,
   setHLXY, setHXY, setI, setLXY, setR, setSP, sp
 } from './registers';
-import { nop as _, next, next16, nop } from './utils';
-
-let inited: boolean;
-
-export function initOpsMisc() {
-  if (inited) return;
-  inited = true;
-
-  spliceMisc(0x00, 64); // ED00-ED3F
-  spliceMisc(0x80, 32); // ED80-ED9F
-  spliceMisc(0xC0, 64); // EDC0-EDFF
-}
-
-function spliceMisc(start: number, count: number) {
-  for (let i = 0; i < count; i++)
-    opsMisc.splice(start, 0, nop);
-}
+import { next, next16, nop } from './utils';
 
 export function executeMisc() {
   refresh();
   opsMisc[next()]();
 }
 
+function nops(count: number) {
+  return new Array(count).fill(nop);
+}
+
 const opsMisc = [
-  /* ED00-ED3F */
+  /* ED00-ED3F  (void) */ ...nops(64),
 
   /* ED40 IN B,(C)     */ () => setB(in_port()),
   /* ED41 OUT (C),B    */ () => writePort(c, b, b),
@@ -104,29 +92,29 @@ const opsMisc = [
   /* ED7E IM 2       * */ () => { setIM1(0); setIM2(IM2); },
   /* ED7F ---          */ nop,
 
-  /* ED80-ED9F */
+  /* ED80-ED9F  (void) */ ...nops(32),
 
-  /* EDA0 LDI         */ () => LD_block(true),
-  /* EDA1 CPI         */ () => CP_block(true),
-  /* EDA2 INI         */ () => IN_block(+1),
-  /* EDA3 OUTI        */ () => OUT_block(+1),
-  /* EDA4 */ _, _, _, _,
-  /* EDA8 LDD         */ () => LD_block(false),
-  /* EDA9 CPD         */ () => CP_block(false),
-  /* EDAA IND         */ () => IN_block(-1),
-  /* EDAB OUTD        */ () => OUT_block(-1),
-  /* EDAC */ _, _, _, _,
+  /* EDA0 LDI          */ () => LD_block(true),
+  /* EDA1 CPI          */ () => CP_block(true),
+  /* EDA2 INI          */ () => IN_block(+1),
+  /* EDA3 OUTI         */ () => OUT_block(+1),
+  /* EDA4       (void) */ ...nops(4),
+  /* EDA8 LDD          */ () => LD_block(false),
+  /* EDA9 CPD          */ () => CP_block(false),
+  /* EDAA IND          */ () => IN_block(-1),
+  /* EDAB OUTD         */ () => OUT_block(-1),
+  /* EDAC       (void) */ ...nops(4),
 
-  /* EDB0 LDIR        */ () => LD_block(true, 1),
-  /* EDB1 CPIR        */ () => CP_block(true, 1),
-  /* EDB2 INIR        */ () => IN_block(+1, 1),
-  /* EDB3 OTIR        */ () => OUT_block(+1, 1),
-  /* EDB4 */ _, _, _, _,
-  /* EDB8 LDDR        */ () => LD_block(false, 1),
-  /* EDB9 CPDR        */ () => CP_block(false, 1),
-  /* EDBA INDR        */ () => IN_block(-1, 1),
-  /* EDBB OTDR        */ () => OUT_block(-1, 1),
-  /* EDBC */ _, _, _, _,
+  /* EDB0 LDIR         */ () => LD_block(true, 1),
+  /* EDB1 CPIR         */ () => CP_block(true, 1),
+  /* EDB2 INIR         */ () => IN_block(+1, 1),
+  /* EDB3 OTIR         */ () => OUT_block(+1, 1),
+  /* EDB4       (void) */ ...nops(4),
+  /* EDB8 LDDR         */ () => LD_block(false, 1),
+  /* EDB9 CPDR         */ () => CP_block(false, 1),
+  /* EDBA INDR         */ () => IN_block(-1, 1),
+  /* EDBB OTDR         */ () => OUT_block(-1, 1),
+  /* EDBC       (void) */ ...nops(4),
 
-  /* EDC0-EDFF */
+  /* EDC0-EDFF  (void) */ ...nops(64),
 ];
