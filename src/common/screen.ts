@@ -4,7 +4,7 @@ import {
 } from './constants.ts';
 import { commitMemoryValue, initMemory, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, memoryX, memoryY, screenEnabled } from './state.ts';
-import { world_copyRegion, world_copyRegionWithSignals } from './world-refs.ts';
+import { world_copyRegion, world_copyRegionWithSignals, world_getArrow } from './world-refs.ts';
 
 // Screen = display area + border
 
@@ -14,11 +14,15 @@ const addrXs: number[] = []; // addr => pixel x (leftmost of the byte)
 const addrYs: number[] = []; // addr => pixel y
 const borderXs: number[] = []; // index => pixel x
 const borderYs: number[] = []; // index => pixel y
+const pixelIndexBaseByRow: number[] = [];
+export const displayCommitTStatesByRow: number[] = [];
+
+let paletteX: number;
+let paletteYFirst: number;
+let paletteY: number;
 const colorMapDefault: number[][] = []; // attr => [inkX, inkY, paperX, paperY]
 const colorMapFlash: number[][] = []; // ink and paper are swapped when flash bit is set
 let colorMapCurrent = colorMapDefault;
-const pixelIndexBaseByRow: number[] = [];
-export const displayCommitTStatesByRow: number[] = [];
 
 //#region Init
 
@@ -30,8 +34,6 @@ export function initScreen() {
 
   displayX = cpuX + 80;
   displayY = cpuY - 400;
-  const paletteX = memoryX - 32;
-  const paletteY = memoryY;
 
   // Fill the arrays sequentially so the QuickJS engine keeps them dense (fast). The 16K zeros below
   // DISPLAY_MIN_ADDR are never read: they are the price of indexing the arrays by addr directly.
@@ -46,7 +48,7 @@ export function initScreen() {
   }
 
   initBorder();
-  initColorMaps(paletteX, paletteY);
+  initPalette();
 
   let rowPixelIndexBase = DISPLAY_MIN_ADDR >> 5;
   let rowCommitTStates = TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE;
@@ -87,7 +89,22 @@ function initBorder() {
   }
 }
 
-function initColorMaps(paletteX: number, paletteY: number) {
+function initPalette() {
+  paletteX = memoryX - 32;
+  let y = paletteY = paletteYFirst = memoryY;
+
+  while (world_getArrow(paletteX + 15, y)) { // Palette exists
+    if (world_getArrow(paletteX + 18, y + 1)) { // Selector exists
+      paletteY = y;
+      break;
+    }
+    y += 8;
+  }
+
+  initColorMaps();
+}
+
+function initColorMaps() {
   const palette: number[][] = []; // color => [x, y]
 
   for (let i = 0; i < 16; i++) {
@@ -151,6 +168,7 @@ export function refreshScreen() {
   for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < indexAfterAttrs; i++)
     memoryDirtyBitmap[i] = -1;
 
+  borderCommited = -1;
   commitScreen();
 }
 
@@ -162,6 +180,19 @@ function clearBorder() {
   setBorder(0);
   commitBorder();
   setBorder(color);
+}
+
+export function switchPalette() {
+  initScreen();
+  const nextY = world_getArrow(paletteX + 15, paletteY + 8) ? paletteY + 8 : paletteYFirst;
+  if (nextY === paletteY) return;
+  const selectorX = paletteX + 18;
+  const selectorY = paletteY + 1;
+  paletteY = nextY;
+  world_copyRegion(selectorX, selectorY, selectorX + 1, selectorY + 1, selectorX, paletteY + 1);
+  world_copyRegion(selectorX + 2, selectorY, selectorX + 3, selectorY + 1, selectorX, selectorY);
+  initColorMaps();
+  refreshScreen();
 }
 
 //#region Commit
