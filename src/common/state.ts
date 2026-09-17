@@ -2,7 +2,7 @@ import { clearCpu, fetchCpu, resetCpu, restoreCpu } from '../z80/init';
 import { ATTRIBUTES_AFTER_ADDR, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, restoreMemory } from './memory';
 import { initPorts } from './ports';
-import { clearScreen, commitBorder, initScreen, refreshScreen, setBorder } from './screen';
+import { clearScreen, commitBorder, initScreen, refreshScreen, setBorder, switchPalette } from './screen';
 
 export let cpuX: number;
 export let cpuY: number;
@@ -107,6 +107,11 @@ export function fetchState() {
     _state.scr = 0;
   }
 
+  if (_state.pal) {
+    switchPalette();
+    _state.pal = 0;
+  }
+
   if (_state.snd) {
     beeperEnabled = _state.snd > 0;
     _state.snd = 0;
@@ -126,5 +131,6 @@ export type State = {
   ram2: number[] | 0;
   ram3: number[] | 0;
   scr: number;
+  pal: number;
   snd: number;
 }
