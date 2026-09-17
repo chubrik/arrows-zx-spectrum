@@ -10,12 +10,13 @@ import { world_copyRegion, world_copyRegionWithSignals } from './world-refs.ts';
 
 let displayX: number;
 let displayY: number;
-const addrXs: number[] = [];
-const addrYs: number[] = [];
-const borderXs: number[] = [];
-const borderYs: number[] = [];
-const palettesDefault: number[][] = []; // attr => [inkX, inkY, paperX, paperY]
-const palettesFlash: number[][] = []; // ink and paper are swapped when flash bit is set
+const addrXs: number[] = []; // addr => pixel x (leftmost of the byte)
+const addrYs: number[] = []; // addr => pixel y
+const borderXs: number[] = []; // index => pixel x
+const borderYs: number[] = []; // index => pixel y
+const colorMapDefault: number[][] = []; // attr => [inkX, inkY, paperX, paperY]
+const colorMapFlash: number[][] = []; // ink and paper are swapped when flash bit is set
+let colorMapCurrent = colorMapDefault;
 const pixelIndexBaseByRow: number[] = [];
 export const displayCommitTStatesByRow: number[] = [];
 
@@ -32,7 +33,8 @@ export function initScreen() {
   const paletteX = memoryX - 32;
   const paletteY = memoryY;
 
-  // Fill the arrays sequentially so the QuickJS engine keeps them dense (fast)
+  // Fill the arrays sequentially so the QuickJS engine keeps them dense (fast). The 16K zeros below
+  // DISPLAY_MIN_ADDR are never read: they are the price of indexing the arrays by addr directly.
   addrXs.length = ATTRIBUTES_MIN_ADDR;
   addrYs.length = ATTRIBUTES_MIN_ADDR;
   addrXs.fill(0);
@@ -44,7 +46,7 @@ export function initScreen() {
   }
 
   initBorder();
-  initPalettes(paletteX, paletteY);
+  initColorMaps(paletteX, paletteY);
 
   let rowPixelIndexBase = DISPLAY_MIN_ADDR >> 5;
   let rowCommitTStates = TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE;
@@ -85,20 +87,20 @@ function initBorder() {
   }
 }
 
-function initPalettes(paletteX: number, paletteY: number) {
-  const palSrc: number[][] = [];
+function initColorMaps(paletteX: number, paletteY: number) {
+  const palette: number[][] = []; // color => [x, y]
 
   for (let i = 0; i < 16; i++) {
     const x = paletteX + ((i & 7) << 1);
     const y = paletteY + ((i & 8) >> 2);
-    palSrc[i] = [x, y];
+    palette[i] = [x, y];
   }
 
-  initPalettesPhase(false, palettesDefault, palSrc);
-  initPalettesPhase(true, palettesFlash, palSrc);
+  initColorMap(false, colorMapDefault, palette);
+  initColorMap(true, colorMapFlash, palette);
 }
 
-function initPalettesPhase(isFlash: boolean, palettes: number[][], palSrc: number[][]) {
+function initColorMap(isFlash: boolean, colorMap: number[][], palette: number[][]) {
   for (let attr = 0; attr < 256; attr++) {
     const rawInk = attr & 0x07;
     const rawPaper = (attr & 0x38) >> 3;
@@ -109,10 +111,10 @@ function initPalettesPhase(isFlash: boolean, palettes: number[][], palSrc: numbe
     const paper = flash ? rawInk : rawPaper;
     const bright = (attr & BIT6) >> 3;
 
-    const inkPal = palSrc[bright | ink];
-    const paperPal = palSrc[bright | paper];
+    const inkXY = palette[bright | ink];
+    const paperXY = palette[bright | paper];
 
-    palettes[attr] = [inkPal[0], inkPal[1], paperPal[0], paperPal[1]];
+    colorMap[attr] = [inkXY[0], inkXY[1], paperXY[0], paperXY[1]];
   }
 }
 
@@ -121,7 +123,6 @@ function initPalettesPhase(isFlash: boolean, palettes: number[][], palSrc: numbe
 let frameCount = 0;
 let flashPhase = 0; // 0 | BIT4
 let flashPhaseChanged = false;
-let currentPalettes = palettesDefault;
 
 export function incFrameCount() {
   const newFlashPhase = ++frameCount & BIT4;
@@ -129,7 +130,7 @@ export function incFrameCount() {
 
   if (flashPhaseChanged) {
     flashPhase = newFlashPhase;
-    currentPalettes = flashPhase ? palettesFlash : palettesDefault;
+    colorMapCurrent = flashPhase ? colorMapFlash : colorMapDefault;
   }
 }
 
@@ -231,21 +232,20 @@ export function commitDisplayRow(row: number) {
 }
 
 function commitDisplayValue(addr: number, attr: number, value: number) {
-  const posX = addrXs[addr];
+  const addrX = addrXs[addr];
   const y = addrYs[addr];
-  const pal = currentPalettes[attr];
 
-  const inkX0 = pal[0];
-  const inkY0 = pal[1];
+  const colorsXY = colorMapCurrent[attr];
+  const inkX0 = colorsXY[0];
+  const inkY0 = colorsXY[1];
   const inkX1 = inkX0 + 1;
   const inkY1 = inkY0 + 1;
-
-  const paperX0 = pal[2];
-  const paperY0 = pal[3];
+  const paperX0 = colorsXY[2];
+  const paperY0 = colorsXY[3];
   const paperX1 = paperX0 + 1;
   const paperY1 = paperY0 + 1;
 
-  for (let x = posX + 14; x >= posX; x -= 2) {
+  for (let x = addrX + 14; x >= addrX; x -= 2) {
     if (value & 1)
       world_copyRegionWithSignals(inkX0, inkY0, inkX1, inkY1, x, y);
     else
@@ -261,13 +261,13 @@ export function commitBorder() {
   if (borderCommited === borderColor) return;
   borderCommited = borderColor;
 
-  const pal = palettesDefault[borderColor];
-  const palX0 = pal[0];
-  const palY0 = pal[1];
-  const palX1 = palX0 + 1;
-  const palY1 = palY0 + 1;
+  const colorsXY = colorMapDefault[borderColor];
+  const inkX0 = colorsXY[0];
+  const inkY0 = colorsXY[1];
+  const inkX1 = inkX0 + 1;
+  const inkY1 = inkY0 + 1;
 
-  borderXs.forEach((x, i) => world_copyRegionWithSignals(palX0, palY0, palX1, palY1, x, borderYs[i]));
+  borderXs.forEach((x, i) => world_copyRegionWithSignals(inkX0, inkY0, inkX1, inkY1, x, borderYs[i]));
 }
 
 //#endregion
