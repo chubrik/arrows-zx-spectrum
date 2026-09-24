@@ -24,7 +24,27 @@ const PRELUDE = `
   function getTick() { return 0; }
   function log() { }
   function showText() { }
-  var state = {};
+  // In the game state is a proxy over JSON, so a value that does not survive the round trip
+  // (a typed array, a mutation in place) must not survive it here either
+  var __stateRaw = {};
+  var state = new Proxy({}, {
+    get(_target, key) {
+      if (typeof key !== 'string') return undefined;
+      const raw = __stateRaw[key];
+      if (raw === undefined) return undefined;
+      try { return JSON.parse(raw); } catch (e) { return undefined; }
+    },
+    set(_target, key, value) {
+      if (typeof key === 'string') {
+        try { __stateRaw[key] = JSON.stringify(value); } catch (e) { __stateRaw[key] = undefined; }
+      }
+      return true;
+    },
+    deleteProperty(_target, key) {
+      if (typeof key === 'string') __stateRaw[key] = undefined;
+      return true;
+    },
+  });
 
   var world = {
     clearSignals() { },

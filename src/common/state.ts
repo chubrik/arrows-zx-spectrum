@@ -57,8 +57,10 @@ export function fetchState() {
     _state.max = 0;
   }
 
-  if (_state.cpu) {
-    restoreCpu(_state.cpu);
+  const cpu = _state.cpu;
+
+  if (cpu) {
+    restoreCpu(cpu);
     _state.cpu = 0;
   }
 
@@ -69,27 +71,35 @@ export function fetchState() {
     _state.brd = null;
   }
 
-  if (_state.rom) {
+  const rom = _state.rom;
+
+  if (rom) {
     clearCpu();
-    restoreMemory(0x0000, _state.rom);
+    restoreMemory(0x0000, rom);
     clearMemory(RAM_MIN_ADDR, xFFFF);
     clearScreen();
     _state.rom = 0;
   }
 
-  if (_state.ram1) {
-    restoreMemory(0x4000, _state.ram1);
+  const ram1 = _state.ram1;
+
+  if (ram1) {
+    restoreMemory(0x4000, ram1);
     refreshScreen();
     _state.ram1 = 0;
   }
 
-  if (_state.ram2) {
-    restoreMemory(0x8000, _state.ram2);
+  const ram2 = _state.ram2;
+
+  if (ram2) {
+    restoreMemory(0x8000, ram2);
     _state.ram2 = 0;
   }
 
-  if (_state.ram3) {
-    restoreMemory(0xC000, _state.ram3);
+  const ram3 = _state.ram3;
+
+  if (ram3) {
+    restoreMemory(0xC000, ram3);
     _state.ram3 = 0;
   }
 

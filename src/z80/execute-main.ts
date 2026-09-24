@@ -21,8 +21,8 @@ import { getHLXYd, next, next16, nop, setEiTStates, ts, tStates } from './utils'
 
 export function executeMain() {
   /*!inline*/
-  ts(TSTATES_PER_OP);
   refresh();
+  ts(TSTATES_PER_OP);
   opsMain[next()]();
 }
 
