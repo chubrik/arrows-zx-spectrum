@@ -1,4 +1,4 @@
-import { incBeeper, initBeeper } from './beeper';
+import { initBeeper, setBeeper } from './beeper';
 import { BIT0, BIT1, BIT2, BIT3, BIT4, xFF } from './constants';
 import { setBorder } from './screen';
 import { cpuX, cpuY } from './state';
@@ -56,5 +56,5 @@ export function writePort(lo: number, hi: number, value: number) {
 
   if (lo & BIT0) return;
   setBorder(value & 0x07);
-  incBeeper(value & BIT4);
+  setBeeper(value & BIT4);
 }

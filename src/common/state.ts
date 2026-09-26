@@ -1,4 +1,5 @@
 import { clearCpu, fetchCpu, resetCpu, restoreCpu } from '../z80/init';
+import { fetchBeeper } from './beeper';
 import { ATTRIBUTES_AFTER_ADDR, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, restoreMemory } from './memory';
 import { initPorts } from './ports';
@@ -38,6 +39,7 @@ export function fetchState() {
       initPorts();
       fetchCpu();
       fetchMemory();
+      fetchBeeper();
       refreshScreen();
     }
   }
