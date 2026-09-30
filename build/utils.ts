@@ -7,24 +7,34 @@ import { remangleTopLevel } from './remangle.ts';
 
 export const SRC_DIR = 'src';
 export const DIST_DIR = 'dist';
-export const SMOKE_DIR = `${DIST_DIR}/temp/smoke`; // build for test/dist-smoke.test.ts, kept apart from dist/
+// The builds for the tests, kept out of dist/ and of the production step folders
+export const FUSE_CPU_PATH = `${DIST_DIR}/temp/_z80-test/z80-test.step09.subst.js`;
+export const SMOKE_CPU_PATH = `${DIST_DIR}/temp/_z80-smoke/z80-smoke.txt`;
+export const SMOKE_ROM_PATH = `${DIST_DIR}/temp/_initializer-smoke/initializer-smoke.txt`;
 
 type StepFn = (label: string, code: string) => string;
 
-export function createStepFn(tempDir: string, fileName: string): StepFn {
+/** A step folder holds files named `<name>.step<NN>[.<part>].<label>.js`, where the name is the
+ *  folder without the leading underscore that marks the folders which are not games. */
+export function stepName(stepsDir: string): string {
+  return basename(stepsDir).replace(/^_/, '');
+}
+
+export function createStepFn(stepsDir: string, fileName: string, part?: string): StepFn {
   let stepNum = 0;
   return (label: string, code: string) => {
     const num = String(++stepNum).padStart(2, '0');
-    writeToPath(`${tempDir}/${fileName}.step${num}.${label}.js`, code);
+    const step = part ? `step${num}.${part}` : `step${num}`;
+    writeToPath(`${stepsDir}/${fileName}.${step}.${label}.js`, code);
     return code;
   };
 }
 
 /** Full CPU build pipeline: esbuild → inline → terser × 3 → arrows → remangle → postprocess. */
-export async function cpuPipeline(srcPath: string, opts?: { test?: boolean; tempDir?: string }) {
+export async function cpuPipeline(srcPath: string, opts?: { test?: boolean; stepsDir?: string }) {
   const fileName = basename(srcPath, '.ts');
-  const tempDir = opts?.tempDir ?? `${DIST_DIR}/temp/${fileName}`;
-  const step = createStepFn(tempDir, fileName);
+  const stepsDir = opts?.stepsDir ?? `${DIST_DIR}/temp/_${fileName}`;
+  const step = createStepFn(stepsDir, stepName(stepsDir));
 
   const srcTsCode = readFileSync(srcPath, 'utf8');
   const built = step('build', await buildTs(srcTsCode, opts));
@@ -37,7 +47,7 @@ export async function cpuPipeline(srcPath: string, opts?: { test?: boolean; temp
   const minified = step('simplify', simplifyCode(remangled));
   const substed = step('subst', substCode(minified));
 
-  return { built, minified, substed, step, tempDir, fileName };
+  return { built, minified, substed, step, stepsDir, fileName };
 }
 
 /** Build TypeScript → JavaScript. */

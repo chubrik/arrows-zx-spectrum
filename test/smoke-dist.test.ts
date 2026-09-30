@@ -1,7 +1,8 @@
 import { readFileSync } from 'fs';
 import { getQuickJS, type QuickJSContext } from 'quickjs-emscripten';
 import { describe, expect, it } from 'vitest';
-import { SMOKE_DIR } from '../build/utils';
+import { decodeClipboard, findCommandBlocks } from '../build/clipboard';
+import { SMOKE_CPU_PATH, SMOKE_ROM_PATH } from '../build/utils';
 
 // Smoke test of the packed command blocks in QuickJS — the engine of the Steam version of the game.
 // Loads the CPU block and the ROM initializer (built by build/build-test.ts) into a VM with a
@@ -85,10 +86,15 @@ function evalOrThrow(vm: QuickJSContext, code: string, name: string) {
   result.value.dispose();
 }
 
-describe('dist smoke (QuickJS)', () => {
+/** The code of the single command block of a clipboard string, the way the game would paste it. */
+function blockCode(path: string): string {
+  return findCommandBlocks(decodeClipboard(readFileSync(path, 'utf8')))[0].code!;
+}
+
+describe('Smoke test (dist)', () => {
   it(`boots the ROM for ${FRAMES} frames`, async () => {
-    const cpu = readFileSync(`${SMOKE_DIR}/z80.pack.js`, 'utf8');
-    const rom = readFileSync(`${SMOKE_DIR}/initializer.js`, 'utf8');
+    const cpu = blockCode(SMOKE_CPU_PATH);
+    const rom = blockCode(SMOKE_ROM_PATH);
 
     const QuickJS = await getQuickJS();
     const runtime = QuickJS.newRuntime();

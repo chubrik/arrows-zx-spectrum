@@ -4,8 +4,8 @@ import { mockPorts } from '../src/common/ports';
 import { runFuseSuite } from './fuse-runner';
 import { getState, loadProgram, setState, setupCpu, step } from './helpers';
 
-const inputText = await getResource('fuse-tests.in', 'utf-8');
-const expectedText = await getResource('fuse-tests.expected', 'utf-8');
+const inputText = await getResource('_fuse-tests.in', 'utf-8');
+const expectedText = await getResource('_fuse-tests.expected', 'utf-8');
 
 runFuseSuite('FUSE Z80 tests (source)', {
   setupCpu, setState, getState, loadProgram, step, mem, mockPorts,

@@ -1,11 +1,11 @@
 import { readFileSync } from 'fs';
 import { getResource } from '../build/resources';
+import { FUSE_CPU_PATH } from '../build/utils';
 import { xFFFF } from '../src/common/constants';
 import { runFuseSuite, type CpuApi, type MockPorts } from './fuse-runner';
 import type { CpuState } from './helpers';
 
-const distPath = 'dist/temp/z80-test/z80-test.step09.subst.js';
-const code = readFileSync(distPath, 'utf-8');
+const code = readFileSync(FUSE_CPU_PATH, 'utf-8');
 
 // Bundle is ESM; eval'ing in a fresh function scope assigns globalThis.__z80
 // as a side effect via the test-hook block.
@@ -114,7 +114,7 @@ function step() { z80.executeMain(); }
 
 const cpu: CpuApi = { setupCpu, setState, getState, loadProgram, step, mem: z80.mem, mockPorts: z80.mockPorts };
 
-const inputText = await getResource('fuse-tests.in', 'utf-8');
-const expectedText = await getResource('fuse-tests.expected', 'utf-8');
+const inputText = await getResource('_fuse-tests.in', 'utf-8');
+const expectedText = await getResource('_fuse-tests.expected', 'utf-8');
 
 runFuseSuite('FUSE Z80 tests (dist)', cpu, inputText, expectedText);

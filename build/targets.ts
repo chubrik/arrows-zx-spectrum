@@ -3,20 +3,22 @@ import { basename } from 'path';
 import { xFF } from '../src/common/constants.ts';
 import { asciiToUnicode, bytesToUnicode } from '../src/util/encode.ts';
 import { IFF1, IFF2, IM1, IM2 } from '../src/z80/flags.ts';
+import { BLOCK_TEMPLATE, buildClipboard } from './clipboard.ts';
 import { getResource } from './resources.ts';
 import {
-  arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, simplifyCode, SRC_DIR,
+  arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, simplifyCode, SRC_DIR, stepName,
   terserCMangle, terserCollapse, terserCompress, writeToPath
 } from './utils.ts';
 import { loadSnapshot } from './z80-snapshot.ts';
 
-/** Builds the packed CPU command block → `<distDir>/z80.pack.js` (steps → `<tempDir>/z80/`). Returns the packed code. */
-export async function buildCpu(distDir = DIST_DIR, tempDir = `${distDir}/temp`): Promise<string> {
+/** Builds the CPU command block → `<outPath>`, a string that pastes it. Returns the packed code. */
+export async function buildCpu(
+  stepsDir = `${DIST_DIR}/temp/_z80`, outPath = `${DIST_DIR}/_z80.txt`
+): Promise<string> {
   const path = `${SRC_DIR}/z80.ts`;
-  const fileName = basename(path, '.ts');
 
   // Build pipeline
-  const { built, minified, substed, step } = await cpuPipeline(path, { tempDir: `${tempDir}/${fileName}` });
+  const { built, minified, substed, step } = await cpuPipeline(path, { stepsDir });
 
   // Decoder pipeline
   const decoderFuncName = 'unicodeToAscii';
@@ -32,24 +34,33 @@ export async function buildCpu(distDir = DIST_DIR, tempDir = `${distDir}/temp`):
   const packCmangled = step('pack-cmangle', await terserCMangle(packArrowed));
   const packed = step('pack-simplify', simplifyCode(packCmangled, { constToLet: true }));
 
-  writeToPath(`${distDir}/${fileName}.pack.js`, packed);
+  const clipboard = buildClipboard([packed], BLOCK_TEMPLATE);
+  writeToPath(outPath, clipboard);
 
   console.log(
     `${path}: ${built.length} bytes → ` +
     `minified: ${minified.length} bytes → ` +
     `substed: ${substed.length} bytes → ` +
-    `packed: ${[...packed].length} chars`);
+    `packed: ${[...packed].length} chars → ` +
+    `${basename(outPath)}: ${clipboard.length} chars`);
 
   return packed;
 }
 
-/** Builds the ROM initializer command block → `<distDir>/initializer.js` (steps → `<tempDir>/initializer/`). Returns the block code. */
-export async function buildRom(distDir = DIST_DIR, tempDir = `${distDir}/temp`): Promise<string> {
-  const rom = await getResource('48k.rom');
-  return buildData(distDir, tempDir, 'initializer', 'rom', rom);
+/** Builds the ROM initializer command block → `<outPath>`. Returns the block code. */
+export async function buildRom(
+  stepsDir = `${DIST_DIR}/temp/_initializer`, outPath = `${DIST_DIR}/_initializer.txt`
+): Promise<string> {
+  const rom = await getResource('_48k.rom');
+  const { code, log } = await buildData(stepsDir, stepName(stepsDir), 'rom', rom);
+  const clipboard = buildClipboard([code], BLOCK_TEMPLATE);
+
+  writeToPath(outPath, clipboard);
+  console.log(`${log} → ${basename(outPath)}: ${clipboard.length} chars`);
+  return code;
 }
 
-/** Builds the three RAM command blocks of a `.z80` snapshot → `dist/<name>/<name>.pack1..3.js`. */
+/** Builds the three RAM command blocks of a `.z80` snapshot into one string → `dist/<name>.txt`. */
 export async function buildSnapshot(z80Path: string) {
   const fileName = basename(z80Path, '.z80');
   const snap = loadSnapshot(z80Path);
@@ -66,20 +77,31 @@ export async function buildSnapshot(z80Path: string) {
     snap.IY >> 8, snap.IY & xFF, snap.I, snap.R, cpuSYS
   ];
 
-  const distDir = `${DIST_DIR}/${fileName}`; // steps stay next to the packs
-  await buildData(distDir, distDir, `${fileName}.pack1`, 'ram1', snap.ram4000, cpuValues, snap.border);
-  await buildData(distDir, distDir, `${fileName}.pack2`, 'ram2', snap.ram8000);
-  await buildData(distDir, distDir, `${fileName}.pack3`, 'ram3', snap.ramC000);
+  const stepsDir = `${DIST_DIR}/temp/${fileName}`;
+  const packs = [
+    await buildData(stepsDir, fileName, 'ram1', snap.ram4000, 'pack1', cpuValues, snap.border),
+    await buildData(stepsDir, fileName, 'ram2', snap.ram8000, 'pack2'),
+    await buildData(stepsDir, fileName, 'ram3', snap.ramC000, 'pack3'),
+  ];
+
+  for (const { log } of packs)
+    console.log(log);
+
+  // A string that pastes the whole machine onto the map, memory included
+  const clipboard = buildClipboard(packs.map(({ code }) => code));
+  writeToPath(`${DIST_DIR}/${fileName}.txt`, clipboard);
+  console.log(`${fileName}.txt: ${clipboard.length} chars`);
 
   console.log('');
 }
 
-/** Builds a data command block → `<distDir>/<fileName>.js` (steps → `<tempDir>/<fileName>/`). */
+/** Builds a data command block; the steps go to `<stepsDir>/`. Returns the code and its log line. */
 async function buildData(
-  distDir: string, tempDir: string, fileName: string, stateName: string, data: Buffer,
-  cpuValues?: number[], border?: number
-): Promise<string> {
-  const step = createStepFn(`${tempDir}/${fileName}`, fileName);
+  stepsDir: string, fileName: string, stateName: string, data: Buffer,
+  part?: string, cpuValues?: number[], border?: number
+): Promise<{ code: string, log: string }> {
+  const step = createStepFn(stepsDir, fileName, part);
+  const name = part ? `${fileName}.${part}` : fileName;
 
   const dataEncoded = bytesToUnicode(data);
   const srcTsCode = readFileSync(`${SRC_DIR}/data-template.ts`, 'utf8');
@@ -97,11 +119,8 @@ async function buildData(
   const cmangled = step('cmangle', await terserCMangle(arrowed));
   const simplified = step('simplify', simplifyCode(cmangled, { constToLet: true }));
 
-  writeToPath(`${distDir}/${fileName}.js`, simplified);
+  const log = `${name}: ${built.length + data.length} bytes → ` +
+    `packed: ${[...simplified].length} chars`;
 
-  console.log(
-    `${fileName}: ${built.length + data.length} bytes → ` +
-    `packed: ${[...simplified].length} chars`);
-
-  return simplified;
+  return { code: simplified, log };
 }
