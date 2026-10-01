@@ -7,14 +7,14 @@ import type { CpuState } from './helpers';
 
 const code = readFileSync(FUSE_CPU_PATH, 'utf-8');
 
-// Bundle is ESM; eval'ing in a fresh function scope assigns globalThis.__z80
+// Bundle is ESM; eval'ing in a fresh function scope assigns globalThis.__cpu
 // as a side effect via the test-hook block.
 const g = globalThis as Record<string, unknown>;
-delete g.__z80;
+delete g.__cpu;
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
 new Function(code)();
 
-const z80 = g.__z80 as {
+const hook = g.__cpu as {
   mem: number[];
   setRamMinAddrForTest: (v: number) => void;
   executeMain: () => void;
@@ -49,70 +49,70 @@ const z80 = g.__z80 as {
 };
 
 function setupCpu() {
-  z80.clearCpu();
-  z80.setRamMinAddrForTest(0);
+  hook.clearCpu();
+  hook.setRamMinAddrForTest(0);
 }
 
 function setState(s: CpuState) {
-  if (s.A !== undefined) z80.setA(s.A);
-  if (s.F !== undefined) z80.setF(s.F);
-  if (s.B !== undefined) z80.setB(s.B);
-  if (s.C !== undefined) z80.setC(s.C);
-  if (s.D !== undefined) z80.setD(s.D);
-  if (s.E !== undefined) z80.setE(s.E);
-  if (s.HL !== undefined) z80.setHLXY(s.HL);
-  if (s.Aa !== undefined) z80.setAa(s.Aa);
-  if (s.Fa !== undefined) z80.setFa(s.Fa);
-  if (s.Ba !== undefined) z80.setBa(s.Ba);
-  if (s.Ca !== undefined) z80.setCa(s.Ca);
-  if (s.Da !== undefined) z80.setDa(s.Da);
-  if (s.Ea !== undefined) z80.setEa(s.Ea);
-  if (s.HLa !== undefined) z80.setHLa(s.HLa);
-  if (s.IX !== undefined) z80.setIX(s.IX);
-  if (s.IY !== undefined) z80.setIY(s.IY);
-  if (s.SP !== undefined) z80.setSP(s.SP);
-  if (s.PC !== undefined) z80.setPC(s.PC);
-  if (s.WZ !== undefined) z80.setWZ(s.WZ);
-  if (s.I !== undefined) z80.setI(s.I);
-  if (s.R !== undefined) z80.setR(s.R);
+  if (s.A !== undefined) hook.setA(s.A);
+  if (s.F !== undefined) hook.setF(s.F);
+  if (s.B !== undefined) hook.setB(s.B);
+  if (s.C !== undefined) hook.setC(s.C);
+  if (s.D !== undefined) hook.setD(s.D);
+  if (s.E !== undefined) hook.setE(s.E);
+  if (s.HL !== undefined) hook.setHLXY(s.HL);
+  if (s.Aa !== undefined) hook.setAa(s.Aa);
+  if (s.Fa !== undefined) hook.setFa(s.Fa);
+  if (s.Ba !== undefined) hook.setBa(s.Ba);
+  if (s.Ca !== undefined) hook.setCa(s.Ca);
+  if (s.Da !== undefined) hook.setDa(s.Da);
+  if (s.Ea !== undefined) hook.setEa(s.Ea);
+  if (s.HLa !== undefined) hook.setHLa(s.HLa);
+  if (s.IX !== undefined) hook.setIX(s.IX);
+  if (s.IY !== undefined) hook.setIY(s.IY);
+  if (s.SP !== undefined) hook.setSP(s.SP);
+  if (s.PC !== undefined) hook.setPC(s.PC);
+  if (s.WZ !== undefined) hook.setWZ(s.WZ);
+  if (s.I !== undefined) hook.setI(s.I);
+  if (s.R !== undefined) hook.setR(s.R);
   if (s.IM !== undefined) {
-    z80.setIM1(s.IM === 1 ? z80.IM1 : 0);
-    z80.setIM2(s.IM === 2 ? z80.IM2 : 0);
+    hook.setIM1(s.IM === 1 ? hook.IM1 : 0);
+    hook.setIM2(s.IM === 2 ? hook.IM2 : 0);
   }
-  if (s.IFF1 !== undefined) z80.setIFF1(s.IFF1 ? z80.IFF1 : 0);
-  if (s.IFF2 !== undefined) z80.setIFF2(s.IFF2 ? z80.IFF2 : 0);
-  if (s.halt !== undefined) z80.setHLT(s.halt ? z80.HLT : 0);
+  if (s.IFF1 !== undefined) hook.setIFF1(s.IFF1 ? hook.IFF1 : 0);
+  if (s.IFF2 !== undefined) hook.setIFF2(s.IFF2 ? hook.IFF2 : 0);
+  if (s.halt !== undefined) hook.setHLT(s.halt ? hook.HLT : 0);
 }
 
 function getState(): CpuState {
   return {
-    A: z80.a, F: z80.getF(),
-    B: z80.b, C: z80.c,
-    D: z80.d, E: z80.e,
-    HL: z80.hlxy,
-    Aa: z80.aa, Fa: z80.fa,
-    Ba: z80.ba, Ca: z80.ca,
-    Da: z80.da, Ea: z80.ea,
-    HLa: z80.hla,
-    IX: z80.ix, IY: z80.iy,
-    SP: z80.sp, PC: z80.pc,
-    I: z80.i, R: z80.getR(),
-    IM: (z80.im2 ? 2 : z80.im1 ? 1 : 0) as 0 | 1 | 2,
-    IFF1: (z80.iff1 ? 1 : 0) as 0 | 1,
-    IFF2: (z80.iff2 ? 1 : 0) as 0 | 1,
-    halt: (z80.hlt ? 1 : 0) as 0 | 1,
+    A: hook.a, F: hook.getF(),
+    B: hook.b, C: hook.c,
+    D: hook.d, E: hook.e,
+    HL: hook.hlxy,
+    Aa: hook.aa, Fa: hook.fa,
+    Ba: hook.ba, Ca: hook.ca,
+    Da: hook.da, Ea: hook.ea,
+    HLa: hook.hla,
+    IX: hook.ix, IY: hook.iy,
+    SP: hook.sp, PC: hook.pc,
+    I: hook.i, R: hook.getR(),
+    IM: (hook.im2 ? 2 : hook.im1 ? 1 : 0) as 0 | 1 | 2,
+    IFF1: (hook.iff1 ? 1 : 0) as 0 | 1,
+    IFF2: (hook.iff2 ? 1 : 0) as 0 | 1,
+    halt: (hook.hlt ? 1 : 0) as 0 | 1,
   };
 }
 
 function loadProgram(addr: number, bytes: number[]) {
   for (let i = 0; i < bytes.length; i++) {
-    z80.mem[(addr + i) & xFFFF] = bytes[i];
+    hook.mem[(addr + i) & xFFFF] = bytes[i];
   }
 }
 
-function step() { z80.executeMain(); }
+function step() { hook.executeMain(); }
 
-const cpu: CpuApi = { setupCpu, setState, getState, loadProgram, step, mem: z80.mem, mockPorts: z80.mockPorts };
+const cpu: CpuApi = { setupCpu, setState, getState, loadProgram, step, mem: hook.mem, mockPorts: hook.mockPorts };
 
 const inputText = await getResource('_fuse-tests.in', 'utf-8');
 const expectedText = await getResource('_fuse-tests.expected', 'utf-8');

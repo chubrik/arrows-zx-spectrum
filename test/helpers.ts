@@ -1,13 +1,13 @@
 import { xFFFF } from '../src/common/constants';
 import { mem, setRamMinAddrForTest } from '../src/common/memory';
-import { executeMain } from '../src/z80/execute-main';
-import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from '../src/z80/flags';
-import { clearCpu } from '../src/z80/init';
+import { executeMain } from '../src/cpu/execute-main';
+import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from '../src/cpu/flags';
+import { clearCpu } from '../src/cpu/init';
 import {
   a, aa, b, ba, c, ca, d, da, e, ea, fa, getR, hla, hlxy, i, ix, iy, pc, setA, setAa, setB, setBa,
   setC, setCa, setD, setDa, setE, setEa, setFa, setHLa, setHLXY, setI, setIX, setIY, setPC, setR,
   setSP, setWZ, sp
-} from '../src/z80/registers';
+} from '../src/cpu/registers';
 
 export function setupCpu() {
   clearCpu();

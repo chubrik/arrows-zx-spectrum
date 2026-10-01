@@ -7,7 +7,7 @@ export async function setup() {
   for (const path of [FUSE_CPU_PATH, SMOKE_CPU_PATH, SMOKE_ROM_PATH])
     rmSync(dirname(path), { recursive: true, force: true });
 
-  const path = `${SRC_DIR}/z80-test.ts`;
+  const path = `${SRC_DIR}/cpu-test.ts`;
   const { built, minified, substed } = await cpuPipeline(path, { test: true, stepsDir: dirname(FUSE_CPU_PATH) });
 
   console.log(

@@ -1,8 +1,8 @@
 import { readFileSync } from 'fs';
 import { basename } from 'path';
 import { xFF } from '../src/common/constants.ts';
+import { IFF1, IFF2, IM1, IM2 } from '../src/cpu/flags.ts';
 import { asciiToUnicode, bytesToUnicode } from '../src/util/encode.ts';
-import { IFF1, IFF2, IM1, IM2 } from '../src/z80/flags.ts';
 import { BLOCK_TEMPLATE, buildClipboard } from './clipboard.ts';
 import { getResource } from './resources.ts';
 import {
@@ -13,9 +13,9 @@ import { loadSnapshot } from './z80-snapshot.ts';
 
 /** Builds the CPU command block → `<outPath>`, a string that pastes it. Returns the packed code. */
 export async function buildCpu(
-  stepsDir = `${DIST_DIR}/temp/_z80`, outPath = `${DIST_DIR}/_z80.txt`
+  stepsDir = `${DIST_DIR}/temp/_cpu`, outPath = `${DIST_DIR}/_cpu.txt`
 ): Promise<string> {
-  const path = `${SRC_DIR}/z80.ts`;
+  const path = `${SRC_DIR}/cpu.ts`;
 
   // Build pipeline
   const { built, minified, substed, step } = await cpuPipeline(path, { stepsDir });

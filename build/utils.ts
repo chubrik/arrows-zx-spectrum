@@ -8,8 +8,8 @@ import { remangleTopLevel } from './remangle.ts';
 export const SRC_DIR = 'src';
 export const DIST_DIR = 'dist';
 // The builds for the tests, kept out of dist/ and of the production step folders
-export const FUSE_CPU_PATH = `${DIST_DIR}/temp/_z80-test/z80-test.step09.subst.js`;
-export const SMOKE_CPU_PATH = `${DIST_DIR}/temp/_z80-smoke/z80-smoke.txt`;
+export const FUSE_CPU_PATH = `${DIST_DIR}/temp/_cpu-test/cpu-test.step09.subst.js`;
+export const SMOKE_CPU_PATH = `${DIST_DIR}/temp/_cpu-smoke/cpu-smoke.txt`;
 export const SMOKE_ROM_PATH = `${DIST_DIR}/temp/_initializer-smoke/initializer-smoke.txt`;
 
 type StepFn = (label: string, code: string) => string;

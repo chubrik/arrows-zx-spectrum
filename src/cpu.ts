@@ -3,11 +3,11 @@ import { MS_PER_FRAME, TSTATES_PER_FRAME } from './common/constants';
 import { commitMemory } from './common/memory';
 import { commitBorder, commitDisplayRow, commitScreen, displayCommitTStatesByRow, incFrameCount } from './common/screen';
 import { cpuStarted, fetchState, initState, screenEnabled, speedLimited, stepMode } from './common/state';
-import { executeMain } from './z80/execute-main';
-import { INT, setINT } from './z80/flags';
-import { commitCpu } from './z80/init';
-import { interrupt } from './z80/interrupt';
-import { eiTStates, setEiTStates, setTStates, tStates } from './z80/utils';
+import { executeMain } from './cpu/execute-main';
+import { INT, setINT } from './cpu/flags';
+import { commitCpu } from './cpu/init';
+import { interrupt } from './cpu/interrupt';
+import { eiTStates, setEiTStates, setTStates, tStates } from './cpu/utils';
 
 initState();
 

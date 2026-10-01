@@ -1,4 +1,4 @@
-import { tStates } from '../z80/utils';
+import { tStates } from '../cpu/utils';
 import { beeperEnabled, cpuX, cpuY } from './state';
 import { world_getArrow, world_setArrow, world_setSignal } from './world-refs';
 

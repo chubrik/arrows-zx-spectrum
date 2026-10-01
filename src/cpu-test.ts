@@ -1,4 +1,4 @@
-// Test hook: in test build (TEST=true) exposes CPU internals via globalThis.__z80
+// Test hook: in test build (TEST=true) exposes CPU internals via globalThis.__cpu
 // so test/fuse-dist.test.ts can drive the fully-compiled bundle. In prod build
 // (TEST=false) the entire `if (TEST)` block is dead-code-eliminated by terser
 // and unused imports are tree-shaken away.
@@ -10,17 +10,17 @@
 
 import { mem, setRamMinAddrForTest } from './common/memory';
 import { mockPorts } from './common/ports';
-import { executeMain } from './z80/execute-main';
-import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from './z80/flags';
-import { clearCpu } from './z80/init';
+import { executeMain } from './cpu/execute-main';
+import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from './cpu/flags';
+import { clearCpu } from './cpu/init';
 import {
   a, aa, b, ba, c, ca, d, da, e, ea, fa, getR, hla, hlxy, i, ix, iy, pc, setA, setAa, setB, setBa,
   setC, setCa, setD, setDa, setE, setEa, setFa, setHLa, setHLXY, setI, setIX, setIY, setPC, setR,
   setSP, setWZ, sp
-} from './z80/registers';
+} from './cpu/registers';
 
 if (TEST) {
-  (globalThis as Record<string, unknown>).__z80 = {
+  (globalThis as Record<string, unknown>).__cpu = {
     mem, mockPorts,
     getF: () => getF(),
     getR: () => getR(),

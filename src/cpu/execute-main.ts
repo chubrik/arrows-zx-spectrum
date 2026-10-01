@@ -19,6 +19,10 @@ import {
 } from './registers';
 import { getHLXYd, next, next16, nop, setEiTStates, ts, tStates } from './utils';
 
+// The whole folder implements the documented Z80 instruction set: opcode timings, flag effects
+// and the DD/FD/CB/ED prefixes follow it literally. The FUSE test suite is the reference we
+// check against, see test/fuse.test.ts.
+
 export function executeMain() {
   /*!inline*/
   refresh();
