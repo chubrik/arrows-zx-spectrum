@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname } from 'path';
 import { check } from '../src/util/check.ts';
+import { RESOURCES_DIR } from './utils.ts';
 
 const RESOURCES = {
   '_48k.rom': {
@@ -25,7 +26,7 @@ export async function getResource(name: ResourceName, encoding: 'utf-8'): Promis
 /** Load and verify resource. */
 export async function getResource(name: ResourceName, encoding?: 'utf-8'): Promise<Buffer | string> {
   const res = RESOURCES[name];
-  const path = `resources/${name}`;
+  const path = `${RESOURCES_DIR}/${name}`;
   let buffer: Buffer;
 
   if (existsSync(path))

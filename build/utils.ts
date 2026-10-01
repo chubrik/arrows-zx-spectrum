@@ -7,6 +7,7 @@ import { remangleTopLevel } from './remangle.ts';
 
 export const SRC_DIR = 'src';
 export const DIST_DIR = 'dist';
+export const RESOURCES_DIR = 'resources'; // Downloads and game snapshots, not in the repository
 // The builds for the tests, kept out of dist/ and of the production step folders
 export const FUSE_CPU_PATH = `${DIST_DIR}/temp/_cpu-test/cpu-test.step09.subst.js`;
 export const SMOKE_CPU_PATH = `${DIST_DIR}/temp/_cpu-smoke/cpu-smoke.txt`;
@@ -509,7 +510,6 @@ function inlineCallSites(code: string, marker: string): string {
       .join('\n');
 
     // Replace marker+call with returnExpr in the containing line
-    const markerAndCall = result.slice(site.markerStart, site.callEnd);
     const beforeMarker = result.slice(0, site.markerStart);
     const afterCall = result.slice(site.callEnd);
 
@@ -825,7 +825,7 @@ function substCode(code: string): string {
       const logReplaceFrom = isReplaceFromStr ? `'${replaceFrom}'` : replaceFrom.toString();
       const logReplaceTo = `'${replaceTo}'`;
       const savedChars = beforeLength - replacedCode.length - restorePart.length;
-      console.log(`Replace ${logReplaceFrom.padEnd(11)} → ${logReplaceTo.padEnd(5)} saves ${savedChars} chars`);
+      console.log(`- Subst ${logReplaceFrom.padEnd(11)} → ${logReplaceTo.padEnd(5)} saves ${savedChars} chars`);
     }
   }
 
@@ -845,8 +845,10 @@ function substCode(code: string): string {
 
   const selfExtracted = `eval(${codeResult})`;
 
-  if (useLogs)
-    console.log(`Replaces total save ${code.length - selfExtracted.length} chars\n`);
+  if (useLogs) {
+    const saved = code.length - selfExtracted.length;
+    console.log(`- Subst total save ${saved} chars (${(saved * 100 / code.length).toFixed(1)}%)`);
+  }
 
   return selfExtracted;
 }

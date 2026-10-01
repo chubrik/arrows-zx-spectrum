@@ -95,7 +95,7 @@ Requires Node.js 22.18 or newer. The build automatically downloads the original 
 test files, verifying their SHA256. Games are built from `.z80` snapshots placed into the
 `resources/` folder (not included in the repository). The results go to `dist/`: one string for the
 CPU, one for the ROM initializer and one per game holding its three RAM blocks — copy a file and
-paste it straight onto the map. `npm run dev` rebuilds the CPU only.
+paste it straight onto the map. `npm run build:cpu` rebuilds the CPU alone, skipping the type check.
 <br><br>
 
 

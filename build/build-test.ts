@@ -7,16 +7,24 @@ export async function setup() {
   for (const path of [FUSE_CPU_PATH, SMOKE_CPU_PATH, SMOKE_ROM_PATH])
     rmSync(dirname(path), { recursive: true, force: true });
 
+  // The production blocks for test/smoke-dist.test.ts, built apart from dist/
+  console.log('Initializer (smoke-test):');
+  await buildRom(dirname(SMOKE_ROM_PATH), SMOKE_ROM_PATH);
+
+  console.log('');
+  console.log('CPU (smoke-test):');
+  await buildCpu(dirname(SMOKE_CPU_PATH), SMOKE_CPU_PATH);
+
+  // The build with the globalThis.__cpu hook for test/fuse-dist.test.ts
+  console.log('');
+  console.log('CPU (FUSE-test):');
+
   const path = `${SRC_DIR}/cpu-test.ts`;
   const { built, minified, substed } = await cpuPipeline(path, { test: true, stepsDir: dirname(FUSE_CPU_PATH) });
 
   console.log(
-    `${path} (test): ${built.length} bytes → ` +
+    `${path}: ${built.length} bytes → ` +
     `minified: ${minified.length} bytes → ` +
     `substed: ${substed.length} bytes`);
-
-  // Production CPU block and ROM initializer for the dist smoke test, built apart from dist/
-  await buildCpu(dirname(SMOKE_CPU_PATH), SMOKE_CPU_PATH);
-  await buildRom(dirname(SMOKE_ROM_PATH), SMOKE_ROM_PATH);
   console.log('');
 }
