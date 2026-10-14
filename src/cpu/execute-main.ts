@@ -1,6 +1,6 @@
 import { TSTATES_PER_OP } from '../common/constants';
 import { mem, read16, write, write16, write88 } from '../common/memory';
-import { readPort, writePort } from '../common/ports';
+import { readPort, writePort } from '../common/port';
 import { executeBit } from './execute-bit';
 import { executeBitXYd } from './execute-bit-xyd';
 import { executeMisc } from './execute-misc';

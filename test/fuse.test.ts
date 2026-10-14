@@ -1,6 +1,6 @@
 import { getResource } from '../build/resources';
 import { mem } from '../src/common/memory';
-import { mockPorts } from '../src/common/ports';
+import { mockPorts } from '../src/common/port';
 import { runFuseSuite } from './fuse-runner';
 import { getState, loadProgram, setState, setupCpu, step } from './helpers';
 

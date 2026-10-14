@@ -15,7 +15,7 @@ let inited: boolean;
 let keysX: number;
 let keysY: number;
 
-export function initPorts() {
+export function initPort() {
   if (inited) return;
   inited = true;
 

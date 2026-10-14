@@ -9,7 +9,7 @@
 // the declaration.
 
 import { mem, setRamMinAddrForTest } from './common/memory';
-import { mockPorts } from './common/ports';
+import { mockPorts } from './common/port';
 import { executeMain } from './cpu/execute-main';
 import { getF, HLT, hlt, IFF1, iff1, IFF2, iff2, IM1, im1, IM2, im2, setF, setHLT, setIFF1, setIFF2, setIM1, setIM2 } from './cpu/flags';
 import { clearCpu } from './cpu/init';

@@ -2,7 +2,7 @@ import { clearCpu, fetchCpu, resetCpu, restoreCpu } from '../cpu/init';
 import { fetchBeeper } from './beeper';
 import { ATTRIBUTES_AFTER_ADDR, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, restoreMemory } from './memory';
-import { initPorts } from './ports';
+import { initPort } from './port';
 import { clearScreen, commitBorder, initScreen, refreshScreen, setBorder, switchPalette } from './screen';
 
 export let cpuX: number;
@@ -36,7 +36,7 @@ export function fetchState() {
     _state.run = 0;
 
     if (cpuStarted) {
-      initPorts();
+      initPort();
       fetchCpu();
       fetchMemory();
       fetchBeeper();
