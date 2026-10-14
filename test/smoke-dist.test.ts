@@ -71,19 +71,22 @@ const PRELUDE = `
     setSignal() { },
   };
 
+  function __byte(x, y) { return __bytes[(x >> 3) + ((y - __Y0) << 8)]; }
   function __load(code) { new Function(code)(); }
   function __activate() { __active[__active.length - 1](); }
   function __ticks(n) { for (let i = 0; i < n; i++) for (const cb of __always) cb(); }
 `;
 
-function evalOrThrow(vm: QuickJSContext, code: string, name: string) {
+function evalOrThrow(vm: QuickJSContext, code: string, name: string): unknown {
   const result = vm.evalCode(code, name);
   if (result.error) {
     const error = vm.dump(result.error);
     result.error.dispose();
     throw new Error(`${name}: ${error?.message ?? JSON.stringify(error)}\n${error?.stack ?? ''}`);
   }
+  const value = vm.dump(result.value);
   result.value.dispose();
+  return value;
 }
 
 /** The code of the single command block of a clipboard string, the way the game would paste it. */
@@ -106,6 +109,10 @@ describe('Smoke test (dist)', () => {
       // Screen enabled before anything is loaded: refreshScreen must cope with untouched memory
       evalOrThrow(vm, `state.do = 1; state.scr = 1; __ticks(1);`, 'scr.js');
       evalOrThrow(vm, `__load(${JSON.stringify(rom)}); __activate(); __ticks(1);`, 'rom.js');
+      // The port byte is kept on the map like a CPU register, at (cpuX + 8, cpuY - 17)
+      evalOrThrow(vm, `state.do = 1; state.prt = 5; __ticks(1);`, 'prt.js');
+      expect(evalOrThrow(vm, `__byte(1048, 1007)`, 'port.js')).toBe(5);
+
       evalOrThrow(vm, `state.do = 1; state.run = 1; state.max = 1; __ticks(1 + ${FRAMES});`, 'run.js');
 
       const statsHandle = vm.getProp(vm.global, '__stats');

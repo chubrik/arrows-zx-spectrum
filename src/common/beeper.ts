@@ -33,17 +33,18 @@ let noteY: number;
 let noiseY: number;
 let instrument: number;
 
-export function initBeeper() {
+function initBeeper() {
   if (inited) return;
   inited = true;
 
-  noteX0 = cpuX;
+  noteX0 = cpuX + 5;
   noteX1 = noteX0 + 1;
-  noteY = cpuY - 17;
+  noteY = cpuY - 19;
   noiseY = noteY - 1;
 }
 
 export function fetchBeeper() {
+  initBeeper();
   instrument = (world_getArrow(noteX0, noteY)?.extra ?? 0) & 0x1F00; // 0 = piano
 }
 
@@ -52,14 +53,14 @@ let beeperBit = 0; // 0 | 16
 let firstTStates: number;
 let lastTStates: number;
 
-export function setBeeper(bit: number) {
-  if (!beeperEnabled) return;
+export function setBeeper(bit: number) { /*!inline*/ beeperBit = bit; }
 
-  if (beeperBit !== bit) {
-    beeperBit = bit;
+export function writeBeeper(bit: number) {
+  if (beeperEnabled && beeperBit !== bit) {
     if (beeperCount++) lastTStates = tStates;
     else firstTStates = tStates;
   }
+  setBeeper(bit);
 }
 
 let phase = false;

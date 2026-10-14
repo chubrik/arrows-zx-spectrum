@@ -2,8 +2,8 @@ import { clearCpu, fetchCpu, resetCpu, restoreCpu } from '../cpu/init';
 import { fetchBeeper } from './beeper';
 import { ATTRIBUTES_AFTER_ADDR, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, restoreMemory } from './memory';
-import { initPort } from './port';
-import { clearScreen, commitBorder, initScreen, refreshScreen, setBorder, switchPalette } from './screen';
+import { clearPort, fetchPort, restorePort } from './port';
+import { clearScreen, commitBorder, initScreen, refreshScreen, switchPalette } from './screen';
 
 export let cpuX: number;
 export let cpuY: number;
@@ -36,10 +36,10 @@ export function fetchState() {
     _state.run = 0;
 
     if (cpuStarted) {
-      initPort();
       fetchCpu();
-      fetchMemory();
+      fetchPort();
       fetchBeeper();
+      fetchMemory();
       refreshScreen();
     }
   }
@@ -66,17 +66,18 @@ export function fetchState() {
     _state.cpu = 0;
   }
 
-  if (_state.brd != null) {
+  if (_state.prt != null) {
     initScreen();
-    setBorder(_state.brd);
+    restorePort(_state.prt);
     if (screenEnabled) commitBorder();
-    _state.brd = null;
+    _state.prt = null;
   }
 
   const rom = _state.rom;
 
   if (rom) {
     clearCpu();
+    clearPort();
     restoreMemory(0x0000, rom);
     clearMemory(RAM_MIN_ADDR, xFFFF);
     clearScreen();
@@ -137,7 +138,7 @@ export type State = {
   by1: number;
   max: number;
   cpu: number[] | 0;
-  brd: number | null;
+  prt: number | null;
   rom: number[] | 0;
   ram1: number[] | 0;
   ram2: number[] | 0;

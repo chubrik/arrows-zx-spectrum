@@ -1,6 +1,7 @@
 import { commitBeeper } from './common/beeper';
 import { MS_PER_FRAME, TSTATES_PER_FRAME } from './common/constants';
 import { commitMemory } from './common/memory';
+import { commitPort } from './common/port';
 import { commitBorder, commitDisplayRow, commitScreen, displayCommitTStatesByRow, incFrameCount } from './common/screen';
 import { cpuStarted, fetchState, initState, screenEnabled, speedLimited, stepMode } from './common/state';
 import { executeMain } from './cpu/execute-main';
@@ -57,8 +58,9 @@ always(() => {
   }
 
   commitCpu();
-  commitMemory();
+  commitPort();
   commitBeeper();
+  commitMemory();
 });
 
 const FRAME_WINDOW = 50;

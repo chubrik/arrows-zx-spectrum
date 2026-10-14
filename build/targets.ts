@@ -120,7 +120,7 @@ async function buildData(
 
   if (cpu)
     assemble = assemble.replace(
-      'let placeholder;', `state.cpu = [${cpu.values}];\n  state.brd = ${cpu.border};`);
+      'let placeholder;', `state.cpu = [${cpu.values}];\n  state.prt = ${cpu.border};`);
 
   const assembled = step('assemble', assemble);
   const collapsed = step('collapse', await terserCollapse(assembled));
