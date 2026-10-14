@@ -11,12 +11,12 @@ export async function setup() {
   console.log('Initializer (smoke-test):');
   await buildRom(dirname(SMOKE_ROM_PATH), SMOKE_ROM_PATH);
 
-  console.log('');
+  console.log();
   console.log('CPU (smoke-test):');
   await buildCpu(dirname(SMOKE_CPU_PATH), SMOKE_CPU_PATH);
 
   // The build with the globalThis.__cpu hook for test/fuse-dist.test.ts
-  console.log('');
+  console.log();
   console.log('CPU (FUSE-test):');
 
   const path = `${SRC_DIR}/cpu-test.ts`;
@@ -26,5 +26,5 @@ export async function setup() {
     `${path}: ${built.length} bytes → ` +
     `minified: ${minified.length} bytes → ` +
     `substed: ${substed.length} bytes`);
-  console.log('');
+  console.log();
 }

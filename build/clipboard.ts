@@ -5,37 +5,44 @@ import { check } from '../src/util/check.ts';
  * Reads and writes the clipboard format of the game, so that a build can produce a string which
  * pastes a ready machine onto the map. The format was recovered from copied buildings.
  *
- * Container: base64 of [FORMAT_VERSION, 0, compressed] followed by the payload, which is a zlib
- * stream when the third byte is 1 and raw bytes when it is 0 (the game leaves small ones raw).
- * The compression level matters: the game reads its own 78 9C header and rejects 78 DA.
+ * Container: base64 of u16 format version, u8 compressed (1 = zlib, 0 = raw) and the payload.
+ * The compression level matters: the game rejects the 78 DA zlib header.
  *
  * Payload: u16 chunk count, then for every chunk u16 x, u16 y (in chunks of CHUNK_SIZE cells, the
  * sign in the high bit) and u8 type count - 1, then for every type u8 type, u8 arrow count - 1 and,
- * for every arrow, u8 position (x in the low nibble, y in the high one) plus u8 flags. A command
- * block adds u16 code length in UTF-8 bytes followed by the code itself; the length is always
- * there, while CODE_FLAG tells the game whether to read the code at all.
+ * for every arrow, u8 position (x | y << 4), u8 flags (rotation | flipped << 2 | hasData << 3 |
+ * state << 4) and, with hasData, u16 data. For a command block the data is the code length in UTF-8
+ * bytes, and the code follows.
  *
- * Arrows are grouped by type and ordered by x, then y, exactly as in the first version of the game.
+ * Arrows are grouped by type and ordered by x, then y.
  */
 
 const CHUNK_SIZE = 16;
 const COMMAND_BLOCK = 33; // Arrow type of a command block
-const CODE_FLAG = 0x10;   // In the flags of a command block: the game reads its code only when set
-const FORMAT_VERSION = 4;
+const CODE_STATE = 1;     // State of a command block with code
+const FORMAT_VERSION = 5;
+
+// Flags of an arrow
+const ROTATION = 0x03;
+const FLIPPED = 0x04;
+const HAS_DATA = 0x08;
+const STATE_SHIFT = 4;
 
 // The templates below are clipboard strings copied from the game; replace one by copying a new
 // building over it. The codes are put into the command blocks it contains.
 
 /** A whole machine: three command blocks for the memory packs. */
 const PROGRAM_TEMPLATE =
-  'BAABeJwVw7cSQVEUhtHP8dujlbVyK7ulTCnTyrX8AHhv15pZAf5cxpUDkPF3/GmvrYmLuKnbuouLKquqdZmx40pQMeVUsx' +
-  '5z9tx4I8WVV936LDhw50NICRXUsAFLjjz4klRRTRuy4sSTlEpq2Yg1Z154NmZDmIr9ADrPETA=';
+  'BQABeJwVw7cSAWEYhtHnfz9mtLJ2xVa2pUwp08q1fAG4b+vMHMefPJUj4AU7wYzf1sRF3dRt3cXFlFXVuszYccUUV0416z' +
+  'Fnz403ISWUV936LDhw50NYSRXUsAFLjjz4klJRTRuy4sSTtEpq2Yg1Z174NmZDhIr9ADZbEQg=';
 
 /** A single command block, for the CPU and for the ROM initializer. */
-export const BLOCK_TEMPLATE = 'BAAAAQAAAAAAACEAAAEAAA==';
+export const BLOCK_TEMPLATE = 'BQAAAQAAAAAAACEAAAgAAA==';
 
-/** In flags, bits 0-1 are the rotation and bit 2 the flip; bit 4 is the CODE_FLAG of a command block. */
-type ClipboardArrow = { x: number, y: number, flags: number, code?: string };
+/** A command block keeps its code instead of data. */
+type ClipboardArrow = {
+  x: number, y: number, rotation: number, flipped: boolean, state: number, data?: number, code?: string,
+};
 
 type ClipboardType = { type: number, arrows: ClipboardArrow[] };
 
@@ -45,7 +52,8 @@ type ClipboardMap = { chunks: ClipboardChunk[] };
 
 export function decodeClipboard(text: string): ClipboardMap {
   const raw = Buffer.from(text.trim(), 'base64');
-  check(raw[0] === FORMAT_VERSION, `Clipboard format version is ${raw[0]}, expected ${FORMAT_VERSION}`);
+  const version = raw.readUInt16LE(0);
+  check(version === FORMAT_VERSION, `Clipboard format version is ${version}, expected ${FORMAT_VERSION}`);
 
   const payload = raw[2] ? inflateSync(raw.subarray(3)) : raw.subarray(3);
 
@@ -68,12 +76,21 @@ export function decodeClipboard(text: string): ClipboardMap {
 
       for (let a = 0; a < arrowCount; a++) {
         const position = u8();
-        const arrow: ClipboardArrow = { x: position & 0x0F, y: position >> 4, flags: u8() };
+        const flags = u8();
+        const arrow: ClipboardArrow = {
+          x: position & 0x0F, y: position >> 4,
+          rotation: flags & ROTATION, flipped: (flags & FLIPPED) !== 0, state: flags >> STATE_SHIFT,
+        };
 
-        if (type === COMMAND_BLOCK) {
-          const length = u16();
-          arrow.code = payload.subarray(pos, pos + length).toString('utf8');
-          pos += length;
+        if (flags & HAS_DATA) {
+          const data = u16();
+
+          if (type === COMMAND_BLOCK) {
+            arrow.code = payload.subarray(pos, pos + data).toString('utf8');
+            pos += data;
+          } else {
+            arrow.data = data;
+          }
         }
 
         arrows.push(arrow);
@@ -92,38 +109,33 @@ export function decodeClipboard(text: string): ClipboardMap {
 function encodeClipboard(map: ClipboardMap): string {
   const parts: Buffer[] = [];
   const coord = (value: number) => value < 0 ? (-value & 0x7FFF) | 0x8000 : value & 0x7FFF;
+  const u16 = (value: number) => { const buffer = Buffer.alloc(2); buffer.writeUInt16LE(value, 0); return buffer; };
 
-  const chunkCount = Buffer.alloc(2);
-  chunkCount.writeUInt16LE(map.chunks.length, 0);
-  parts.push(chunkCount);
+  parts.push(u16(map.chunks.length));
 
   for (const chunk of map.chunks) {
-    const head = Buffer.alloc(5);
-    head.writeUInt16LE(coord(chunk.x), 0);
-    head.writeUInt16LE(coord(chunk.y), 2);
-    head[4] = chunk.types.length - 1;
-    parts.push(head);
+    parts.push(u16(coord(chunk.x)), u16(coord(chunk.y)), Buffer.from([chunk.types.length - 1]));
 
     for (const { type, arrows } of chunk.types) {
       parts.push(Buffer.from([type, arrows.length - 1]));
 
       for (const arrow of arrows) {
-        if (type !== COMMAND_BLOCK) {
-          parts.push(Buffer.from([arrow.y << 4 | arrow.x, arrow.flags]));
-          continue;
-        }
+        // The game writes the code length even for an empty block
+        const code = type === COMMAND_BLOCK ? Buffer.from(arrow.code ?? '', 'utf8') : undefined;
+        const data = code ? code.length : arrow.data;
+        const state = code ? (code.length ? arrow.state | CODE_STATE : arrow.state & ~CODE_STATE) : arrow.state;
+        const flags = arrow.rotation | (arrow.flipped ? FLIPPED : 0) | (data !== undefined ? HAS_DATA : 0) |
+          state << STATE_SHIFT;
 
-        const code = Buffer.from(arrow.code ?? '', 'utf8');
-        const flags = code.length ? arrow.flags | CODE_FLAG : arrow.flags & ~CODE_FLAG;
-        const length = Buffer.alloc(2);
-        length.writeUInt16LE(code.length, 0);
-        parts.push(Buffer.from([arrow.y << 4 | arrow.x, flags]), length, code);
+        parts.push(Buffer.from([arrow.y << 4 | arrow.x, flags]));
+        if (data !== undefined) parts.push(u16(data));
+        if (code) parts.push(code);
       }
     }
   }
 
   const compressed = deflateSync(Buffer.concat(parts));
-  return Buffer.concat([Buffer.from([FORMAT_VERSION, 0, 1]), compressed]).toString('base64');
+  return Buffer.concat([u16(FORMAT_VERSION), Buffer.from([1]), compressed]).toString('base64');
 }
 
 /** Every command block of the map, in the order they are read across chunks: by y, then x. */

@@ -5,6 +5,7 @@ import { RESOURCES_DIR } from './utils.ts';
 
 const cpuOnly = process.argv.includes('--cpu');
 let noPrograms = false;
+console.log();
 
 if (!cpuOnly) {
   const z80Files = existsSync(RESOURCES_DIR)
@@ -21,20 +22,20 @@ if (!cpuOnly) {
     for (const file of z80Files)
       await buildSnapshot(`${RESOURCES_DIR}/${file}`, nameWidth);
 
-    console.log('');
+    console.log();
   }
 
   console.log('Initializer:');
   await buildRom();
-  console.log('');
+  console.log();
 }
 
 console.log('CPU:');
 await buildCpu();
-console.log('');
+console.log();
 
 if (noPrograms) {
   console.warn('No programs:');
   console.warn(`- Put ZX Spectrum 48K *.z80 snapshots into ${RESOURCES_DIR}/ to get a paste-ready string for each`);
-  console.log('');
+  console.log();
 }
