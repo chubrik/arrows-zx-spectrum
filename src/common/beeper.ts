@@ -5,11 +5,6 @@ import { world_getArrow, world_setArrow, world_setSignal } from './world-refs';
 const ARROW_TYPE = 29;
 const ARROW_SIGNAL = 6;
 
-// A single click repeated every frame gives 25 Hz, which is close to G of octave 0
-// (the sub-contra octave) at 24.5 Hz
-const OCTAVE_MIN = 0;
-const NOTE_MIN = 7;
-
 // The highest octave the music arrows can play. Anything above it is treated as noise.
 const OCTAVE_MAX = 7;
 
@@ -121,32 +116,28 @@ export function commitBeeper() {
 }
 
 function getNote(count: number, span: number): number {
+  if (count < 2) return -1; // A single click is treated as noise
+
   const steps = count - 1; // Number of half periods: the gaps between the clicks
-  let octave = OCTAVE_MIN;
+  let octave = 0;
   let note = 0;
 
-  if (steps) {
-    // The shortest span in T-states that still belongs to octave 0 with this number of half periods
-    const min = steps * OCTAVE_ZERO_BOUND;
+  // The shortest span in T-states that still belongs to octave 0 with this number of half periods
+  const min = steps * OCTAVE_ZERO_BOUND;
 
-    // Find the octave
-    while (span < min) {
-      span <<= 1;
-      octave++;
-    }
-
-    // Above the available range the sound is played by the noise arrows
-    if (octave > OCTAVE_MAX)
-      return -1;
-
-    // Find the note
-    while (span < steps * octaveZeroNoteBounds[note])
-      note++;
+  // Find the octave
+  while (span < min) {
+    span <<= 1;
+    octave++;
   }
-  else {
-    // A single click
-    note = NOTE_MIN;
-  }
+
+  // Above the available range the sound is played by the noise arrows
+  if (octave > OCTAVE_MAX)
+    return -1;
+
+  // Find the note
+  while (span < steps * octaveZeroNoteBounds[note])
+    note++;
 
   return (octave << 4) | note;
 }
