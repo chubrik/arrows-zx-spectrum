@@ -33,8 +33,8 @@ const STATE_SHIFT = 4;
 
 /** A whole machine: three command blocks for the memory packs. */
 const PROGRAM_TEMPLATE =
-  'BQABeJwVw7cSAWEYhtHnfz9mtLJ2xVa2pUwp08q1fAG4b+vMHMefPJUj4AU7wYzf1sRF3dRt3cXFlFXVuszYccUUV0416z' +
-  'Fnz403ISWUV936LDhw50NYSRXUsAFLjjz4klJRTRuy4sSTtEpq2Yg1Z174NmZDhIr9ADZbEQg=';
+  'BQABeJwVw7cSAQEUhtFv/8uMVtau2MqhkyllWrmWHwDvvbtn5jgEHFflCHT9M3+mE5WrivWYs+dGTFlVrc+CA3dMceVUsw' +
+  'FLjjz4ElJCedVtyIoTT36ElVRBDRux5syLPykV1bQxGy68Sauklk3YcuVD26bs8AAMUhD9';
 
 /** A single command block, for the CPU and for the ROM initializer. */
 export const BLOCK_TEMPLATE = 'BQAAAQAAAAAAACEAAAgAAA==';

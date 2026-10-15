@@ -16,7 +16,7 @@ export function initState() {
   const pos = getPosition()!;
   cpuX = (pos.x & ~15) + 16;
   cpuY = pos.y & ~15;
-  memoryX = cpuX - 272;
+  memoryX = cpuX - 224;
   memoryY = cpuY + 32;
   _state = state as State;
 }
@@ -121,7 +121,7 @@ export function fetchState() {
   }
 
   if (_state.pal) {
-    switchPalette();
+    switchPalette(_state.pal);
     _state.pal = 0;
   }
 

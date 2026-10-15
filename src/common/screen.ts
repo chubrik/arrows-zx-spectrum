@@ -18,8 +18,8 @@ const pixelIndexBaseByRow: number[] = [];
 export const displayCommitTStatesByRow: number[] = [];
 
 let paletteX: number;
-let paletteYFirst: number;
-let paletteY: number;
+let paletteYs: number[] = [];
+let paletteIndex: number;
 const colorMapDefault: number[][] = []; // attr => [inkX, inkY, paperX, paperY]
 const colorMapFlash: number[][] = []; // ink and paper are swapped when flash bit is set
 let colorMapCurrent = colorMapDefault;
@@ -48,7 +48,7 @@ export function initScreen() {
   }
 
   initBorder();
-  initPalette();
+  initPalettes();
 
   let rowPixelIndexBase = DISPLAY_MIN_ADDR >> 5;
   let rowCommitTStates = TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE;
@@ -89,15 +89,16 @@ function initBorder() {
   }
 }
 
-function initPalette() {
+function initPalettes() {
   paletteX = memoryX - 32;
-  let y = paletteY = paletteYFirst = memoryY;
+  let index = 0;
+  let y = memoryY;
 
   while (world_getArrow(paletteX + 15, y)) { // Palette exists
-    if (world_getArrow(paletteX + 18, y + 1)) { // Selector exists
-      paletteY = y;
-      break;
-    }
+    if (world_getArrow(paletteX + 18, y + 1)) // Selector exists
+      paletteIndex = index;
+
+    paletteYs[index++] = y;
     y += 8;
   }
 
@@ -105,6 +106,7 @@ function initPalette() {
 }
 
 function initColorMaps() {
+  const paletteY = paletteYs[paletteIndex];
   const palette: number[][] = []; // color => [x, y]
 
   for (let i = 0; i < 16; i++) {
@@ -113,25 +115,17 @@ function initColorMaps() {
     palette[i] = [x, y];
   }
 
-  initColorMap(false, colorMapDefault, palette);
-  initColorMap(true, colorMapFlash, palette);
-}
-
-function initColorMap(isFlash: boolean, colorMap: number[][], palette: number[][]) {
   for (let attr = 0; attr < 256; attr++) {
-    const rawInk = attr & 0x07;
-    const rawPaper = (attr & 0x38) >> 3;
-    const rawFlash = (attr & BIT7) !== 0;
-
-    const flash = rawFlash && isFlash;
-    const ink = flash ? rawPaper : rawInk;
-    const paper = flash ? rawInk : rawPaper;
+    const flash = attr & BIT7;
     const bright = (attr & BIT6) >> 3;
+    const paper = (attr & 0x38) >> 3;
+    const ink = attr & 0x07;
 
     const inkXY = palette[bright | ink];
     const paperXY = palette[bright | paper];
 
-    colorMap[attr] = [inkXY[0], inkXY[1], paperXY[0], paperXY[1]];
+    const colorXY = colorMapDefault[attr] = [inkXY[0], inkXY[1], paperXY[0], paperXY[1]];
+    colorMapFlash[attr] = flash ? [paperXY[0], paperXY[1], inkXY[0], inkXY[1]] : colorXY;
   }
 }
 
@@ -182,15 +176,17 @@ function clearBorder() {
   setBorder(color);
 }
 
-export function switchPalette() {
+export function switchPalette(inc: number) {
   initScreen();
-  const nextY = world_getArrow(paletteX + 15, paletteY + 8) ? paletteY + 8 : paletteYFirst;
-  if (nextY === paletteY) return;
   const selectorX = paletteX + 18;
-  const selectorY = paletteY + 1;
-  paletteY = nextY;
-  world_copyRegion(selectorX, selectorY, selectorX + 1, selectorY + 1, selectorX, paletteY + 1);
-  world_copyRegion(selectorX + 2, selectorY, selectorX + 3, selectorY + 1, selectorX, selectorY);
+  const selectorY = paletteYs[paletteIndex] + 1;
+
+  const count = paletteYs.length;
+  paletteIndex = (paletteIndex + inc + count) % count;
+  const newPaletteY = paletteYs[paletteIndex];
+  world_copyRegion(selectorX, selectorY, selectorX + 1, selectorY + 1, selectorX, newPaletteY + 1);
+  world_copyRegion(selectorX - 2, selectorY, selectorX - 1, selectorY + 1, selectorX, selectorY);
+
   initColorMaps();
   refreshScreen();
 }

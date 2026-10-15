@@ -12,17 +12,21 @@ const FRAMES = 50;
 
 // The mock keeps the bytes committed by the CPU (see values.ts: commitValue copies a row of the
 // values cache into the byte position) and reads them back for fetchValue. Coordinates follow
-// getPosition() = (1024, 1024): cpuX = 1040, cpuY = 1024 → cacheX0 = 736, cacheY = 1312.
+// getPosition() = (1024, 1024): cpuX = 1040, cpuY = 1024 → cacheX0 = 784, cacheY = 1312.
 const PRELUDE = `
-  var __active = [], __always = [];
+  var __active = [], __always = [], __tick = 0;
   var __stats = { getArrow: 0, memoryWrites: 0, screenWrites: 0 };
-  var __CX0 = 736, __CX1 = 744, __CY = 1312;
+  var __CX0 = 784, __CX1 = 792, __CY = 1312;
+  // Two palettes stand on the map (paletteX = memoryX - 32) eight rows apart,
+  // with the selector on the first one
+  var __PX = 784, __PY = 1056, __PY_END = __PY + 16, __selectorY = __PY + 1;
+  var __PALETTE = { type: 16, rotation: 0, flip: false, extra: 0 };
   var __Y0 = 1000, __bytes = new Uint8Array(256 * 600); // x in [0, 2048) by 8 cells, y in [1000, 1600)
 
   function onActive(cb) { __active.push(cb); }
   function always(cb) { __always.push(cb); }
   function getPosition() { return { x: 1024, y: 1024 }; }
-  function getTick() { return 0; }
+  function getTick() { return __tick; }
   function log() { }
   function showText() { }
   // In the game state is a proxy over JSON, so a value that does not survive the round trip
@@ -51,6 +55,7 @@ const PRELUDE = `
     clearSignals() { },
     copy() { },
     copyRegion(x0, y0, x1, y1, dx, dy) {
+      if (x0 === __PX + 18) __selectorY = dy; // The selector moved to another palette
       if ((x0 === __CX0 || x0 === __CX1) && x1 === x0 + 7 && y0 === y1 && y0 >= __CY && y0 < __CY + 256) {
         if (dx < 0 || dx >= 2048 || dy < __Y0 || dy >= __Y0 + 600) throw new Error('mock: out of range ' + dx + ',' + dy);
         __bytes[(dx >> 3) + ((dy - __Y0) << 8)] = y0 - __CY;
@@ -60,6 +65,10 @@ const PRELUDE = `
     copyRegionWithSignals() { __stats.screenWrites++; },
     getArrow(x, y) {
       __stats.getArrow++;
+      if (y >= __PY && y <= __PY_END) { // The palette rows, outside the byte area
+        if (x === __PX + 15) return y < __PY_END ? __PALETTE : null; // Palette exists
+        if (x === __PX + 18) return y === __PY + 1 ? __PALETTE : null; // Selector exists
+      }
       const b = __bytes[(x >> 3) + ((y - __Y0) << 8)];
       return { type: (b >> (7 - (x & 7))) & 1 ? 16 : 0, rotation: 0, flip: false, extra: 0 };
     },
@@ -73,8 +82,13 @@ const PRELUDE = `
 
   function __byte(x, y) { return __bytes[(x >> 3) + ((y - __Y0) << 8)]; }
   function __load(code) { new Function(code)(); }
-  function __activate() { __active[__active.length - 1](); }
-  function __ticks(n) { for (let i = 0; i < n; i++) for (const cb of __always) cb(); }
+  // The data block deduplicates its activations by the tick, so every callback needs an event
+  function __event(type) { return { type: type, tick: __tick, x: 1024, y: 1024 }; }
+  // An activation belongs to a tick of its own, the way a player keypress does
+  function __activate() { __tick++; __active[__active.length - 1](__event('commandBlockActive')); }
+  function __ticks(n) {
+    for (let i = 0; i < n; i++) { __tick++; for (const cb of __always) cb(__event('always')); }
+  }
 `;
 
 function evalOrThrow(vm: QuickJSContext, code: string, name: string): unknown {
@@ -112,6 +126,11 @@ describe('Smoke test (dist)', () => {
       // The port byte is kept on the map like a CPU register, at (cpuX + 8, cpuY - 17)
       evalOrThrow(vm, `state.do = 1; state.prt = 5; __ticks(1);`, 'prt.js');
       expect(evalOrThrow(vm, `__byte(1048, 1007)`, 'port.js')).toBe(5);
+
+      // Two palettes on the map: a step of -1 wraps the index from the first to the second,
+      // which moves the selector eight rows down plus the one row of its own offset
+      evalOrThrow(vm, `state.do = 1; state.pal = -1; __ticks(1);`, 'pal.js');
+      expect(evalOrThrow(vm, `__selectorY - __PY`, 'selector.js')).toBe(9);
 
       evalOrThrow(vm, `state.do = 1; state.run = 1; state.max = 1; __ticks(1 + ${FRAMES});`, 'run.js');
 
