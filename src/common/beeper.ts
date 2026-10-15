@@ -27,60 +27,105 @@ const octaveZeroNoteBounds =
 const OCTAVE_ZERO_BOUND = 55080;
 
 let inited: boolean;
-let noteX0: number;
-let noteX1: number;
-let noteY: number;
-let noiseY: number;
-let instrument: number;
+let noteX: number;
+let noiseX: number;
+let earNoteY: number;
+let earNoteYLast: number;
+let earInstrument: number;
+let micNoteY: number;
+let micInstrument: number;
 
 function initBeeper() {
   if (inited) return;
   inited = true;
 
-  noteX0 = cpuX + 5;
-  noteX1 = noteX0 + 1;
-  noteY = cpuY - 19;
-  noiseY = noteY - 1;
+  noteX = cpuX + 3;
+  noiseX = noteX + 2;
+  earNoteY = cpuY - 19;
+  earNoteYLast = earNoteY - 2;
+  micNoteY = cpuY - 17;
 }
 
 export function fetchBeeper() {
   initBeeper();
-  instrument = (world_getArrow(noteX0, noteY)?.extra ?? 0) & 0x1F00; // 0 = piano
+  earInstrument = (world_getArrow(noteX, earNoteY)?.extra ?? 0) & 0x1F00; // 0 = piano
+  micInstrument = (world_getArrow(noteX, micNoteY)?.extra ?? 0) & 0x1F00; // 0 = piano
 }
 
-let beeperCount = 0;
-let beeperBit = 0; // 0 | 16
-let firstTStates: number;
-let lastTStates: number;
+let earValue = 0; // 0 | 16
+let earCount = 0;
+let earFirstTStates: number;
+let earLastTStates: number;
+let micValue = 0; // 0 | 8
+let micCount = 0;
+let micFirstTStates: number;
+let micLastTStates: number;
 
-export function setBeeper(bit: number) { /*!inline*/ beeperBit = bit; }
+export function setBeeper(ear: number, mic: number) { /*!inline*/ earValue = ear; micValue = mic; }
 
-export function writeBeeper(bit: number) {
-  if (beeperEnabled && beeperBit !== bit) {
-    if (beeperCount++) lastTStates = tStates;
-    else firstTStates = tStates;
+export function writeBeeper(ear: number, mic: number) {
+  if (beeperEnabled) {
+    if (earValue !== ear) {
+      if (earCount++) earLastTStates = tStates;
+      else earFirstTStates = tStates;
+    }
+    if (micValue !== mic) {
+      if (micCount++) micLastTStates = tStates;
+      else micFirstTStates = tStates;
+    }
   }
-  setBeeper(bit);
+  setBeeper(ear, mic);
 }
 
-let phase = false;
+let phase = 0;
 
 export function commitBeeper() {
-  if (!beeperCount) return;
-  const steps = beeperCount - 1; // Number of half periods: the gaps between the clicks
-  beeperCount = 0;
+  phase ^= 1; // Every frame restarts the sound instead of holding it
 
-  // Two identical arrows alternate so that every frame restarts the sound instead of holding it
-  const x = phase ? noteX1 : noteX0;
-  phase = !phase;
+  if (earCount) {
+    const earSpan = earLastTStates - earFirstTStates;
+    const earNote = getNote(earCount, earSpan);
+    earCount = 0;
 
+    if (earNote < 0) {
+      const x = noiseX + phase;
+      for (let y = earNoteY; y >= earNoteYLast; y--)
+        world_setSignal(x, y, ARROW_SIGNAL);
+    }
+    else {
+      const x = noteX + phase;
+      const extra = earInstrument | earNote;
+      for (let y = earNoteY; y >= earNoteYLast; y--) {
+        world_setArrow(x, y, ARROW_TYPE, 0, false, extra);
+        world_setSignal(x, y, ARROW_SIGNAL);
+      }
+    }
+  }
+
+  if (micCount) {
+    const micSpan = micLastTStates - micFirstTStates;
+    const micNote = getNote(micCount, micSpan);
+    micCount = 0;
+
+    if (micNote < 0) {
+      const x = noiseX + phase;
+      world_setSignal(x, micNoteY, ARROW_SIGNAL);
+    }
+    else {
+      const x = noteX + phase;
+      const extra = micInstrument | micNote;
+      world_setArrow(x, micNoteY, ARROW_TYPE, 0, false, extra);
+      world_setSignal(x, micNoteY, ARROW_SIGNAL);
+    }
+  }
+}
+
+function getNote(count: number, span: number): number {
+  const steps = count - 1; // Number of half periods: the gaps between the clicks
   let octave = OCTAVE_MIN;
   let note = 0;
 
   if (steps) {
-    // The measured span in T-states between the first and the last click within one frame
-    let span = lastTStates - firstTStates;
-
     // The shortest span in T-states that still belongs to octave 0 with this number of half periods
     const min = steps * OCTAVE_ZERO_BOUND;
 
@@ -91,10 +136,8 @@ export function commitBeeper() {
     }
 
     // Above the available range the sound is played by the noise arrows
-    if (octave > OCTAVE_MAX) {
-      world_setSignal(x, noiseY, ARROW_SIGNAL);
-      return;
-    }
+    if (octave > OCTAVE_MAX)
+      return -1;
 
     // Find the note
     while (span < steps * octaveZeroNoteBounds[note])
@@ -105,6 +148,5 @@ export function commitBeeper() {
     note = NOTE_MIN;
   }
 
-  world_setArrow(x, noteY, ARROW_TYPE, 0, false, instrument | (octave << 4) | note);
-  world_setSignal(x, noteY, ARROW_SIGNAL);
+  return (octave << 4) | note;
 }

@@ -12,8 +12,9 @@ export const mockPorts: {
   writes: Array<{ addr: number; value: number }>;
 } = TEST ? { readQueue: [], readIndex: 0, reads: [], writes: [] } : (undefined as never);
 
-const PORT_MASK = 0x1F; // Bits: 4 - beeper, 3 - MIC, 2-0 - border
-const BEEPER_MASK = BIT4;
+const PORT_MASK = 0x1F; // Bits: 4 - EAR, 3 - MIC, 2-0 - border
+const EAR_MASK = BIT4;
+const MIC_MASK = BIT3;
 const BORDER_MASK = 0x07;
 
 let inited: boolean;
@@ -69,13 +70,13 @@ export function writePort(lo: number, hi: number, value: number) {
 
   if (lo & BIT0) return;
   portValue = value & PORT_MASK;
-  writeBeeper(portValue & BEEPER_MASK);
+  writeBeeper(portValue & EAR_MASK, portValue & MIC_MASK);
   setBorder(portValue & BORDER_MASK);
 }
 
 function setPort(value: number) {
   portValue = value & PORT_MASK;
-  setBeeper(portValue & BEEPER_MASK);
+  setBeeper(portValue & EAR_MASK, portValue & MIC_MASK);
   setBorder(portValue & BORDER_MASK);
 }
 
