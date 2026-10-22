@@ -71,8 +71,43 @@ function parseZ80(buf: Buffer): Z80Snapshot {
   const imBits = buf[29] & 0x03;
   const IM: 0 | 1 | 2 = imBits <= 2 ? imBits as 0 | 1 | 2 : 0;
 
-  // V2+ detection
-  check(pcV1 === 0, '.z80: only v2/v3 format supported (PC at offset 6 must be 0)');
+  // V1 has a non-zero PC in the header, V2+ keeps it in the additional header
+  const { PC, ram } = pcV1 !== 0
+    ? { PC: pcV1, ram: parseMemoryV1(buf.subarray(30), (byte12 & 0x20) !== 0) }
+    : parseMemoryV2(buf);
+
+  check(ram.has(0x4000), '.z80: missing page 8 (0x4000–0x7FFF)');
+  check(ram.has(0x8000), '.z80: missing page 4 (0x8000–0xBFFF)');
+  check(ram.has(0xC000), '.z80: missing page 5 (0xC000–0xFFFF)');
+
+  return {
+    A, F, B, C, D, E, H, L,
+    Aa, Fa, Ba, Ca, Da, Ea, Ha, La,
+    I, R, IX, IY, SP, PC,
+    IM, IFF1, IFF2, border,
+    ram4000: ram.get(0x4000)!,
+    ram8000: ram.get(0x8000)!,
+    ramC000: ram.get(0xC000)!,
+  };
+}
+
+/** V1: the 48K memory from 0x4000 as one block, compressed when flagged, ending with 00 ED ED 00. */
+function parseMemoryV1(data: Buffer, compressed: boolean): Map<number, Buffer> {
+  const END_MARKER = Buffer.from([0x00, 0xED, 0xED, 0x00]);
+  const body = compressed && data.subarray(-END_MARKER.length).equals(END_MARKER)
+    ? data.subarray(0, -END_MARKER.length)
+    : data;
+  const memory = compressed ? decompressBlock(body) : body;
+
+  check(memory.length === 3 * PAGE_SIZE, `.z80: memory is ${memory.length} bytes, expected ${3 * PAGE_SIZE}`);
+
+  const ram = new Map<number, Buffer>();
+  for (const addr of [0x4000, 0x8000, 0xC000])
+    ram.set(addr, Buffer.from(memory.subarray(addr - 0x4000, addr - 0x4000 + PAGE_SIZE)));
+  return ram;
+}
+
+function parseMemoryV2(buf: Buffer): { PC: number, ram: Map<number, Buffer> } {
   const addHeaderLen = buf.readUInt16LE(30);
   check(addHeaderLen === 23 || addHeaderLen === 54 || addHeaderLen === 55,
     `.z80: unexpected additional header length ${addHeaderLen}`);
@@ -117,19 +152,7 @@ function parseZ80(buf: Buffer): Z80Snapshot {
     ram.set(baseAddr, decompressed);
   }
 
-  check(ram.has(0x4000), '.z80: missing page 8 (0x4000–0x7FFF)');
-  check(ram.has(0x8000), '.z80: missing page 4 (0x8000–0xBFFF)');
-  check(ram.has(0xC000), '.z80: missing page 5 (0xC000–0xFFFF)');
-
-  return {
-    A, F, B, C, D, E, H, L,
-    Aa, Fa, Ba, Ca, Da, Ea, Ha, La,
-    I, R, IX, IY, SP, PC,
-    IM, IFF1, IFF2, border,
-    ram4000: ram.get(0x4000)!,
-    ram8000: ram.get(0x8000)!,
-    ramC000: ram.get(0xC000)!,
-  };
+  return { PC, ram };
 }
 
 function decompressBlock(data: Buffer): Buffer {
