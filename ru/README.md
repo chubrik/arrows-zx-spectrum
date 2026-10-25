@@ -110,5 +110,5 @@ FUSE, проверяя их SHA256. Игры собираются из снап�
   для внутриигровых компьютеров
 - [FUSE](https://fuse-emulator.sourceforge.net/) – эмулятор ZX Spectrum, тестами которого
   проверяется процессор
-- [Дискорд-сервер](https://discord.gg/8FMuQuMFCN) и [Телеграм-канал](https://t.me/logic_arrows) –
+- [Дискорд-сервер](https://discord.gg/yR8aaJWWH5) и [Телеграм-канал](https://t.me/logic_arrows) –
   здесь обсуждают игру, делятся идеями и схемами

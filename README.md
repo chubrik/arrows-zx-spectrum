@@ -109,5 +109,5 @@ paste it straight onto the map. `npm run build:cpu` rebuilds the CPU alone, skip
 - [Online compiler](https://github.com/chubrik/arrows-compiler) – for the in-game computers
 - [FUSE](https://fuse-emulator.sourceforge.net/) – ZX Spectrum emulator whose test suite verifies
   the CPU
-- [Discord server](https://discord.gg/8FMuQuMFCN) and [Telegram channel](https://t.me/logic_arrows)
+- [Discord server](https://discord.gg/zw2sRUGu5y) and [Telegram channel](https://t.me/logic_arrows)
   – where people discuss the game and share ideas and circuits
