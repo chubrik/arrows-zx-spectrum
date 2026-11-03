@@ -1,8 +1,8 @@
 import { commitBeeper } from './common/beeper';
-import { DISPLAY_LINE_COUNT, MS_PER_FRAME, TSTATES_PER_FRAME } from './common/constants';
+import { MS_PER_FRAME, SCREEN_LINE_COUNT, TSTATES_PER_FRAME } from './common/constants';
 import { commitMemory } from './common/memory';
 import { commitPort } from './common/port';
-import { commitBorder, commitDisplayLine, commitScreen, displayCommitTStatesByLine, incFrameCount } from './common/screen';
+import { commitScreen, commitScreenLine, incFrameCount, screenCommitTStatesByLine } from './common/screen';
 import { cpuStarted, fetchState, initState, screenEnabled, speedLimited, stepMode } from './common/state';
 import { executeMain } from './cpu/execute-main';
 import { INT, setINT } from './cpu/flags';
@@ -32,16 +32,13 @@ always(() => {
     }
   }
   else {
-    if (screenEnabled) {
-      for (let line = 0; line < DISPLAY_LINE_COUNT; line++) {
-        const targetTStates = displayCommitTStatesByLine[line];
+    if (screenEnabled)
+      // Unlike the rest of the memory, the synchronization of the screen occurs as the beam moves
+      for (let line = 0; line < SCREEN_LINE_COUNT; line++) {
+        const targetTStates = screenCommitTStatesByLine[line];
         do executeMain(); while (tStates < targetTStates);
-        // Unlike the rest of the memory, the synchronization of the display area occurs as the beam moves
-        commitDisplayLine(line);
+        commitScreenLine(line);
       }
-
-      commitBorder();
-    }
 
     do executeMain(); while (tStates < TSTATES_PER_FRAME);
     setINT(INT);

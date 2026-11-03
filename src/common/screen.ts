@@ -1,21 +1,35 @@
 import {
-  ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, DISPLAY_LINE_COUNT,
-  DISPLAY_MIN_ADDR, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE, TSTATES_PER_LINE
+  ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, BORDER_LINE_COUNT,
+  DISPLAY_LINE_COUNT, DISPLAY_MIN_ADDR, SCREEN_LINE_COUNT, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE,
+  TSTATES_PER_LINE
 } from './constants.ts';
 import { commitMemoryValue, initMemory, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, memoryX, memoryY, screenEnabled } from './state.ts';
 import { world_copyRegion, world_copyRegionWithSignals, world_getArrow } from './world-refs.ts';
 
-// Screen = display area + border
+// Screen = display area + border. The screen is committed line by line, following the beam:
+// BORDER_LINE_COUNT lines of the top border, the display lines with the side borders and
+// BORDER_LINE_COUNT lines of the bottom border, SCREEN_LINE_COUNT in all. The rest of the border
+// is cropped. A display line is numbered from the display, a screen line from the top border.
 
 let displayX: number;
 let displayY: number;
 const addrXs: number[] = []; // addr => pixel x (leftmost of the byte)
 const addrYs: number[] = []; // addr => pixel y
-const borderXs: number[] = []; // index => pixel x
-const borderYs: number[] = []; // index => pixel y
-const dirtyPixelIndexByLine: number[] = []; // line => memoryDirtyBitmap index of the line's pixels
-export const displayCommitTStatesByLine: number[] = []; // line => T-states to commit the line at
+const dirtyPixelIndexByLine: number[] = []; // display line => memoryDirtyBitmap index of its pixels
+export const screenCommitTStatesByLine: number[] = []; // screen line => T-states to commit it at
+
+// Border of a screen line as two runs of cells, [x, xEnd, x, xEnd] with xEnd exclusive: a line
+// above or below the display has one run across the whole width minus the rounded corners and an
+// empty second run, a display line has the left and the right margins
+const borderRunsByLine: number[][] = [];
+const borderYs: number[] = [];           // screen line => pixel y
+const borderColorsByLine: number[] = []; // screen line => color its border is drawn with, -1 = none
+
+const BORDER_PIXELS = 16;                             // Border shown at each side of the display
+const SCREEN_PIXELS = 256 + BORDER_PIXELS * 2;        // Pixels in a screen line
+const CORNER_SKIPS = [10, 7, 5, 4, 3, 2, 2, 1, 1, 1]; // Rounded corners: pixels cut from each end
+                                                      // of the outermost lines
 
 let paletteX: number;
 let paletteYs: number[] = [];
@@ -50,39 +64,40 @@ export function initScreen() {
   initBorder();
   initPalettes();
 
-  // The display is committed line by line, following the beam, in the middle of the visible part
-  // of each line. The dirty bits of the 32 bytes of a line share one memoryDirtyBitmap word:
-  // its index is the byte address without the five low column bits. Of the address layout
+  // Every screen line is committed in the middle of its visible part
+  for (let line = 0; line < SCREEN_LINE_COUNT; line++)
+    screenCommitTStatesByLine[line] =
+      TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE + (line - BORDER_LINE_COUNT) * TSTATES_PER_LINE;
+
+  // The dirty bits of the 32 bytes of a display line share one memoryDirtyBitmap word: its index
+  // is the byte address without the five low column bits. Of the address layout
   // 010ZZ LLL RRR CCCCC that leaves 010ZZLLLRRR, where ZZ is the third of the screen, LLL the line
   // within the row and RRR the row within the third.
   const minPixelIndex = DISPLAY_MIN_ADDR >> 5;
 
-  for (let line = 0; line < DISPLAY_LINE_COUNT; line++) {
+  for (let line = 0; line < DISPLAY_LINE_COUNT; line++)
     dirtyPixelIndexByLine[line] = minPixelIndex + (line & 0xC0) + ((line & 7) << 3) + ((line >> 3) & 7);
-    displayCommitTStatesByLine[line] = TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE + line * TSTATES_PER_LINE;
-  }
 }
 
 function initBorder() {
-  const minX = displayX - 32;
-  const minY = displayY - 28;
-  const maxX = displayX + 512 + 32 - 2;
-  const maxY = displayY + 384 + 28 - 2;
-  const skips = [20, 14, 10, 8, 6, 4, 4, 2, 2, 2];
+  const screenX = displayX - BORDER_PIXELS * 2;
+  const screenY = displayY - BORDER_LINE_COUNT * 2;
+  const lastLine = SCREEN_LINE_COUNT - 1;
 
-  for (let y = minY; y <= maxY; y += 2) {
-    let skip = 0;
-    if (y < minY + 20)
-      skip = skips[(y - minY) >> 1];
-    else if (y > maxY - 20)
-      skip = skips[(maxY - y) >> 1];
+  for (let line = 0; line < SCREEN_LINE_COUNT; line++) {
+    borderYs[line] = screenY + line * 2;
+    borderColorsByLine[line] = -1;
+    const displayLine = line - BORDER_LINE_COUNT;
 
-    for (let x = minX + skip; x <= maxX - skip; x += 2) {
-      if (x < displayX || x >= displayX + 512 || y < displayY || y >= displayY + 384) {
-        borderXs.push(x);
-        borderYs.push(y);
-      }
+    if (displayLine >= 0 && displayLine < DISPLAY_LINE_COUNT) {
+      borderRunsByLine[line] = [screenX, displayX, displayX + 512, screenX + SCREEN_PIXELS * 2];
+      continue;
     }
+
+    // Above or below the display: the lines nearest to the edge are cut at the corners
+    const edge = line < BORDER_LINE_COUNT ? line : lastLine - line;
+    const skip = edge < CORNER_SKIPS.length ? CORNER_SKIPS[edge] : 0;
+    borderRunsByLine[line] = [screenX + skip * 2, screenX + (SCREEN_PIXELS - skip) * 2, 0, 0];
   }
 }
 
@@ -159,7 +174,7 @@ export function refreshScreen() {
   for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < indexAfterAttrs; i++)
     memoryDirtyBitmap[i] = -1;
 
-  borderCommited = -1;
+  borderColorsByLine.fill(-1);
   commitScreen();
 }
 
@@ -193,10 +208,17 @@ export function switchPalette(inc: number) {
 export function commitScreen() {
   if (!screenEnabled) return;
 
-  for (let line = 0; line < DISPLAY_LINE_COUNT; line++)
-    commitDisplayLine(line);
+  for (let line = 0; line < SCREEN_LINE_COUNT; line++)
+    commitScreenLine(line);
+}
 
-  commitBorder();
+// Commits a screen line following the beam: its border always, its display part if it has one.
+// The two are independent: the border of a line knows only its runs, the display part knows
+// nothing of the border.
+export function commitScreenLine(line: number) {
+  commitBorderLine(line);
+  const displayLine = line - BORDER_LINE_COUNT;
+  if (displayLine >= 0 && displayLine < DISPLAY_LINE_COUNT) commitDisplayLine(displayLine);
 }
 
 const minAttrIndex = ATTRIBUTES_MIN_ADDR >> 5;
@@ -209,7 +231,7 @@ let dirtyRowAttrs = 0;
 // dirtyRowAttrs and drawn on all eight lines of the current row. An attribute changed while the row
 // is being drawn is marked dirty the usual way, and it gets drawn both in the current frame, on the
 // remaining lines of its row, and in the next frame.
-export function commitDisplayLine(line: number) {
+function commitDisplayLine(line: number) {
   const dirtyAttrIndex = minAttrIndex + (line >> 3);
   const attrAddrBase = dirtyAttrIndex << 5;
 
@@ -300,19 +322,37 @@ function commitPixels(addr: number, attr: number, value: number) {
   }
 }
 
-let borderCommited = -1;
-
 export function commitBorder() {
-  if (borderCommited === borderColor) return;
-  borderCommited = borderColor;
+  for (let line = 0; line < SCREEN_LINE_COUNT; line++)
+    commitBorderLine(line);
+}
 
-  const colorsXY = colorMapDefault[borderColor];
-  const inkX0 = colorsXY[0];
-  const inkY0 = colorsXY[1];
-  const inkX1 = inkX0 + 1;
-  const inkY1 = inkY0 + 1;
+// The border of a line is redrawn when the border color differs from the one it was drawn with.
+// So a color changed through the port in the middle of a frame lands on the lines below at once
+// and on the lines above in the next frame, and a split the game repeats every frame costs nothing
+// after the first one.
+function commitBorderLine(line: number) {
+  const color = borderColor;
+  if (borderColorsByLine[line] === color) return;
+  borderColorsByLine[line] = color;
 
-  borderXs.forEach((x, i) => world_copyRegionWithSignals(inkX0, inkY0, inkX1, inkY1, x, borderYs[i]));
+  const colorsXY = colorMapDefault[color];
+  const srcX = colorsXY[0];
+  const srcY = colorsXY[1];
+  const runs = borderRunsByLine[line];
+  const y = borderYs[line];
+  fillBorder(runs[0], runs[1], y, srcX, srcY);
+  fillBorder(runs[2], runs[3], y, srcX, srcY);
+}
+
+// Fills the cells [x, xEnd) of a line with the pixel at (srcX, srcY): the bridge to the GFX cache,
+// where the run is copied at once from a solid color row instead of pixel by pixel
+function fillBorder(x: number, xEnd: number, y: number, srcX: number, srcY: number) {
+  const srcX1 = srcX + 1;
+  const srcY1 = srcY + 1;
+
+  for (let px = x; px < xEnd; px += 2)
+    world_copyRegionWithSignals(srcX, srcY, srcX1, srcY1, px, y);
 }
 
 //#endregion

@@ -1,13 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ATTRIBUTES_MIN_ADDR, BIT7, DISPLAY_LINE_COUNT, DISPLAY_MIN_ADDR } from '../src/common/constants';
+import {
+  ATTRIBUTES_MIN_ADDR, BIT7, BORDER_LINE_COUNT, DISPLAY_LINE_COUNT, DISPLAY_MIN_ADDR,
+  SCREEN_LINE_COUNT
+} from '../src/common/constants';
 import { initMemory, mem, write } from '../src/common/memory';
-import { commitDisplayLine, incFrameCount, initScreen, refreshScreen } from '../src/common/screen';
+import {
+  commitBorder, commitScreenLine, incFrameCount, initScreen, refreshScreen, setBorder
+} from '../src/common/screen';
 import { cpuX, cpuY, initState, memoryX, memoryY } from '../src/common/state';
 
-// Line-by-line display commit of the screen.ts module with the world mock of setup.ts. Checks which
-// display lines get redrawn after a byte or an attribute is written, and in which frame: an
+// Line-by-line commit of the screen.ts module with the world mock of setup.ts. Checks which lines
+// get redrawn after a byte, an attribute or the border color is written, and in which frame: an
 // attribute changed before its row is drawn on all eight lines at once, one changed during the row
-// is drawn on the remaining lines now and on the whole row in the next frame.
+// is drawn on the remaining lines now and on the whole row in the next frame; a border color
+// changed in the middle of a frame lands on the lines below now and on the lines above next frame.
 
 // The copy interceptor is installed before the modules load: world-refs.ts binds the world
 // functions on import
@@ -26,6 +32,12 @@ const ATTR_ADDR = ATTRIBUTES_MIN_ADDR + ROW * 32 + COLUMN;
 const PIXELS_PER_BYTE = 8;
 const BYTES_PER_LINE = 32;
 
+// The border geometry of screen.ts: 16 pixels at each side, the outermost lines cut at the corners
+const BORDER_PIXELS = 16;
+const SCREEN_PIXELS = 256 + 2 * BORDER_PIXELS;
+const CORNER_SKIPS = [10, 7, 5, 4, 3, 2, 2, 1, 1, 1];
+const ALL_SCREEN_LINES = [...Array(SCREEN_LINE_COUNT).keys()];
+
 /** Address of the byte on line lineInRow of the character cell (ROW, COLUMN); the row lies in the
  *  top third of the screen */
 const pixelAddr = (lineInRow: number) => DISPLAY_MIN_ADDR + (lineInRow << 8) + (ROW << 5) + COLUMN;
@@ -33,8 +45,22 @@ const pixelAddr = (lineInRow: number) => DISPLAY_MIN_ADDR + (lineInRow << 8) + (
 /** A write that changes the byte: writing the same value does not make it dirty */
 const touch = (addr: number) => write(addr, (mem[addr] + 1) & 0x3F);
 
+/** The screen line a display line is committed as */
+const screenLine = (displayLine: number) => BORDER_LINE_COUNT + displayLine;
+
 /** The lines drawn once each, with the number of copies on each */
 const drawn = (lines: number[], copiesPerLine = PIXELS_PER_BYTE) => new Map(lines.map(l => [l, copiesPerLine]));
+
+/** Border pixels of a screen line */
+function borderPixels(line: number): number {
+  const displayLine = line - BORDER_LINE_COUNT;
+  if (displayLine >= 0 && displayLine < DISPLAY_LINE_COUNT) return 2 * BORDER_PIXELS;
+  const edge = line < BORDER_LINE_COUNT ? line : SCREEN_LINE_COUNT - 1 - line;
+  return SCREEN_PIXELS - 2 * (CORNER_SKIPS[edge] ?? 0);
+}
+
+/** The border of the given screen lines, drawn once */
+const borderDrawnOn = (lines: number[]) => new Map(lines.map(l => [l, borderPixels(l)]));
 
 describe('Screen: line-by-line commit', () => {
   (globalThis as any).state = {};
@@ -47,30 +73,43 @@ describe('Screen: line-by-line commit', () => {
 
   const displayX = cpuX + 80;
   const displayY = cpuY - 400;
+  const screenX = displayX - BORDER_PIXELS * 2;
+  const screenY = displayY - BORDER_LINE_COUNT * 2;
 
-  /** A frame: the lines are committed in order; writes[line] runs before the commit of that line */
+  /** A frame: the screen lines are committed in order; writes[line] runs before the commit of
+   *  that screen line */
   function frame(writes: Record<number, () => void> = {}) {
-    for (let line = 0; line < DISPLAY_LINE_COUNT; line++) {
+    for (let line = 0; line < SCREEN_LINE_COUNT; line++) {
       writes[line]?.();
-      commitDisplayLine(line);
+      commitScreenLine(line);
     }
   }
 
-  /** Copies per display line since the previous call; the border does not count */
-  function linesDrawn(): Map<number, number> {
-    const result = new Map<number, number>();
+  /** Copies since the previous call: per display line inside the display, per screen line in the
+   *  border. A copy outside the screen is an error */
+  function takeCopies() {
+    const display = new Map<number, number>();
+    const border = new Map<number, number>();
 
     for (const { x, y } of copies) {
-      if (x < displayX || x >= displayX + 512 || y < displayY || y >= displayY + 384) continue;
-      const line = (y - displayY) >> 1;
-      result.set(line, (result.get(line) ?? 0) + 1);
+      const inScreen = x >= screenX && x < screenX + SCREEN_PIXELS * 2
+        && y >= screenY && y < screenY + SCREEN_LINE_COUNT * 2;
+      if (!inScreen) throw new Error(`Copy outside the screen: ${x}, ${y}`);
+
+      const inDisplay = x >= displayX && x < displayX + 512 && y >= displayY && y < displayY + 384;
+      const map = inDisplay ? display : border;
+      const line = inDisplay ? (y - displayY) >> 1 : (y - screenY) >> 1;
+      map.set(line, (map.get(line) ?? 0) + 1);
     }
 
     copies.length = 0;
-    return result;
+    return { display, border };
   }
 
-  it('refreshScreen draws every line once', () => {
+  const linesDrawn = () => takeCopies().display;
+  const borderDrawn = () => takeCopies().border;
+
+  it('refreshScreen draws every display line once', () => {
     refreshScreen();
     const all = [...Array(DISPLAY_LINE_COUNT).keys()];
     expect(linesDrawn()).toEqual(drawn(all, BYTES_PER_LINE * PIXELS_PER_BYTE));
@@ -93,7 +132,7 @@ describe('Screen: line-by-line commit', () => {
   });
 
   it('an attribute changed during its row finishes the row now and redraws the whole row next frame', () => {
-    frame({ [FIRST_LINE + 4]: () => touch(ATTR_ADDR) });
+    frame({ [screenLine(FIRST_LINE + 4)]: () => touch(ATTR_ADDR) });
     expect(linesDrawn()).toEqual(drawn(ROW_LINES.slice(4)));
     frame();
     expect(linesDrawn()).toEqual(drawn(ROW_LINES));
@@ -102,7 +141,7 @@ describe('Screen: line-by-line commit', () => {
   });
 
   it('an attribute changed during its row every frame stays dirty', () => {
-    const writes = { [FIRST_LINE + 4]: () => touch(ATTR_ADDR) };
+    const writes = { [screenLine(FIRST_LINE + 4)]: () => touch(ATTR_ADDR) };
     frame(writes);
     expect(linesDrawn()).toEqual(drawn(ROW_LINES.slice(4)));
     frame(writes);
@@ -125,5 +164,38 @@ describe('Screen: line-by-line commit', () => {
     incFrameCount();
     frame();
     expect(linesDrawn().size).toBe(0);
+  });
+
+  it('refreshScreen draws the border of every screen line once', () => {
+    refreshScreen();
+    expect(borderDrawn()).toEqual(borderDrawnOn(ALL_SCREEN_LINES));
+    frame();
+    expect(borderDrawn().size).toBe(0);
+  });
+
+  it('a border color changed in the middle of a frame recolors the lines below now and the lines above next frame', () => {
+    const SPLIT = 100;
+    frame({ [SPLIT]: () => setBorder(2) });
+    expect(borderDrawn()).toEqual(borderDrawnOn(ALL_SCREEN_LINES.slice(SPLIT)));
+    frame();
+    expect(borderDrawn()).toEqual(borderDrawnOn(ALL_SCREEN_LINES.slice(0, SPLIT)));
+    frame();
+    expect(borderDrawn().size).toBe(0);
+  });
+
+  it('a border split repeated every frame costs nothing after the first frame', () => {
+    const writes = { 0: () => setBorder(3), 120: () => setBorder(4) };
+    frame(writes);
+    expect(borderDrawn()).toEqual(borderDrawnOn(ALL_SCREEN_LINES));
+    frame(writes);
+    expect(borderDrawn().size).toBe(0);
+  });
+
+  it('commitBorder redraws every line in a new color and nothing in the same one', () => {
+    setBorder(5);
+    commitBorder();
+    expect(borderDrawn()).toEqual(borderDrawnOn(ALL_SCREEN_LINES));
+    commitBorder();
+    expect(borderDrawn().size).toBe(0);
   });
 });
