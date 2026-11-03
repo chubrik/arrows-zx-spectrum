@@ -15,6 +15,7 @@ export const RAM_MIN_ADDR = 0x4000;
 export const DISPLAY_MIN_ADDR = RAM_MIN_ADDR;
 export const ATTRIBUTES_MIN_ADDR = 0x5800;
 export const ATTRIBUTES_AFTER_ADDR = 0x5B00;
+export const DISPLAY_LINE_COUNT = 192;
 
 export const MS_PER_FRAME = 20; // 50 fps
 
@@ -33,9 +34,9 @@ export const TSTATES_PER_FRAME = 69888; // ≈50.08 Hz (at 3.5 MHz CPU)
 
 export const TSTATES_PER_OP = 7; //todo: Real T-state counting
 
-export const TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE = 15256; // (16 + 48 + 4) * 224 + (48 / 2)
-export const TSTATES_PER_DISPLAY_ROW = 1792;               // 8 * 224
+export const TSTATES_PER_LINE = 224; // Any scan line: display, border or blanking
+export const TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE = 14472; // (16 + 48) * 224 + 48 + 24 + 128 / 2
 
-// export const TSTATES_PER_DISPLAY_BEGIN = 14408;  // (16 + 48) * 224 + 48 + 24
-// export const TSTATES_PER_DISPLAY_END = 57320;    // (16 + 48 + 192) * 224 - 24
-// export const TSTATES_PER_DISPLAY_MIDDLE = 35864; // (BEGIN + END) * 0.5
+// export const TSTATES_AT_DISPLAY_BEGIN = 14408;  // (16 + 48) * 224 + 48 + 24
+// export const TSTATES_AT_DISPLAY_END = 57320;    // (16 + 48 + 192) * 224 - 24
+// export const TSTATES_AT_DISPLAY_MIDDLE = 35864; // (BEGIN + END) * 0.5

@@ -1,6 +1,6 @@
 import {
-  ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, DISPLAY_MIN_ADDR,
-  TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE, TSTATES_PER_DISPLAY_ROW
+  ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, DISPLAY_LINE_COUNT,
+  DISPLAY_MIN_ADDR, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE, TSTATES_PER_LINE
 } from './constants.ts';
 import { commitMemoryValue, initMemory, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, memoryX, memoryY, screenEnabled } from './state.ts';
@@ -14,8 +14,8 @@ const addrXs: number[] = []; // addr => pixel x (leftmost of the byte)
 const addrYs: number[] = []; // addr => pixel y
 const borderXs: number[] = []; // index => pixel x
 const borderYs: number[] = []; // index => pixel y
-const pixelIndexBaseByRow: number[] = [];
-export const displayCommitTStatesByRow: number[] = [];
+const dirtyPixelIndexByLine: number[] = []; // line => memoryDirtyBitmap index of the line's pixels
+export const displayCommitTStatesByLine: number[] = []; // line => T-states to commit the line at
 
 let paletteX: number;
 let paletteYs: number[] = [];
@@ -50,19 +50,16 @@ export function initScreen() {
   initBorder();
   initPalettes();
 
-  let rowPixelIndexBase = DISPLAY_MIN_ADDR >> 5;
-  let rowCommitTStates = TSTATES_PER_DISPLAY_FIRST_ROW_MIDDLE;
-  let zoneCount = 8;
+  // The display is committed line by line, following the beam, in the middle of the visible part
+  // of each line. The dirty bits of the 32 bytes of a line share one memoryDirtyBitmap word:
+  // its index is the byte address without the five low column bits. Of the address layout
+  // 010ZZ LLL RRR CCCCC that leaves 010ZZLLLRRR, where ZZ is the third of the screen, LLL the line
+  // within the row and RRR the row within the third.
+  const minPixelIndex = DISPLAY_MIN_ADDR >> 5;
 
-  for (let i = 0; i < 24; i++) {
-    pixelIndexBaseByRow[i] = rowPixelIndexBase + i;
-    displayCommitTStatesByRow[i] = rowCommitTStates;
-    rowCommitTStates += TSTATES_PER_DISPLAY_ROW;
-
-    if (!--zoneCount) {
-      zoneCount = 8;
-      rowPixelIndexBase += 56; // 64 - 8
-    }
+  for (let line = 0; line < DISPLAY_LINE_COUNT; line++) {
+    dirtyPixelIndexByLine[line] = minPixelIndex + (line & 0xC0) + ((line & 7) << 3) + ((line >> 3) & 7);
+    displayCommitTStatesByLine[line] = TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE + line * TSTATES_PER_LINE;
   }
 }
 
@@ -196,34 +193,78 @@ export function switchPalette(inc: number) {
 export function commitScreen() {
   if (!screenEnabled) return;
 
-  for (let i = 0; i < 24; i++)
-    commitDisplayRow(i);
+  for (let line = 0; line < DISPLAY_LINE_COUNT; line++)
+    commitDisplayLine(line);
 
   commitBorder();
 }
 
 const minAttrIndex = ATTRIBUTES_MIN_ADDR >> 5;
 
-export function commitDisplayRow(row: number) {
-  const attrIndex = minAttrIndex + row;
-  const pixelIndexBase = pixelIndexBaseByRow[row];
-  const attrAddrBase = attrIndex << 5;
-  let attrBits = memoryDirtyBitmap[attrIndex];
-  memoryDirtyBitmap[attrIndex] = 0;
+// Snapshot of the dirty attributes of the current 8-line row, taken before the whole row is drawn
+let dirtyRowAttrs = 0;
 
+// Commits a display line following the beam: dirty pixels and attributes are copied to the world.
+// An attribute changed before its 8-line row begins is marked clean, but is remembered in
+// dirtyRowAttrs and drawn on all eight lines of the current row. An attribute changed while the row
+// is being drawn is marked dirty the usual way, and it gets drawn both in the current frame, on the
+// remaining lines of its row, and in the next frame.
+export function commitDisplayLine(line: number) {
+  const dirtyAttrIndex = minAttrIndex + (line >> 3);
+  const attrAddrBase = dirtyAttrIndex << 5;
+
+  // The snapshot of the dirty attributes is taken on every line, so that a character cell can be
+  // recoloured following the beam, an effect some games use.
+  const dirtyAttrs = memoryDirtyBitmap[dirtyAttrIndex];
+
+  // Before the 8-line row begins: track the flash, commit the dirty attributes of the row to the
+  // world and remember dirtyRowAttrs for the other 7 lines of the current row.
+  if ((line & 7) === 0) {
+    dirtyRowAttrs = dirtyAttrs;
+    memoryDirtyBitmap[dirtyAttrIndex] = 0;
+    commitAttrsRow(attrAddrBase);
+  }
+
+  const dirtyPixelIndex = dirtyPixelIndexByLine[line];
+  const dirtyPixels = memoryDirtyBitmap[dirtyPixelIndex];
+
+  let dirtyMask = dirtyRowAttrs | dirtyAttrs | dirtyPixels;
+  if (dirtyMask === 0) return;
+  memoryDirtyBitmap[dirtyPixelIndex] = 0;
+  const addrBase = dirtyPixelIndex << 5;
+
+  while (dirtyMask) {
+    const bit = dirtyMask & -dirtyMask;
+    const offset = 31 - Math.clz32(bit);
+    dirtyMask ^= bit;
+
+    const addr = addrBase + offset;
+    const value = mem[addr];
+
+    if (dirtyPixels & bit)
+      commitMemoryValue(addr, value);
+
+    const attrAddr = attrAddrBase + offset;
+    const attr = mem[attrAddr];
+    commitPixels(addr, attr, value);
+  }
+}
+
+function commitAttrsRow(attrAddrBase: number) {
+  /*!inline*/
   if (flashPhaseChanged) {
-    // Once every 16 frames: check all 32 attributes in the line. Save dirty ones to world.
+    // Once every 16 frames: check all 32 attributes in the row. Save dirty ones to world.
     // Mark those with flash bit as dirty for the subsequent display output phase.
     for (let offset = 0; offset < 32; offset++) {
       const bit = 1 << offset;
       const attrAddr = attrAddrBase + offset;
       const value = mem[attrAddr];
-      if (attrBits & bit) commitMemoryValue(attrAddr, value);
-      else if (value & BIT7) attrBits |= bit;
+      if (dirtyRowAttrs & bit) commitMemoryValue(attrAddr, value);
+      else if (value & BIT7) dirtyRowAttrs |= bit;
     }
   } else {
     // Hot path (15 of 16 frames): save dirty attributes to world
-    let ab = attrBits;
+    let ab = dirtyRowAttrs;
     while (ab) {
       const bit = ab & -ab;
       ab ^= bit;
@@ -231,34 +272,10 @@ export function commitDisplayRow(row: number) {
       commitMemoryValue(attrAddr, mem[attrAddr]);
     }
   }
-
-  for (let i = 0; i < 64; i += 8) {
-    const pixelIndex = pixelIndexBase + i;
-    const pixelBits = memoryDirtyBitmap[pixelIndex];
-    let bits = attrBits | pixelBits;
-    if (bits === 0) continue;
-    memoryDirtyBitmap[pixelIndex] = 0;
-    const addrBase = pixelIndex << 5;
-
-    while (bits) {
-      const bit = bits & -bits;
-      const offset = 31 - Math.clz32(bit);
-      bits ^= bit;
-
-      const addr = addrBase + offset;
-      const value = mem[addr];
-
-      if (pixelBits & bit)
-        commitMemoryValue(addr, value);
-
-      const attrAddr = attrAddrBase + offset;
-      const attr = mem[attrAddr];
-      commitDisplayValue(addr, attr, value);
-    }
-  }
 }
 
-function commitDisplayValue(addr: number, attr: number, value: number) {
+function commitPixels(addr: number, attr: number, value: number) {
+  /*!inline*/
   const addrX = addrXs[addr];
   const y = addrYs[addr];
 
@@ -271,14 +288,15 @@ function commitDisplayValue(addr: number, attr: number, value: number) {
   const paperY0 = colorsXY[3];
   const paperX1 = paperX0 + 1;
   const paperY1 = paperY0 + 1;
+  let bits = value;
 
   for (let x = addrX + 14; x >= addrX; x -= 2) {
-    if (value & 1)
+    if (bits & 1)
       world_copyRegionWithSignals(inkX0, inkY0, inkX1, inkY1, x, y);
     else
       world_copyRegionWithSignals(paperX0, paperY0, paperX1, paperY1, x, y);
 
-    value >>= 1;
+    bits >>= 1;
   }
 }
 
