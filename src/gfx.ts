@@ -1,5 +1,7 @@
 import type { GfxTables, State } from './common/state';
-import { world_copyRegionWithSignals, world_getArrow, world_setSignal } from './common/world-refs';
+import {
+  world_copyRegion, world_copyRegionWithSignals, world_getArrow, world_getSignal, world_setSignal
+} from './common/world-refs';
 
 const { x, y } = getPosition()!;
 const _state = state as State;
@@ -22,8 +24,7 @@ onActive(e => {
     return;
   }
 
-  // _state.do = 1;
-  // _state.pal = world_getSignal(x, y - 1) ? -1 : 1;
+  switchPalette(world_getSignal(x, y - 1) ? -1 : 1);
 });
 
 let inited: boolean;
@@ -55,6 +56,25 @@ function initPalettes() {
   listRows();
   buildCache();
   _state.gfx = buildTables();
+}
+
+// Palette switch: the selector moves to the neighbouring palette, the cache is rebuilt from it and
+// the main block gets a request to redraw the screen. The tables do not depend on the palette and
+// stay as they are.
+function switchPalette(inc: number) {
+  const count = paletteYs.length;
+  if (count < 2) return;
+
+  const selectorX = paletteX + 18;
+  const selectorY = paletteYs[paletteIndex] + 1;
+  paletteIndex = (paletteIndex + inc + count) % count;
+  const newSelectorY = paletteYs[paletteIndex] + 1;
+  world_copyRegion(selectorX, selectorY, selectorX + 1, selectorY + 1, selectorX, newSelectorY);
+  world_copyRegion(selectorX - 2, selectorY, selectorX - 1, selectorY + 1, selectorX, selectorY);
+
+  buildCache();
+  _state.do = 1;
+  _state.pal = 1;
 }
 
 //#region Cache layout

@@ -89,8 +89,9 @@ const PRELUDE = `
   function __load(code) { new Function(code)(); }
   // The data block deduplicates its activations by the tick, so every callback needs an event
   function __event(type) { return { type: type, tick: __tick, x: 1024, y: 1024 }; }
-  // An activation belongs to a tick of its own, the way a player keypress does
-  function __activate() { __tick++; __active[__active.length - 1](__event('commandBlockActive')); }
+  // An activation belongs to a tick of its own, the way a player keypress does. By default it goes
+  // to the block loaded last; the blocks are numbered in the order they are loaded
+  function __activate(index = __active.length - 1) { __tick++; __active[index](__event('commandBlockActive')); }
   function __ticks(n) {
     for (let i = 0; i < n; i++) { __tick++; for (const cb of __always) cb(__event('always')); }
   }
@@ -137,10 +138,12 @@ describe('Smoke test (dist)', () => {
       evalOrThrow(vm, `state.do = 1; state.prt = 5; __ticks(1);`, 'prt.js');
       expect(evalOrThrow(vm, `__byte(1048, 1007)`, 'port.js')).toBe(5);
 
-      // Two palettes on the map: a step of -1 wraps the index from the first to the second,
-      // which moves the selector eight rows down plus the one row of its own offset
-      evalOrThrow(vm, `state.do = 1; state.pal = -1; __ticks(1);`, 'pal.js');
+      // A palette switch is a repeated activation of the GFX block, the first one loaded with
+      // onActive: the selector moves to the second palette, eight rows down plus the row of its own
+      // offset, the cache is rebuilt and the pal flag asks the main block to redraw the screen
+      expect(evalOrThrow(vm, `__activate(0); state.pal`, 'pal.js')).toBe(1);
       expect(evalOrThrow(vm, `__selectorY - __PY`, 'selector.js')).toBe(9);
+      expect(evalOrThrow(vm, `__ticks(1); state.pal`, 'pal-done.js')).toBe(0);
 
       evalOrThrow(vm, `state.do = 1; state.run = 1; state.max = 1; __ticks(1 + ${FRAMES});`, 'run.js');
 

@@ -8,7 +8,7 @@ import {
   commitBorder, commitBorderLine, commitDisplayLine, incFrameCount, initScreen, refreshScreen,
   setBorder
 } from '../src/common/screen';
-import { cpuX, cpuY, initState, memoryX, memoryY } from '../src/common/state';
+import { cpuX, cpuY, initState } from '../src/common/state';
 
 // Line-by-line commit of the screen.ts module with the world mock of setup.ts. Checks which lines
 // get redrawn after a byte, an attribute or the border color is written, and in which frame: an
@@ -78,9 +78,6 @@ describe('Screen: line-by-line commit', () => {
     gfx: { attrYs: zeros(), valueXs: [zeros(), zeros(), zeros(), zeros()], attrKinds: zeros(), attrKindsFlash: zeros() },
   };
   initState();
-  const paletteX = memoryX - 32;
-  (globalThis as any).world.setArrow(paletteX + 15, memoryY, 1, 0, false); // Palette exists
-  (globalThis as any).world.setArrow(paletteX + 18, memoryY + 1, 1, 0, false); // Selector exists
   initMemory();
   initScreen();
 

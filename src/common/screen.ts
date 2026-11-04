@@ -4,7 +4,7 @@ import {
 } from './constants.ts';
 import { commitMemoryValue, initMemory, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, fetchGfx, memoryX, memoryY, screenEnabled } from './state.ts';
-import { world_copyRegion, world_copyRegionWithSignals, world_getArrow } from './world-refs.ts';
+import { world_copyRegion, world_copyRegionWithSignals } from './world-refs.ts';
 
 // Screen = display area + border. The screen is committed line by line, following the beam, in
 // three phases the frame loop runs one after another: the top border lines, the display lines with
@@ -39,10 +39,6 @@ const BORDER_PIXELS = 16;
 const SCREEN_PIXELS = 256 + BORDER_PIXELS * 2; // Pixels in a screen line
 const CORNER_SKIPS = [10, 7, 5, 4, 3, 2, 2, 1, 1, 1];
 
-let paletteX: number;
-let paletteYs: number[] = [];
-let paletteIndex: number;
-
 // The GFX block (gfx.ts) builds the graphics cache on the map and hands its tables over through
 // state. A display byte is drawn with one copy of its window from the cache: the attribute sets
 // the row, the byte value sets the X through the X table chosen for that attribute.
@@ -75,7 +71,6 @@ export function initScreen() {
     addrYs[addr] = displayY + ((addr & 0x1800) >> 4) + ((addr & 0x0700) >> 7) + ((addr & 0xE0) >> 1);
   }
 
-  initPalettes();
   initGfx();
   initBorder(); // After initGfx: the runs are laid out against the cache
 
@@ -119,20 +114,6 @@ function initBorder() {
     borderSrcX1s[line] = cacheLeft + (SCREEN_PIXELS - skip * 2) * 2 - 1;
     borderYs[line] = displayY + offset * 2;
     borderColors[line] = -1;
-  }
-}
-
-function initPalettes() {
-  paletteX = memoryX - 32;
-  let index = 0;
-  let y = memoryY;
-
-  while (world_getArrow(paletteX + 15, y)) { // Palette exists
-    if (world_getArrow(paletteX + 18, y + 1)) // Selector exists
-      paletteIndex = index;
-
-    paletteYs[index++] = y;
-    y += 8;
   }
 }
 
@@ -203,21 +184,6 @@ function clearBorder() {
   setBorder(0);
   commitBorder();
   setBorder(color);
-}
-
-export function switchPalette(inc: number) {
-  initScreen();
-  const selectorX = paletteX + 18;
-  const selectorY = paletteYs[paletteIndex] + 1;
-
-  const count = paletteYs.length;
-  paletteIndex = (paletteIndex + inc + count) % count;
-  const newPaletteY = paletteYs[paletteIndex];
-  world_copyRegion(selectorX, selectorY, selectorX + 1, selectorY + 1, selectorX, newPaletteY + 1);
-  world_copyRegion(selectorX - 2, selectorY, selectorX - 1, selectorY + 1, selectorX, selectorY);
-
-  //todo: The colors come from the graphics cache, the GFX block has to rebuild it for a new palette
-  refreshScreen();
 }
 
 //#region Commit

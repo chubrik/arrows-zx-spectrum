@@ -3,7 +3,7 @@ import { fetchBeeper } from './beeper';
 import { ATTRIBUTES_AFTER_ADDR, RAM_MIN_ADDR, xFFFF } from './constants';
 import { clearMemory, fetchMemory, restoreMemory } from './memory';
 import { clearPort, fetchPort, restorePort } from './port';
-import { clearScreen, commitBorder, initScreen, refreshScreen, switchPalette } from './screen';
+import { clearScreen, commitBorder, initScreen, refreshScreen } from './screen';
 
 export let cpuX: number;
 export let cpuY: number;
@@ -121,7 +121,7 @@ export function fetchState() {
   }
 
   if (_state.pal) {
-    switchPalette(_state.pal);
+    refreshScreen();
     _state.pal = 0;
   }
 
