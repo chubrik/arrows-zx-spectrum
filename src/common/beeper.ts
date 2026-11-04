@@ -8,18 +8,30 @@ const ARROW_SIGNAL = 6;
 // The highest octave the music arrows can play. Anything above it is treated as noise.
 const OCTAVE_MAX = 7;
 
-// Octave 0 (the sub-contra octave). For every note this is the shortest half period in T-states
-// that still counts as that note, which is the boundary with the note above.
+// Octave 0 (the sub-contra octave). For every note this is the shortest half period that still
+// counts as that note, which is the boundary with the note above. In tenths of a T-state, the
+// unit tStates counts in (see TSTATES_PER_OP).
 //
 //  T/sec   note A  half period  up 1/4 tone
 // 3500000 / 27.5 /     2      /  2^(1/24)   ≈ 61825 T at the boundary between A and A#
 //
-//   C      C#      D     D#      E      F     F#      G     G#      A     A#      B
-const octaveZeroNoteBounds =
-  [103976, 98141, 92632, 87433, 82526, 77894, 73522, 69396, 65501, 61825, 58355, 55080];
+const octaveZeroNoteBounds = [
+  103976_0, // C
+  98141_0,  // C#
+  92632_0,  // D
+  87433_0,  // D#
+  82526_0,  // E
+  77894_0,  // F
+  73522_0,  // F#
+  69396_0,  // G
+  65501_0,  // G#
+  61825_0,  // A
+  58355_0,  // A#
+  55080_0,  // B
+];
 
 // Equals the last element of octaveZeroNoteBounds and marks the boundary between octaves 0 and 1
-const OCTAVE_ZERO_BOUND = 55080;
+const OCTAVE_ZERO_BOUND = 55080_0;
 
 let inited: boolean;
 let noteX: number;

@@ -39,13 +39,15 @@ export const MS_PER_FRAME = 20; // 50 fps
 // - 24 T-states — left border
 // - 128 T-states — pixel area (256 pixels)
 // - 24 T-states — right border
-export const TSTATES_PER_FRAME = 69888; // ≈50.08 Hz (at 3.5 MHz CPU)
+export const TSTATES_PER_FRAME = 69888_0; // ≈50.08 Hz (at 3.5 MHz CPU)
 
-export const TSTATES_PER_OP = 7; //todo: Real T-state counting
+// An op costs a fractional number of T-states, so every T-state count is kept in tenths: an
+// integer counter stays on the QuickJS int fast path. The trailing _0 marks the fraction.
+export const TSTATES_PER_OP = 7_3; //todo: Real T-state counting
 
-export const TSTATES_PER_LINE = 224; // Any scan line: display, border or blanking
-export const TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE = 14472; // (16 + 48) * 224 + 48 + 24 + 128 / 2
+export const TSTATES_PER_LINE = 224_0; // Any scan line: display, border or blanking
+export const TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE = 14472_0; // (16 + 48) * 224 + 48 + 24 + 128 / 2
 
-// export const TSTATES_AT_DISPLAY_BEGIN = 14408;  // (16 + 48) * 224 + 48 + 24
-// export const TSTATES_AT_DISPLAY_END = 57320;    // (16 + 48 + 192) * 224 - 24
-// export const TSTATES_AT_DISPLAY_MIDDLE = 35864; // (BEGIN + END) * 0.5
+// export const TSTATES_AT_DISPLAY_BEGIN = 14408_0;  // (16 + 48) * 224 + 48 + 24
+// export const TSTATES_AT_DISPLAY_END = 57320_0;    // (16 + 48 + 192) * 224 - 24
+// export const TSTATES_AT_DISPLAY_MIDDLE = 35864_0; // (BEGIN + END) * 0.5
