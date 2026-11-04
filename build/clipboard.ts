@@ -36,7 +36,7 @@ const PROGRAM_TEMPLATE =
   'BQABeJwVw7cSAQEUhtFv/8uMVtau2MqhkyllWrmWHwDvvbtn5jgEHFflCHT9M3+mE5WrivWYs+dGTFlVrc+CA3dMceVUsw' +
   'FLjjz4ElJCedVtyIoTT36ElVRBDRux5syLPykV1bQxGy68Sauklk3YcuVD26bs8AAMUhD9';
 
-/** A single command block, for the CPU and for the ROM initializer. */
+/** A single command block, for the CPU, the GFX block and the ROM initializer. */
 export const BLOCK_TEMPLATE = 'BQAAAQAAAAAAACEAAAgAAA==';
 
 /** A command block keeps its code instead of data. */

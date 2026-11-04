@@ -12,6 +12,7 @@ export const RESOURCES_DIR = 'resources'; // Downloads and game snapshots, not i
 export const FUSE_CPU_PATH = `${DIST_DIR}/temp/_cpu-test/cpu-test.step09.subst.js`;
 export const SMOKE_CPU_PATH = `${DIST_DIR}/temp/_cpu-smoke/cpu-smoke.txt`;
 export const SMOKE_ROM_PATH = `${DIST_DIR}/temp/_initializer-smoke/initializer-smoke.txt`;
+export const SMOKE_GFX_PATH = `${DIST_DIR}/temp/_gfx-smoke/gfx-smoke.txt`;
 
 type StepFn = (label: string, code: string) => string;
 
@@ -31,8 +32,9 @@ export function createStepFn(stepsDir: string, fileName: string, part?: string):
   };
 }
 
-/** Full CPU build pipeline: esbuild → inline → terser × 3 → arrows → remangle → postprocess. */
-export async function cpuPipeline(srcPath: string, opts?: { test?: boolean; stepsDir?: string }) {
+/** Command block minification pipeline: esbuild → inline → terser × 3 → arrows → remangle →
+ *  simplify. The GFX block is built this way, the CPU block also goes through the substitutions. */
+export async function minifyPipeline(srcPath: string, opts?: { test?: boolean; stepsDir?: string }) {
   const fileName = basename(srcPath, '.ts');
   const stepsDir = opts?.stepsDir ?? `${DIST_DIR}/temp/_${fileName}`;
   const step = createStepFn(stepsDir, stepName(stepsDir));
@@ -46,9 +48,16 @@ export async function cpuPipeline(srcPath: string, opts?: { test?: boolean; step
   const cmangled = step('cmangle', await terserCMangle(arrowed));
   const remangled = step('remangle', remangleTopLevel(cmangled));
   const minified = step('simplify', simplifyCode(remangled));
-  const substed = step('subst', substCode(minified));
 
-  return { built, minified, substed, step, stepsDir, fileName };
+  return { built, minified, step, stepsDir, fileName };
+}
+
+/** Full CPU pipeline: minification and then the substitutions, which the packed block undoes
+ *  when it loads. */
+export async function cpuPipeline(srcPath: string, opts?: { test?: boolean; stepsDir?: string }) {
+  const result = await minifyPipeline(srcPath, opts);
+  const substed = result.step('subst', substCode(result.minified));
+  return { ...result, substed };
 }
 
 /** Build TypeScript → JavaScript. */

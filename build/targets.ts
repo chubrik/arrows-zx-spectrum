@@ -6,8 +6,8 @@ import { asciiToUnicode, bytesToUnicode } from '../src/util/encode.ts';
 import { BLOCK_TEMPLATE, buildClipboard } from './clipboard.ts';
 import { getResource } from './resources.ts';
 import {
-  arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, RESOURCES_DIR, simplifyCode,
-  SRC_DIR, stepName, terserCMangle, terserCollapse, terserCompress, writeToPath
+  arrowFunctions, buildTs, cpuPipeline, createStepFn, DIST_DIR, minifyPipeline, RESOURCES_DIR,
+  simplifyCode, SRC_DIR, stepName, terserCMangle, terserCollapse, terserCompress, writeToPath
 } from './utils.ts';
 import { loadSnapshot } from './z80-snapshot.ts';
 
@@ -55,6 +55,24 @@ export async function buildCpu(
     `${outPath}: ${clipboard.length} bytes`);
 
   return packed;
+}
+
+/** Builds the GFX command block → `<outPath>`, a string that pastes it. Returns the block code. */
+export async function buildGfx(
+  stepsDir = `${DIST_DIR}/temp/_gfx`, outPath = `${DIST_DIR}/_gfx.txt`
+): Promise<string> {
+  const path = `${SRC_DIR}/gfx.ts`;
+  const { built, minified } = await minifyPipeline(path, { stepsDir });
+  const clipboard = buildClipboard([minified], BLOCK_TEMPLATE);
+
+  writeToPath(outPath, clipboard);
+
+  console.log(
+    `${path}: ${built.length} bytes → ` +
+    `minified: ${minified.length} bytes → ` +
+    `${outPath}: ${clipboard.length} bytes`);
+
+  return minified;
 }
 
 /** Builds the ROM initializer command block → `<outPath>`. Returns the block code. */

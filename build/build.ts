@@ -1,13 +1,14 @@
 import { existsSync, readdirSync } from 'fs';
 import { basename } from 'path';
-import { buildCpu, buildRom, buildSnapshot } from './targets.ts';
+import { buildCpu, buildGfx, buildRom, buildSnapshot } from './targets.ts';
 import { RESOURCES_DIR } from './utils.ts';
 
 const cpuOnly = process.argv.includes('--cpu');
+const gfxOnly = process.argv.includes('--gfx');
 let noPrograms = false;
 console.log();
 
-if (!cpuOnly) {
+if (!cpuOnly && !gfxOnly) {
   const z80Files = existsSync(RESOURCES_DIR)
     ? readdirSync(RESOURCES_DIR).filter(f => f.toLowerCase().endsWith('.z80'))
     : [];
@@ -30,9 +31,17 @@ if (!cpuOnly) {
   console.log();
 }
 
-console.log('CPU:');
-await buildCpu();
-console.log();
+if (!gfxOnly) {
+  console.log('CPU:');
+  await buildCpu();
+  console.log();
+}
+
+if (!cpuOnly) {
+  console.log('GFX:');
+  await buildGfx();
+  console.log();
+}
 
 if (noPrograms) {
   console.warn('No programs:');

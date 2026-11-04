@@ -10,6 +10,7 @@
   "scripts": {
     "build": "node build/build.ts",
     "build:cpu": "node build/build.ts --cpu",
+    "build:gfx": "node build/build.ts --gfx",
     "test": "vitest run",
     "prebuild": "tsc -p tsconfig.json",
     "pretest": "tsc -p tsconfig.json"

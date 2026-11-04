@@ -1,10 +1,10 @@
 import { rmSync } from 'fs';
 import { dirname } from 'path';
-import { buildCpu, buildRom } from './targets.ts';
-import { cpuPipeline, FUSE_CPU_PATH, SMOKE_CPU_PATH, SMOKE_ROM_PATH, SRC_DIR } from './utils.ts';
+import { buildCpu, buildGfx, buildRom } from './targets.ts';
+import { cpuPipeline, FUSE_CPU_PATH, SMOKE_CPU_PATH, SMOKE_GFX_PATH, SMOKE_ROM_PATH, SRC_DIR } from './utils.ts';
 
 export async function setup() {
-  for (const path of [FUSE_CPU_PATH, SMOKE_CPU_PATH, SMOKE_ROM_PATH])
+  for (const path of [FUSE_CPU_PATH, SMOKE_CPU_PATH, SMOKE_GFX_PATH, SMOKE_ROM_PATH])
     rmSync(dirname(path), { recursive: true, force: true });
 
   // The production blocks for test/smoke-dist.test.ts, built apart from dist/
@@ -14,6 +14,10 @@ export async function setup() {
   console.log();
   console.log('CPU (smoke-test):');
   await buildCpu(dirname(SMOKE_CPU_PATH), SMOKE_CPU_PATH);
+
+  console.log();
+  console.log('GFX (smoke-test):');
+  await buildGfx(dirname(SMOKE_GFX_PATH), SMOKE_GFX_PATH);
 
   // The build with the globalThis.__cpu hook for test/fuse-dist.test.ts
   console.log();

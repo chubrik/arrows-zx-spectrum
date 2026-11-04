@@ -16,9 +16,9 @@ export function initState() {
   const pos = getPosition()!;
   cpuX = (pos.x & ~15) + 16;
   cpuY = pos.y & ~15;
-  memoryX = cpuX - 224;
-  memoryY = cpuY + 32;
   _state = state as State;
+  _state.memX = memoryX = cpuX - 224;
+  _state.memY = memoryY = cpuY + 32;
 }
 
 export let stepMode = false;
@@ -132,6 +132,9 @@ export function fetchState() {
 }
 
 export type State = {
+  memX: number;
+  memY: number;
+  gfx: GfxTables | undefined;
   do: number;
   run: number;
   res: number;
@@ -146,4 +149,20 @@ export type State = {
   scr: number;
   pal: number;
   snd: number;
+}
+
+/**
+ * Screen rendering tables. The GFX block builds them from the layout of the graphics cache on the
+ * map and hands them to the main block through state. All coordinates are absolute.
+ */
+export type GfxTables = {
+  /** Attribute → Y of the cache row */
+  attrYs: number[];
+  /** [kind][byte] → X of the byte's window in the row. Kinds: 0 — the byte as is, 1 — inverted,
+   *  2 — the solid ink of the row, 3 — the solid paper of the row */
+  valueXs: number[][];
+  /** Attribute → kind of the X table */
+  attrKinds: number[];
+  /** Attribute → kind of the X table in the flash phase, when ink and paper are swapped */
+  attrKindsFlash: number[];
 }

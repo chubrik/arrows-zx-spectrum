@@ -2,10 +2,10 @@ import { readFileSync } from 'fs';
 import { getQuickJS, type QuickJSContext } from 'quickjs-emscripten';
 import { describe, expect, it } from 'vitest';
 import { decodeClipboard, findCommandBlocks } from '../build/clipboard';
-import { SMOKE_CPU_PATH, SMOKE_ROM_PATH } from '../build/utils';
+import { SMOKE_CPU_PATH, SMOKE_GFX_PATH, SMOKE_ROM_PATH } from '../build/utils';
 
 // Smoke test of the packed command blocks in QuickJS — the engine of the Steam version of the game.
-// Loads the CPU block and the ROM initializer (built by build/build-test.ts) into a VM with a
+// Loads the CPU, GFX and ROM initializer blocks (built by build/build-test.ts) into a VM with a
 // minimal world mock, boots the ROM for a number of frames and checks the runtime memory profile.
 
 const FRAMES = 50;
@@ -111,6 +111,7 @@ function blockCode(path: string): string {
 describe('Smoke test (dist)', () => {
   it(`boots the ROM for ${FRAMES} frames`, async () => {
     const cpu = blockCode(SMOKE_CPU_PATH);
+    const gfx = blockCode(SMOKE_GFX_PATH);
     const rom = blockCode(SMOKE_ROM_PATH);
 
     const QuickJS = await getQuickJS();
@@ -120,6 +121,10 @@ describe('Smoke test (dist)', () => {
     try {
       evalOrThrow(vm, PRELUDE, 'prelude.js');
       evalOrThrow(vm, `__load(${JSON.stringify(cpu)})`, 'cpu.js');
+      // The GFX block finds the palettes, builds the graphics cache and puts its tables into state.
+      // It skips the first activation, the palettes light up a tick later, so it is activated twice
+      evalOrThrow(vm, `__load(${JSON.stringify(gfx)}); __activate(); __ticks(1); __activate();`, 'gfx.js');
+      expect(evalOrThrow(vm, `state.gfx.attrYs.length`, 'gfx-tables.js')).toBe(256);
       // Screen enabled before anything is loaded: refreshScreen must cope with untouched memory
       evalOrThrow(vm, `state.do = 1; state.scr = 1; __ticks(1);`, 'scr.js');
       evalOrThrow(vm, `__load(${JSON.stringify(rom)}); __activate(); __ticks(1);`, 'rom.js');
