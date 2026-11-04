@@ -1,8 +1,13 @@
 import { commitBeeper } from './common/beeper';
-import { MS_PER_FRAME, SCREEN_LINE_COUNT, TSTATES_PER_FRAME } from './common/constants';
+import {
+  BORDER_LINE_COUNT, DISPLAY_LINE_COUNT, MS_PER_FRAME, TOP_BORDER_LINE_COUNT, TSTATES_PER_FRAME
+} from './common/constants';
 import { commitMemory } from './common/memory';
 import { commitPort } from './common/port';
-import { commitScreen, commitScreenLine, incFrameCount, screenCommitTStatesByLine } from './common/screen';
+import {
+  borderCommitTStates, commitBorderLine, commitDisplayLine, commitScreen, displayCommitTStates,
+  incFrameCount
+} from './common/screen';
 import { cpuStarted, fetchState, initState, screenEnabled, speedLimited, stepMode } from './common/state';
 import { executeMain } from './cpu/execute-main';
 import { INT, setINT } from './cpu/flags';
@@ -32,13 +37,32 @@ always(() => {
     }
   }
   else {
-    if (screenEnabled)
-      // Unlike the rest of the memory, the synchronization of the screen occurs as the beam moves
-      for (let line = 0; line < SCREEN_LINE_COUNT; line++) {
-        const targetTStates = screenCommitTStatesByLine[line];
+    if (screenEnabled) {
+      // Unlike the rest of the memory, the synchronization of the screen occurs as the beam moves:
+      // the top border lines, the display lines with their margins, the bottom border lines
+      let targetTStates: number;
+
+      // Top border lines
+      for (let line = 0; line < TOP_BORDER_LINE_COUNT; line++) {
+        targetTStates = borderCommitTStates[line];
         do executeMain(); while (tStates < targetTStates);
-        commitScreenLine(line);
+        commitBorderLine(line);
       }
+
+      // Display lines with their margins
+      for (let line = 0; line < DISPLAY_LINE_COUNT; line++) {
+        targetTStates = displayCommitTStates[line];
+        do executeMain(); while (tStates < targetTStates);
+        commitDisplayLine(line);
+      }
+
+      // Bottom border lines
+      for (let line = TOP_BORDER_LINE_COUNT; line < BORDER_LINE_COUNT; line++) {
+        targetTStates = borderCommitTStates[line];
+        do executeMain(); while (tStates < targetTStates);
+        commitBorderLine(line);
+      }
+    }
 
     do executeMain(); while (tStates < TSTATES_PER_FRAME);
     setINT(INT);

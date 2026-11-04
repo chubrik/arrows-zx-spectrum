@@ -1,34 +1,43 @@
 import {
   ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT7, BORDER_LINE_COUNT, DISPLAY_LINE_COUNT,
-  DISPLAY_MIN_ADDR, SCREEN_LINE_COUNT, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE, TSTATES_PER_LINE
+  DISPLAY_MIN_ADDR, TOP_BORDER_LINE_COUNT, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE, TSTATES_PER_LINE
 } from './constants.ts';
 import { commitMemoryValue, initMemory, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, fetchGfx, memoryX, memoryY, screenEnabled } from './state.ts';
 import { world_copyRegion, world_copyRegionWithSignals, world_getArrow } from './world-refs.ts';
 
-// Screen = display area + border. The screen is committed line by line, following the beam:
-// BORDER_LINE_COUNT lines of the top border, the display lines with the side borders and
-// BORDER_LINE_COUNT lines of the bottom border, SCREEN_LINE_COUNT in all. The rest of the border
-// is cropped. A display line is numbered from the display, a screen line from the top border.
+// Screen = display area + border. The screen is committed line by line, following the beam, in
+// three phases the frame loop runs one after another: the top border lines, the display lines with
+// their margins and the bottom border lines. The rest of the border is cropped. The display lines
+// are numbered from the display, the border lines from the top border, the bottom ones right after
+// the top ones.
 
 let displayX: number;
 let displayY: number;
 const addrXs: number[] = []; // addr => pixel x (leftmost of the byte)
 const addrYs: number[] = []; // addr => pixel y
 const dirtyPixelIndexByLine: number[] = []; // display line => memoryDirtyBitmap index of its pixels
-export const screenCommitTStatesByLine: number[] = []; // screen line => T-states to commit it at
+export const displayCommitTStates: number[] = []; // display line => T-states to commit it at
 
-// Border of a screen line as two runs of cells, [x, xEnd, x, xEnd] with xEnd exclusive: a line
-// above or below the display has one run across the whole width minus the rounded corners and an
-// empty second run, a display line has the left and the right margins
-const borderRunsByLine: number[][] = [];
-const borderYs: number[] = [];           // screen line => pixel y
-const borderColorsByLine: number[] = []; // screen line => color its border is drawn with, -1 = none
+// A border line above or below the display is one run of cells across the whole width minus the
+// rounded corners, drawn with one copy from a solid color row of the cache
+export const borderCommitTStates: number[] = []; // border line => T-states to commit it at
+const borderXs: number[] = [];     // border line => x where the run starts
+const borderSrcX1s: number[] = []; // border line => x where the copy of the run from the cache ends
+const borderYs: number[] = [];     // border line => pixel y
+const borderColors: number[] = []; // border line => color it is drawn with, -1 = none
 
-const BORDER_PIXELS = 16;                             // Border shown at each side of the display
-const SCREEN_PIXELS = 256 + BORDER_PIXELS * 2;        // Pixels in a screen line
-const CORNER_SKIPS = [10, 7, 5, 4, 3, 2, 2, 1, 1, 1]; // Rounded corners: pixels cut from each end
-                                                      // of the outermost lines
+// The margins of a display line are the same two runs on every line, 16 pixels at each side
+let marginLeftX: number;  // The left edge of the screen
+let marginRightX: number; // Right after the display
+let marginSrcX1: number;  // x where the copy of a margin from the cache ends
+const marginColors: number[] = []; // display line => color its margins are drawn with, -1 = none
+
+// The outermost lines above and below the display are cut at the corners by CORNER_SKIPS pixels
+// from each end
+const BORDER_PIXELS = 16;
+const SCREEN_PIXELS = 256 + BORDER_PIXELS * 2; // Pixels in a screen line
+const CORNER_SKIPS = [10, 7, 5, 4, 3, 2, 2, 1, 1, 1];
 
 let paletteX: number;
 let paletteYs: number[] = [];
@@ -41,6 +50,7 @@ let attrYs: number[];                   // attr => y of the cache row
 const xsByAttrDefault: number[][] = []; // attr => value => x of the byte's window
 const xsByAttrFlash: number[][] = [];   // the same for the flash phase: ink and paper swapped
 let xsByAttrCurrent = xsByAttrDefault;
+let cacheLeft: number; // Left edge of the cache: a solid color row spans the screen width from it
 
 //#region Init
 
@@ -65,14 +75,13 @@ export function initScreen() {
     addrYs[addr] = displayY + ((addr & 0x1800) >> 4) + ((addr & 0x0700) >> 7) + ((addr & 0xE0) >> 1);
   }
 
-  initBorder();
   initPalettes();
   initGfx();
+  initBorder(); // After initGfx: the runs are laid out against the cache
 
-  // Every screen line is committed in the middle of its visible part
-  for (let line = 0; line < SCREEN_LINE_COUNT; line++)
-    screenCommitTStatesByLine[line] =
-      TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE + (line - BORDER_LINE_COUNT) * TSTATES_PER_LINE;
+  // Every line is committed in the middle of its visible part
+  for (let line = 0; line < DISPLAY_LINE_COUNT; line++)
+    displayCommitTStates[line] = TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE + line * TSTATES_PER_LINE;
 
   // The dirty bits of the 32 bytes of a display line share one memoryDirtyBitmap word: its index
   // is the byte address without the five low column bits. Of the address layout
@@ -86,23 +95,30 @@ export function initScreen() {
 
 function initBorder() {
   const screenX = displayX - BORDER_PIXELS * 2;
-  const screenY = displayY - BORDER_LINE_COUNT * 2;
-  const lastLine = SCREEN_LINE_COUNT - 1;
 
-  for (let line = 0; line < SCREEN_LINE_COUNT; line++) {
-    borderYs[line] = screenY + line * 2;
-    borderColorsByLine[line] = -1;
-    const displayLine = line - BORDER_LINE_COUNT;
+  marginLeftX = screenX;
+  marginRightX = displayX + 512;
+  marginSrcX1 = cacheLeft + BORDER_PIXELS * 2 - 1;
 
-    if (displayLine >= 0 && displayLine < DISPLAY_LINE_COUNT) {
-      borderRunsByLine[line] = [screenX, displayX, displayX + 512, screenX + SCREEN_PIXELS * 2];
-      continue;
-    }
+  for (let line = 0; line < DISPLAY_LINE_COUNT; line++)
+    marginColors[line] = -1;
 
-    // Above or below the display: the lines nearest to the edge are cut at the corners
-    const edge = line < BORDER_LINE_COUNT ? line : lastLine - line;
+  for (let line = 0; line < BORDER_LINE_COUNT; line++) {
+    const top = line < TOP_BORDER_LINE_COUNT;
+
+    // Where the line lies counted from the first display line: the top ones above it, the bottom
+    // ones below the last one
+    const offset = top ? line - TOP_BORDER_LINE_COUNT : DISPLAY_LINE_COUNT + line - TOP_BORDER_LINE_COUNT;
+
+    // The lines nearest to the edge are cut at the corners
+    const edge = top ? line : BORDER_LINE_COUNT - 1 - line;
     const skip = edge < CORNER_SKIPS.length ? CORNER_SKIPS[edge] : 0;
-    borderRunsByLine[line] = [screenX + skip * 2, screenX + (SCREEN_PIXELS - skip) * 2, 0, 0];
+
+    borderCommitTStates[line] = TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE + offset * TSTATES_PER_LINE;
+    borderXs[line] = screenX + skip * 2;
+    borderSrcX1s[line] = cacheLeft + (SCREEN_PIXELS - skip * 2) * 2 - 1;
+    borderYs[line] = displayY + offset * 2;
+    borderColors[line] = -1;
   }
 }
 
@@ -132,6 +148,13 @@ function initGfx() {
     xsByAttrDefault[attr] = valueXs[attrKinds[attr]];
     xsByAttrFlash[attr] = valueXs[attrKindsFlash[attr]];
   }
+
+  // The left edge of the cache is the leftmost window of the byte table, the byte with zero shift
+  const byteXs = valueXs[0];
+  cacheLeft = byteXs[0];
+
+  for (let value = 1; value < 256; value++)
+    if (byteXs[value] < cacheLeft) cacheLeft = byteXs[value];
 }
 
 //#endregion
@@ -167,7 +190,8 @@ export function refreshScreen() {
   for (let i = ATTRIBUTES_MIN_ADDR >> 5; i < indexAfterAttrs; i++)
     memoryDirtyBitmap[i] = -1;
 
-  borderColorsByLine.fill(-1);
+  borderColors.fill(-1);
+  marginColors.fill(-1);
   commitScreen();
 }
 
@@ -198,20 +222,18 @@ export function switchPalette(inc: number) {
 
 //#region Commit
 
+// The whole screen at once, in the order of the beam
 export function commitScreen() {
   if (!screenEnabled) return;
 
-  for (let line = 0; line < SCREEN_LINE_COUNT; line++)
-    commitScreenLine(line);
-}
+  for (let line = 0; line < TOP_BORDER_LINE_COUNT; line++)
+    commitBorderLine(line);
 
-// Commits a screen line following the beam: its border always, its display part if it has one.
-// The two are independent: the border of a line knows only its runs, the display part knows
-// nothing of the border.
-export function commitScreenLine(line: number) {
-  commitBorderLine(line);
-  const displayLine = line - BORDER_LINE_COUNT;
-  if (displayLine >= 0 && displayLine < DISPLAY_LINE_COUNT) commitDisplayLine(displayLine);
+  for (let line = 0; line < DISPLAY_LINE_COUNT; line++)
+    commitDisplayLine(line);
+
+  for (let line = TOP_BORDER_LINE_COUNT; line < BORDER_LINE_COUNT; line++)
+    commitBorderLine(line);
 }
 
 const minAttrIndex = ATTRIBUTES_MIN_ADDR >> 5;
@@ -224,7 +246,8 @@ let dirtyRowAttrs = 0;
 // dirtyRowAttrs and drawn on all eight lines of the current row. An attribute changed while the row
 // is being drawn is marked dirty the usual way, and it gets drawn both in the current frame, on the
 // remaining lines of its row, and in the next frame.
-function commitDisplayLine(line: number) {
+export function commitDisplayLine(line: number) {
+  commitMargins(line);
   const dirtyAttrIndex = minAttrIndex + (line >> 3);
   const attrAddrBase = dirtyAttrIndex << 5;
 
@@ -296,39 +319,48 @@ function commitPixels(addr: number, attr: number, value: number) {
   world_copyRegionWithSignals(cacheX, cacheY, cacheX + 15, cacheY + 1, addrXs[addr], addrYs[addr]);
 }
 
+// The whole border at once: the top lines, the margins of the display lines, the bottom lines
 export function commitBorder() {
-  for (let line = 0; line < SCREEN_LINE_COUNT; line++)
+  for (let line = 0; line < TOP_BORDER_LINE_COUNT; line++)
+    commitBorderLine(line);
+
+  for (let line = 0; line < DISPLAY_LINE_COUNT; line++)
+    commitMargins(line);
+
+  for (let line = TOP_BORDER_LINE_COUNT; line < BORDER_LINE_COUNT; line++)
     commitBorderLine(line);
 }
 
 // The border of a line is redrawn when the border color differs from the one it was drawn with.
 // So a color changed through the port in the middle of a frame lands on the lines below at once
 // and on the lines above in the next frame, and a split the game repeats every frame costs nothing
-// after the first one.
-function commitBorderLine(line: number) {
+// after the first one. The attribute with ink = paper = color has a solid color row in the cache
+// as wide as the screen, the lines are copied from it.
+export function commitBorderLine(line: number) {
   const color = borderColor;
-  if (borderColorsByLine[line] === color) return;
-  borderColorsByLine[line] = color;
+  if (borderColors[line] === color) return;
+  borderColors[line] = color;
 
-  // A pixel of the border color: for the attribute with ink = paper = color any window lies in
-  // a solid color row of the cache
-  const attr = color | (color << 3);
-  const srcX = xsByAttrDefault[attr][0];
-  const srcY = attrYs[attr];
-  const runs = borderRunsByLine[line];
-  const y = borderYs[line];
-  fillBorder(runs[0], runs[1], y, srcX, srcY);
-  fillBorder(runs[2], runs[3], y, srcX, srcY);
+  const srcY = attrYs[color | (color << 3)];
+
+  world_copyRegionWithSignals(
+    cacheLeft, srcY, borderSrcX1s[line], srcY + 1, borderXs[line], borderYs[line]);
 }
 
-// Fills the cells [x, xEnd) of a line with the pixel at (srcX, srcY): the bridge to the GFX cache,
-// where the run is copied at once from a solid color row instead of pixel by pixel
-function fillBorder(x: number, xEnd: number, y: number, srcX: number, srcY: number) {
-  const srcX1 = srcX + 1;
-  const srcY1 = srcY + 1;
+// The margins of a display line, the same way
+function commitMargins(line: number) {
+  /*!inline*/
+  const color = borderColor;
 
-  for (let px = x; px < xEnd; px += 2)
-    world_copyRegionWithSignals(srcX, srcY, srcX1, srcY1, px, y);
+  if (marginColors[line] !== color) {
+    marginColors[line] = color;
+
+    const srcY = attrYs[color | (color << 3)];
+    const srcY1 = srcY + 1;
+    const y = displayY + line + line;
+    world_copyRegionWithSignals(cacheLeft, srcY, marginSrcX1, srcY1, marginLeftX, y);
+    world_copyRegionWithSignals(cacheLeft, srcY, marginSrcX1, srcY1, marginRightX, y);
+  }
 }
 
 //#endregion

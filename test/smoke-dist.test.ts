@@ -12,11 +12,13 @@ const FRAMES = 50;
 
 // The mock keeps the bytes committed by the CPU (see values.ts: commitValue copies a row of the
 // values cache into the byte position) and reads them back for fetchValue. Coordinates follow
-// getPosition() = (1024, 1024): cpuX = 1040, cpuY = 1024 → cacheX0 = 784, cacheY = 2080.
+// getPosition() = (1024, 1024): cpuX = 1040, cpuY = 1024 → cacheX0 = 784, cacheY = 2080;
+// the display area starts at displayX = 1120, displayY = 624 and is 512 × 384 cells.
 const PRELUDE = `
   var __active = [], __always = [], __tick = 0;
-  var __stats = { getArrow: 0, memoryWrites: 0, screenWrites: 0 };
+  var __stats = { getArrow: 0, memoryWrites: 0, screenWrites: 0, displayWrites: 0 };
   var __CX0 = 784, __CX1 = 792, __CY = 2080;
+  var __DX = 1120, __DY = 624;
   // Two palettes stand on the map (paletteX = memoryX - 32) eight rows apart,
   // with the selector on the first one
   var __PX = 784, __PY = 1056, __PY_END = __PY + 16, __selectorY = __PY + 1;
@@ -62,7 +64,10 @@ const PRELUDE = `
         __stats.memoryWrites++;
       }
     },
-    copyRegionWithSignals() { __stats.screenWrites++; },
+    copyRegionWithSignals(x0, y0, x1, y1, dx, dy) {
+      __stats.screenWrites++;
+      if (dx >= __DX && dx < __DX + 512 && dy >= __DY && dy < __DY + 384) __stats.displayWrites++;
+    },
     getArrow(x, y) {
       __stats.getArrow++;
       if (y >= __PY && y <= __PY_END) { // The palette rows, outside the byte area
@@ -140,7 +145,9 @@ describe('Smoke test (dist)', () => {
       evalOrThrow(vm, `state.do = 1; state.run = 1; state.max = 1; __ticks(1 + ${FRAMES});`, 'run.js');
 
       const statsHandle = vm.getProp(vm.global, '__stats');
-      const stats = vm.dump(statsHandle) as { getArrow: number; memoryWrites: number; screenWrites: number };
+      const stats = vm.dump(statsHandle) as {
+        getArrow: number; memoryWrites: number; screenWrites: number; displayWrites: number;
+      };
       statsHandle.dispose();
 
       const usageHandle = runtime.computeMemoryUsage();
@@ -150,6 +157,9 @@ describe('Smoke test (dist)', () => {
       // The ROM boot writes to RAM (RAM test) and to the screen (CLS)
       expect(stats.memoryWrites).toBeGreaterThan(0);
       expect(stats.screenWrites).toBeGreaterThan(0);
+      // The display itself, not only the border: a display line commit that returns early would
+      // still pass on the border copies
+      expect(stats.displayWrites).toBeGreaterThan(0);
 
       // A sparse (hash-map) array of 64K entries would add 65K object properties
       expect(usage.prop_count).toBeLessThan(10_000);

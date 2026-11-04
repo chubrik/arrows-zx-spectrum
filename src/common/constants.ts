@@ -16,8 +16,8 @@ export const DISPLAY_MIN_ADDR = RAM_MIN_ADDR;
 export const ATTRIBUTES_MIN_ADDR = 0x5800;
 export const ATTRIBUTES_AFTER_ADDR = 0x5B00;
 export const DISPLAY_LINE_COUNT = 192;
-export const BORDER_LINE_COUNT = 14; // Border lines shown above and below the display area
-export const SCREEN_LINE_COUNT = DISPLAY_LINE_COUNT + BORDER_LINE_COUNT * 2;
+export const TOP_BORDER_LINE_COUNT = 14;
+export const BORDER_LINE_COUNT = TOP_BORDER_LINE_COUNT * 2;
 
 export const MS_PER_FRAME = 20; // 50 fps
 
