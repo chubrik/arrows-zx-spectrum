@@ -58,7 +58,8 @@ release.
 ## <a name="how-it-works"></a>How it works
 
 The emulator is written in TypeScript and compiled into code for in-game command blocks. Running a
-game takes just five blocks: the CPU, the ROM initializer, and three blocks with a RAM snapshot.
+game takes just six blocks: the CPU, the GFX block, the ROM initializer, and three blocks with a RAM
+snapshot — plus a color palette laid out on the map.
 
 - **CPU.** The complete Z80 instruction set, including undocumented instructions and flags.
   Correctness is verified by the test suite of the
@@ -67,16 +68,18 @@ game takes just five blocks: the CPU, the ROM initializer, and three blocks with
   frame, 50 frames per second.
 - **Speed.** The emulator runs in real time. Two extra modes are available: single-step and
   unlimited speed.
-- **Memory.** 16K of ROM and 48K of RAM. The whole memory fits on the screen at once, down to the
+- **Memory.** 16K of ROM and 48K of RAM. The whole memory lies on the map at once, down to the
   last bit, and changes right before your eyes: you can watch the stack at work, the buffers being
   updated, and the sprites being prepared before they appear on the screen.
-- **Screen.** 256×192 pixels, border and FLASH attributes. The display area is committed to the
-  map row by row, following the beam just like on a real TV.
+- **Screen.** 256×192 pixels, border and FLASH attributes. The screen is committed to the map line
+  by line, border included, following the beam just like on a real TV. Every byte is drawn with a
+  single copy from a cache that the GFX block builds on the map out of a palette of 16 colors;
+  several palettes can stand on the map and be switched on the fly.
 - **Keyboard.** The 8×5 half-row matrix of the Spectrum keyboard is read directly from signals
   on the map.
 - **Sound.** The beeper is translated into the game’s music arrows.
 - **Packing.** The build pipeline squeezes the whole CPU into a single command block of about
-  6 000 characters (24 KB): esbuild → custom function inliner → three Terser passes → arrow-function
+  6 600 characters (24 KB): esbuild → custom function inliner → three Terser passes → arrow-function
   conversion → a self-extracting packed string.
 - **Games.** Games are loaded from `.z80` snapshots. Each snapshot is packed into three command
   blocks — 16K of RAM each — plus the CPU registers and the border color.

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  ATTRIBUTES_MIN_ADDR, BIT7, BORDER_LINE_COUNT, DISPLAY_LINE_COUNT, DISPLAY_MIN_ADDR,
-  TOP_BORDER_LINE_COUNT
+  ATTRIBUTES_MIN_ADDR, BIT7, BORDER_LINE_COUNT, BORDER_WIDTH, DISPLAY_HEIGHT, DISPLAY_LINE_COUNT,
+  DISPLAY_MIN_ADDR, DISPLAY_WIDTH, PIXEL, SCREEN_WIDTH, TOP_BORDER_LINE_COUNT
 } from '../src/common/constants';
 import { initMemory, mem, write } from '../src/common/memory';
 import {
@@ -39,9 +39,7 @@ const ATTR_ADDR = ATTRIBUTES_MIN_ADDR + ROW * 32 + COLUMN;
 const COPIES_PER_BYTE = 1; // A byte is one copy of its window from the GFX cache
 const BYTES_PER_LINE = 32;
 
-// The border geometry of screen.ts: 16 pixels at each side, the outermost lines cut at the corners
-const BORDER_PIXELS = 16;
-const SCREEN_PIXELS = 256 + 2 * BORDER_PIXELS;
+// The corners of screen.ts: the outermost lines are cut by these pixels from each end
 const CORNER_SKIPS = [10, 7, 5, 4, 3, 2, 2, 1, 1, 1];
 const BEAM_LINE_COUNT = BORDER_LINE_COUNT + DISPLAY_LINE_COUNT;
 const ALL_BEAM_LINES = [...Array(BEAM_LINE_COUNT).keys()];
@@ -59,16 +57,16 @@ const beamLine = (displayLine: number) => TOP_BORDER_LINE_COUNT + displayLine;
 /** The lines drawn once each, with the number of copies on each */
 const drawn = (lines: number[], copiesPerLine = COPIES_PER_BYTE) => new Map(lines.map(l => [l, copiesPerLine]));
 
-/** Border pixels of a beam line */
-function borderPixels(line: number): number {
+/** Border cells of a beam line */
+function borderCells(line: number): number {
   const displayLine = line - TOP_BORDER_LINE_COUNT;
-  if (displayLine >= 0 && displayLine < DISPLAY_LINE_COUNT) return 2 * BORDER_PIXELS;
+  if (displayLine >= 0 && displayLine < DISPLAY_LINE_COUNT) return BORDER_WIDTH * 2;
   const edge = line < TOP_BORDER_LINE_COUNT ? line : BEAM_LINE_COUNT - 1 - line;
-  return SCREEN_PIXELS - 2 * (CORNER_SKIPS[edge] ?? 0);
+  return SCREEN_WIDTH - (CORNER_SKIPS[edge] ?? 0) * PIXEL * 2;
 }
 
 /** The border of the given beam lines, drawn once: the cells copied on each */
-const borderDrawnOn = (lines: number[]) => new Map(lines.map(l => [l, borderPixels(l) * 2]));
+const borderDrawnOn = (lines: number[]) => new Map(lines.map(l => [l, borderCells(l)]));
 
 describe('Screen: line-by-line commit', () => {
   // The GFX tables the display is drawn from: a stand-in of the right shape, only the copies are
@@ -83,8 +81,8 @@ describe('Screen: line-by-line commit', () => {
 
   const displayX = cpuX + 80;
   const displayY = cpuY - 400;
-  const screenX = displayX - BORDER_PIXELS * 2;
-  const screenY = displayY - TOP_BORDER_LINE_COUNT * 2;
+  const screenX = displayX - BORDER_WIDTH;
+  const screenY = displayY - TOP_BORDER_LINE_COUNT * PIXEL;
 
   /** A frame, the three phases of the frame loop of cpu.ts: the lines are committed in the beam
    *  order, writes[beamLine] runs before the commit of that line */
@@ -113,17 +111,18 @@ describe('Screen: line-by-line commit', () => {
     let borderCopies = 0;
 
     for (const { x, y, w } of copies) {
-      const inScreen = x >= screenX && x < screenX + SCREEN_PIXELS * 2
-        && y >= screenY && y < screenY + BEAM_LINE_COUNT * 2;
+      const inScreen = x >= screenX && x < screenX + SCREEN_WIDTH
+        && y >= screenY && y < screenY + BEAM_LINE_COUNT * PIXEL;
       if (!inScreen) throw new Error(`Copy outside the screen: ${x}, ${y}`);
 
-      const inDisplay = x >= displayX && x < displayX + 512 && y >= displayY && y < displayY + 384;
+      const inDisplay = x >= displayX && x < displayX + DISPLAY_WIDTH
+        && y >= displayY && y < displayY + DISPLAY_HEIGHT;
 
       if (inDisplay) {
-        const line = (y - displayY) >> 1;
+        const line = (y - displayY) / PIXEL;
         display.set(line, (display.get(line) ?? 0) + 1);
       } else {
-        const line = (y - screenY) >> 1;
+        const line = (y - screenY) / PIXEL;
         border.set(line, (border.get(line) ?? 0) + w);
         borderCopies++;
       }

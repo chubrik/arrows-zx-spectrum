@@ -1,3 +1,4 @@
+import { DISPLAY_WIDTH, PIXEL, SCREEN_WIDTH } from './common/constants';
 import type { GfxTables, State } from './common/state';
 import {
   world_copyRegion, world_copyRegionWithSignals, world_getArrow, world_getSignal, world_setSignal
@@ -7,8 +8,8 @@ const { x, y } = getPosition()!;
 const _state = state as State;
 let prevTick = 0;
 
-// The palettes on the map initialize on the first tick. So here the block arranges itself an
-// activation one tick later.
+// The first two ticks have to be left to the palettes on the map to initialize. So here the block
+// arranges a delayed activation for itself.
 world_setSignal(x + 2, y, 5);
 
 onActive(e => {
@@ -18,29 +19,51 @@ onActive(e => {
   prevTick = e.tick;
   if (!affect) return;
 
-  if (!inited) {
-    inited = true;
-    initPalettes();
-    return;
-  }
-
-  switchPalette(world_getSignal(x, y - 1) ? -1 : 1);
+  if (!inited)
+    init();
+  else
+    switchPalette(world_getSignal(x, y - 1) ? -1 : 1);
 });
 
 let inited: boolean;
 let cacheX: number;
 let cacheY: number;
-let paletteX: number;
-const paletteYs: number[] = [];
-let paletteIndex: number;
 
-function initPalettes() {
+function init() {
+  inited = true;
   const memoryX = _state.memX;
   const memoryY = _state.memY;
   cacheX = memoryX;
   cacheY = memoryY + 1024;
-  paletteX = memoryX - 32;
 
+  // One-time initializations: the palettes, the cache layout by rows and columns, the GFX tables
+  initPalettes(memoryX, memoryY);
+  initCacheRows();
+  initCacheColumns();
+  const gfx = buildGfxTables();
+
+  // The cache is drawn on the map at once, and again on every palette switch
+  rebuildCache();
+
+  // The GFX tables are handed to the CPU block only when everything is ready to work
+  _state.gfx = gfx;
+}
+
+const BYTE_BITS = 8;
+const BYTE_COUNT = 1 << BYTE_BITS;
+const ATTR_COUNT = 256;
+const COLORS = 8;    // Colors per brightness level
+const FLASH = 0x80;  // Attribute bit: flash
+const BRIGHT = 0x40; // Attribute bit: brightness
+
+//#region Palettes
+
+let paletteX: number;
+const paletteYs: number[] = [];
+let paletteIndex = 0; // Without a selector on the map, the first palette
+
+function initPalettes(memoryX: number, memoryY: number) {
+  paletteX = memoryX - 32;
   let palIndex = 0;
   let palY = memoryY;
 
@@ -51,15 +74,10 @@ function initPalettes() {
     paletteYs[palIndex++] = palY;
     palY += 8;
   }
-
-  calcDeBruijn();
-  listRows();
-  buildCache();
-  _state.gfx = buildTables();
 }
 
 // Palette switch: the selector moves to the neighbouring palette, the cache is rebuilt from it and
-// the main block gets a request to redraw the screen. The tables do not depend on the palette and
+// the CPU block gets a request to redraw the screen. The tables do not depend on the palette and
 // stay as they are.
 function switchPalette(inc: number) {
   const count = paletteYs.length;
@@ -72,44 +90,33 @@ function switchPalette(inc: number) {
   world_copyRegion(selectorX, selectorY, selectorX + 1, selectorY + 1, selectorX, newSelectorY);
   world_copyRegion(selectorX - 2, selectorY, selectorX - 1, selectorY + 1, selectorX, selectorY);
 
-  buildCache();
+  rebuildCache();
   _state.do = 1;
   _state.pal = 1;
 }
 
-//#region Cache layout
+//#endregion
 
-const PIXEL = 2;                   // A Spectrum pixel is a 2×2 square of map cells
-const BYTE_BITS = 8;
-const BYTE_COUNT = 1 << BYTE_BITS;
-const ATTR_COUNT = 256;
-const COLORS = 8;                  // Colors per brightness level
-const FLASH = 0x80;                // Attribute bit: flash
-const BRIGHT = 0x40;               // Attribute bit: brightness
-const DISPLAY_WIDTH = 256 * PIXEL; // Display width in cells
-const BORDER_WIDTH = 16 * PIXEL;   // Border width at one side in cells
+//#region Cache layout by rows
 
-// Kinds of the X tables: the one the main block looks up the X of a byte's window in
+// Kinds of the X tables: the one the CPU block looks up the X of a byte's window in
 const NORMAL = 0;      // The byte as is: the ones are the ink of the row
 const INVERTED = 1;    // The inverted byte: the row holds the pair the other way round
 const SOLID_INK = 2;   // The solid ink color of the row: the window of byte 0xFF for any byte
 const SOLID_PAPER = 3; // The solid paper color of the row: the window of byte 0x00 for any byte
 
-// The pair key is the attribute without the flash bit, laid out as in the attribute: 0BPPPIII
-function pairKey(bright: number, ink: number, paper: number) { return bright | (paper << 3) | ink; }
-
 // The cache rows, top down: the solid colors without brightness (white..black) as wide as the
-// screen with the border, then the pairs ink > paper without and with brightness, ink descending,
-// paper descending. A pair row holds the paper as the background and the ink along the ones of the
-// de Bruijn sequence, so the window of any byte of that pair lies in it at the byte's shift. In a
-// solid row any window will do.
+// screen, then the pairs ink > paper without and with brightness, ink descending, paper descending.
+// A pair row holds the paper as the background and the ink along the ones of the de Bruijn
+// sequence, so the window of any byte of that pair lies in it at the byte's shift. In a solid row
+// any window will do.
 const SOLID_ROW_COUNT = COLORS;
 const rowInks: number[] = [];   // Row → ink color: 0..7 with the BRIGHT bit
 const rowPapers: number[] = []; // Row → paper color: 0..7 with the BRIGHT bit
 const keyRows = new Int32Array(ATTR_COUNT);  // Pair key → the row the pair lies in
 const keyKinds = new Int32Array(ATTR_COUNT); // Pair key → the kind of the X table for it
 
-function listRows() {
+function initCacheRows() {
   for (let color = COLORS - 1; color >= 0; color--)
     addRow(0, color, color);
 
@@ -143,66 +150,50 @@ function setKey(key: number, row: number, kind: number) {
   keyKinds[key] = kind;
 }
 
-//#endregion
+// The pair key is the attribute without the flash bit, laid out as in the attribute: 0BPPPIII
+function pairKey(bright: number, ink: number, paper: number) {
+  return bright | (paper << 3) | ink;
+}
 
-//#region Cache on the map
-
+// Y of a cache row on the map
 function rowY(row: number) { return cacheY + row * PIXEL; }
 
-// Copies the pixel of color (0..7 with the BRIGHT bit) from the current palette to (x, y)
-function copyColor(paletteY: number, color: number, x: number, y: number) {
-  const srcX = paletteX + ((color & 7) << 1);
-  const srcY = color & BRIGHT ? paletteY + PIXEL : paletteY; // Bright colors: second palette row
-  world_copyRegionWithSignals(srcX, srcY, srcX + PIXEL - 1, srcY + PIXEL - 1, x, y);
-}
+//#endregion
 
-function buildCache() {
-  const paletteY = paletteYs[paletteIndex];
-  const rowCount = rowInks.length;
-  const solidBottom = rowY(SOLID_ROW_COUNT); // The first row after the solid ones
-  const cacheBottom = rowY(rowCount);
+//#region Cache layout by columns
 
-  // The background column: the paper of every row
-  for (let row = 0; row < rowCount; row++)
-    copyColor(paletteY, rowPapers[row], cacheX, rowY(row));
+// A de Bruijn sequence B(2, 8), built by Martin's greedy walk: after seven zeros, append a one
+// whenever the byte it completes is new, otherwise a zero, until neither is. The walk is known to
+// pass every byte once, ending with 0x00, and the 7 + 256 bits are the fewest that fit them.
 
-  // Stretching the background to the display width
-  for (let width = PIXEL; width < DISPLAY_WIDTH; width *= 2)
-    world_copyRegionWithSignals(
-      cacheX, cacheY, cacheX + width - 1, cacheBottom - 1, cacheX + width, cacheY);
+const columnBits: number[] = []; // The bit sequence that contains every possible byte
+const columnShifts = new Int32Array(BYTE_COUNT); // The window shift of every byte
 
-  // The right edge of the background: the solid rows up to the width of the screen with the border,
-  // the pair rows up to the length of the sequence
-  const solidWidth = DISPLAY_WIDTH + 2 * BORDER_WIDTH;
-  const pairWidth = bruijnBits.length * PIXEL;
+function initCacheColumns() {
+  const used = new Uint8Array(BYTE_COUNT);
 
-  world_copyRegionWithSignals(
-    cacheX, cacheY, cacheX + solidWidth - DISPLAY_WIDTH - 1, solidBottom - 1,
-    cacheX + DISPLAY_WIDTH, cacheY);
+  for (let i = 1; i < BYTE_BITS; i++)
+    columnBits.push(0);
 
-  world_copyRegionWithSignals(
-    cacheX, solidBottom, cacheX + pairWidth - DISPLAY_WIDTH - 1, cacheBottom - 1,
-    cacheX + DISPLAY_WIDTH, solidBottom);
+  let byte = 0; // The byte the last eight bits make
 
-  // The signal column: the ink of every pair row in place of the first one of the sequence, which
-  // comes after the seven zeros
-  const signalX = cacheX + (BYTE_BITS - 1) * PIXEL;
+  for (; ;) {
+    const zero = (byte << 1) & 0xFF;
+    const one = zero | 1;
+    byte = used[one] ? zero : one;
+    if (used[byte]) break;
 
-  for (let row = SOLID_ROW_COUNT; row < rowCount; row++)
-    copyColor(paletteY, rowInks[row], signalX, rowY(row));
-
-  // Filling with signals along the ones of the sequence
-  for (let i = BYTE_BITS; i < bruijnBits.length; i++)
-    if (bruijnBits[i])
-      world_copyRegionWithSignals(
-        signalX, solidBottom, signalX + PIXEL - 1, cacheBottom - 1, cacheX + i * PIXEL, solidBottom);
+    used[byte] = 1;
+    columnBits.push(byte & 1);
+    columnShifts[byte] = columnBits.length - BYTE_BITS;
+  }
 }
 
 //#endregion
 
-//#region Tables for the main block
+//#region GFX tables for the CPU block
 
-function buildTables(): GfxTables {
+function buildGfxTables(): GfxTables {
   const attrYs: number[] = [];
   const attrKinds: number[] = [];
   const attrKindsFlash: number[] = [];
@@ -219,12 +210,12 @@ function buildTables(): GfxTables {
   }
 
   const valueXs: number[][] = [[], [], [], []]; // By kind
-  const solidInkX = cacheX + bruijnShifts[0xFF] * PIXEL;   // Byte 0xFF window: all pixels ink
-  const solidPaperX = cacheX + bruijnShifts[0x00] * PIXEL; // Byte 0x00 window: all pixels paper
+  const solidInkX = cacheX + columnShifts[0xFF] * PIXEL;   // Byte 0xFF window: all pixels ink
+  const solidPaperX = cacheX + columnShifts[0x00] * PIXEL; // Byte 0x00 window: all pixels paper
 
   for (let value = 0; value < BYTE_COUNT; value++) {
-    valueXs[NORMAL].push(cacheX + bruijnShifts[value] * PIXEL);
-    valueXs[INVERTED].push(cacheX + bruijnShifts[value ^ 0xFF] * PIXEL);
+    valueXs[NORMAL].push(cacheX + columnShifts[value] * PIXEL);
+    valueXs[INVERTED].push(cacheX + columnShifts[value ^ 0xFF] * PIXEL);
     valueXs[SOLID_INK].push(solidInkX);
     valueXs[SOLID_PAPER].push(solidPaperX);
   }
@@ -234,35 +225,54 @@ function buildTables(): GfxTables {
 
 //#endregion
 
-//#region De Bruijn sequence
+//#region Drawing the cache on the map
 
-// bruijnBits is the shortest bit sequence that contains every byte from 0x00 to 0xFF.
-// bruijnShifts is the window shift of every byte in it.
-//
-// A de Bruijn sequence B(2, 8), built by Martin's greedy walk: after seven zeros, append a one
-// whenever the byte it completes is new, otherwise a zero, until neither is. The walk is known to
-// pass every byte once, ending with 0x00, and the 7 + 256 bits are the fewest that fit them.
-const bruijnBits: number[] = [];
-const bruijnShifts = new Int32Array(BYTE_COUNT);
+function rebuildCache() {
+  const paletteY = paletteYs[paletteIndex];
+  const rowCount = rowInks.length;
+  const solidBottom = rowY(SOLID_ROW_COUNT); // The first row after the solid ones
+  const cacheBottom = rowY(rowCount);
 
-function calcDeBruijn() {
-  const used = new Uint8Array(BYTE_COUNT);
+  // The background column: the paper of every row
+  for (let row = 0; row < rowCount; row++)
+    copyColor(paletteY, rowPapers[row], cacheX, rowY(row));
 
-  for (let i = 1; i < BYTE_BITS; i++)
-    bruijnBits.push(0);
+  // Stretching the background to the display width
+  for (let width = PIXEL; width < DISPLAY_WIDTH; width *= 2)
+    world_copyRegionWithSignals(
+      cacheX, cacheY, cacheX + width - 1, cacheBottom - 1, cacheX + width, cacheY);
 
-  let byte = 0; // The byte the last eight bits make
+  // The right edge of the background: the solid rows up to the width of the screen, the pair rows
+  // up to the length of the sequence
+  const pairWidth = columnBits.length * PIXEL;
 
-  for (; ;) {
-    const zero = (byte << 1) & 0xFF;
-    const one = zero | 1;
-    byte = used[one] ? zero : one;
-    if (used[byte]) break;
+  world_copyRegionWithSignals(
+    cacheX, cacheY, cacheX + SCREEN_WIDTH - DISPLAY_WIDTH - 1, solidBottom - 1,
+    cacheX + DISPLAY_WIDTH, cacheY);
 
-    used[byte] = 1;
-    bruijnBits.push(byte & 1);
-    bruijnShifts[byte] = bruijnBits.length - BYTE_BITS;
-  }
+  world_copyRegionWithSignals(
+    cacheX, solidBottom, cacheX + pairWidth - DISPLAY_WIDTH - 1, cacheBottom - 1,
+    cacheX + DISPLAY_WIDTH, solidBottom);
+
+  // The signal column: the ink of every pair row in place of the first one of the sequence, which
+  // comes after the seven zeros
+  const signalX = cacheX + (BYTE_BITS - 1) * PIXEL;
+
+  for (let row = SOLID_ROW_COUNT; row < rowCount; row++)
+    copyColor(paletteY, rowInks[row], signalX, rowY(row));
+
+  // Filling with signals along the ones of the sequence
+  for (let i = BYTE_BITS; i < columnBits.length; i++)
+    if (columnBits[i])
+      world_copyRegionWithSignals(
+        signalX, solidBottom, signalX + PIXEL - 1, cacheBottom - 1, cacheX + i * PIXEL, solidBottom);
+}
+
+// Copies the pixel of color (0..7 with the BRIGHT bit) from the current palette to (x, y)
+function copyColor(paletteY: number, color: number, x: number, y: number) {
+  const srcX = paletteX + ((color & 7) << 1);
+  const srcY = color & BRIGHT ? paletteY + PIXEL : paletteY; // Bright colors: second palette row
+  world_copyRegionWithSignals(srcX, srcY, srcX + PIXEL - 1, srcY + PIXEL - 1, x, y);
 }
 
 //#endregion

@@ -155,8 +155,8 @@ export type State = {
 }
 
 /**
- * Screen rendering tables. The GFX block builds them from the layout of the graphics cache on the
- * map and hands them to the main block through state. All coordinates are absolute.
+ * Screen rendering tables. The GFX block builds them from the layout of the GFX cache on the map
+ * and hands them to the CPU block through state. All coordinates are absolute.
  */
 export type GfxTables = {
   /** Attribute → Y of the cache row */

@@ -19,6 +19,13 @@ export const DISPLAY_LINE_COUNT = 192;
 export const TOP_BORDER_LINE_COUNT = 14;
 export const BORDER_LINE_COUNT = TOP_BORDER_LINE_COUNT * 2;
 
+// The screen on the map, in cells: a Spectrum pixel is a PIXEL × PIXEL square of cells
+export const PIXEL = 2;
+export const DISPLAY_WIDTH = 256 * PIXEL;
+export const DISPLAY_HEIGHT = DISPLAY_LINE_COUNT * PIXEL;
+export const BORDER_WIDTH = 16 * PIXEL; // The border shown at each side of the display
+export const SCREEN_WIDTH = DISPLAY_WIDTH + BORDER_WIDTH * 2;
+
 export const MS_PER_FRAME = 20; // 50 fps
 
 // 312 scan lines per frame:

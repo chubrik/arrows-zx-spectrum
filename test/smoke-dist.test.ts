@@ -127,7 +127,7 @@ describe('Smoke test (dist)', () => {
     try {
       evalOrThrow(vm, PRELUDE, 'prelude.js');
       evalOrThrow(vm, `__load(${JSON.stringify(cpu)})`, 'cpu.js');
-      // The GFX block finds the palettes, builds the graphics cache and puts its tables into state.
+      // The GFX block finds the palettes, builds the GFX cache and puts its tables into state.
       // It skips the first activation, the palettes light up a tick later, so it is activated twice
       evalOrThrow(vm, `__load(${JSON.stringify(gfx)}); __activate(); __ticks(1); __activate();`, 'gfx.js');
       expect(evalOrThrow(vm, `state.gfx.attrYs.length`, 'gfx-tables.js')).toBe(256);
@@ -140,7 +140,7 @@ describe('Smoke test (dist)', () => {
 
       // A palette switch is a repeated activation of the GFX block, the first one loaded with
       // onActive: the selector moves to the second palette, eight rows down plus the row of its own
-      // offset, the cache is rebuilt and the pal flag asks the main block to redraw the screen
+      // offset, the cache is rebuilt and the pal flag asks the CPU block to redraw the screen
       expect(evalOrThrow(vm, `__activate(0); state.pal`, 'pal.js')).toBe(1);
       expect(evalOrThrow(vm, `__selectorY - __PY`, 'selector.js')).toBe(9);
       expect(evalOrThrow(vm, `__ticks(1); state.pal`, 'pal-done.js')).toBe(0);

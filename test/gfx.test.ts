@@ -140,7 +140,7 @@ describe('GFX block (dist)', () => {
   const gfx = block.gfx();
   const cacheY = Math.min(...gfx.attrYs); // The top row of the cache
 
-  it('builds the cache: 64 rows, solid rows as wide as the screen with the border', () => {
+  it('builds the cache: 64 rows, solid rows as wide as the screen', () => {
     let maxX = -Infinity;
     let maxY = -Infinity;
 
