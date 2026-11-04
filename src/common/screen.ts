@@ -1,10 +1,9 @@
 import {
-  ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT6, BIT7, BORDER_LINE_COUNT,
-  DISPLAY_LINE_COUNT, DISPLAY_MIN_ADDR, SCREEN_LINE_COUNT, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE,
-  TSTATES_PER_LINE
+  ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT7, BORDER_LINE_COUNT, DISPLAY_LINE_COUNT,
+  DISPLAY_MIN_ADDR, SCREEN_LINE_COUNT, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE, TSTATES_PER_LINE
 } from './constants.ts';
 import { commitMemoryValue, initMemory, mem, memoryDirtyBitmap } from './memory.ts';
-import { cpuX, cpuY, memoryX, memoryY, screenEnabled } from './state.ts';
+import { cpuX, cpuY, fetchGfx, memoryX, memoryY, screenEnabled } from './state.ts';
 import { world_copyRegion, world_copyRegionWithSignals, world_getArrow } from './world-refs.ts';
 
 // Screen = display area + border. The screen is committed line by line, following the beam:
@@ -34,9 +33,14 @@ const CORNER_SKIPS = [10, 7, 5, 4, 3, 2, 2, 1, 1, 1]; // Rounded corners: pixels
 let paletteX: number;
 let paletteYs: number[] = [];
 let paletteIndex: number;
-const colorMapDefault: number[][] = []; // attr => [inkX, inkY, paperX, paperY]
-const colorMapFlash: number[][] = []; // ink and paper are swapped when flash bit is set
-let colorMapCurrent = colorMapDefault;
+
+// The GFX block (gfx.ts) builds the graphics cache on the map and hands its tables over through
+// state. A display byte is drawn with one copy of its window from the cache: the attribute sets
+// the row, the byte value sets the X through the X table chosen for that attribute.
+let attrYs: number[];                   // attr => y of the cache row
+const xsByAttrDefault: number[][] = []; // attr => value => x of the byte's window
+const xsByAttrFlash: number[][] = [];   // the same for the flash phase: ink and paper swapped
+let xsByAttrCurrent = xsByAttrDefault;
 
 //#region Init
 
@@ -63,6 +67,7 @@ export function initScreen() {
 
   initBorder();
   initPalettes();
+  initGfx();
 
   // Every screen line is committed in the middle of its visible part
   for (let line = 0; line < SCREEN_LINE_COUNT; line++)
@@ -113,31 +118,19 @@ function initPalettes() {
     paletteYs[index++] = y;
     y += 8;
   }
-
-  initColorMaps();
 }
 
-function initColorMaps() {
-  const paletteY = paletteYs[paletteIndex];
-  const palette: number[][] = []; // color => [x, y]
-
-  for (let i = 0; i < 16; i++) {
-    const x = paletteX + ((i & 7) << 1);
-    const y = paletteY + ((i & 8) >> 2);
-    palette[i] = [x, y];
-  }
+//todo: Do not start the screen until the tables are in state
+function initGfx() {
+  const gfx = fetchGfx()!;
+  attrYs = gfx.attrYs;
+  const valueXs = gfx.valueXs;
+  const attrKinds = gfx.attrKinds;
+  const attrKindsFlash = gfx.attrKindsFlash;
 
   for (let attr = 0; attr < 256; attr++) {
-    const flash = attr & BIT7;
-    const bright = (attr & BIT6) >> 3;
-    const paper = (attr & 0x38) >> 3;
-    const ink = attr & 0x07;
-
-    const inkXY = palette[bright | ink];
-    const paperXY = palette[bright | paper];
-
-    const colorXY = colorMapDefault[attr] = [inkXY[0], inkXY[1], paperXY[0], paperXY[1]];
-    colorMapFlash[attr] = flash ? [paperXY[0], paperXY[1], inkXY[0], inkXY[1]] : colorXY;
+    xsByAttrDefault[attr] = valueXs[attrKinds[attr]];
+    xsByAttrFlash[attr] = valueXs[attrKindsFlash[attr]];
   }
 }
 
@@ -153,7 +146,7 @@ export function incFrameCount() {
 
   if (flashPhaseChanged) {
     flashPhase = newFlashPhase;
-    colorMapCurrent = flashPhase ? colorMapFlash : colorMapDefault;
+    xsByAttrCurrent = flashPhase ? xsByAttrFlash : xsByAttrDefault;
   }
 }
 
@@ -199,7 +192,7 @@ export function switchPalette(inc: number) {
   world_copyRegion(selectorX, selectorY, selectorX + 1, selectorY + 1, selectorX, newPaletteY + 1);
   world_copyRegion(selectorX - 2, selectorY, selectorX - 1, selectorY + 1, selectorX, selectorY);
 
-  initColorMaps();
+  //todo: The colors come from the graphics cache, the GFX block has to rebuild it for a new palette
   refreshScreen();
 }
 
@@ -298,28 +291,9 @@ function commitAttrsRow(attrAddrBase: number) {
 
 function commitPixels(addr: number, attr: number, value: number) {
   /*!inline*/
-  const addrX = addrXs[addr];
-  const y = addrYs[addr];
-
-  const colorsXY = colorMapCurrent[attr];
-  const inkX0 = colorsXY[0];
-  const inkY0 = colorsXY[1];
-  const inkX1 = inkX0 + 1;
-  const inkY1 = inkY0 + 1;
-  const paperX0 = colorsXY[2];
-  const paperY0 = colorsXY[3];
-  const paperX1 = paperX0 + 1;
-  const paperY1 = paperY0 + 1;
-  let bits = value;
-
-  for (let x = addrX + 14; x >= addrX; x -= 2) {
-    if (bits & 1)
-      world_copyRegionWithSignals(inkX0, inkY0, inkX1, inkY1, x, y);
-    else
-      world_copyRegionWithSignals(paperX0, paperY0, paperX1, paperY1, x, y);
-
-    bits >>= 1;
-  }
+  const cacheX = xsByAttrCurrent[attr][value];
+  const cacheY = attrYs[attr];
+  world_copyRegionWithSignals(cacheX, cacheY, cacheX + 15, cacheY + 1, addrXs[addr], addrYs[addr]);
 }
 
 export function commitBorder() {
@@ -336,9 +310,11 @@ function commitBorderLine(line: number) {
   if (borderColorsByLine[line] === color) return;
   borderColorsByLine[line] = color;
 
-  const colorsXY = colorMapDefault[color];
-  const srcX = colorsXY[0];
-  const srcY = colorsXY[1];
+  // A pixel of the border color: for the attribute with ink = paper = color any window lies in
+  // a solid color row of the cache
+  const attr = color | (color << 3);
+  const srcX = xsByAttrDefault[attr][0];
+  const srcY = attrYs[attr];
   const runs = borderRunsByLine[line];
   const y = borderYs[line];
   fillBorder(runs[0], runs[1], y, srcX, srcY);

@@ -29,7 +29,7 @@ const COLUMN = 10;
 const FIRST_LINE = ROW * 8;
 const ROW_LINES = [0, 1, 2, 3, 4, 5, 6, 7].map(i => FIRST_LINE + i);
 const ATTR_ADDR = ATTRIBUTES_MIN_ADDR + ROW * 32 + COLUMN;
-const PIXELS_PER_BYTE = 8;
+const COPIES_PER_BYTE = 1; // A byte is one copy of its window from the GFX cache
 const BYTES_PER_LINE = 32;
 
 // The border geometry of screen.ts: 16 pixels at each side, the outermost lines cut at the corners
@@ -49,7 +49,7 @@ const touch = (addr: number) => write(addr, (mem[addr] + 1) & 0x3F);
 const screenLine = (displayLine: number) => BORDER_LINE_COUNT + displayLine;
 
 /** The lines drawn once each, with the number of copies on each */
-const drawn = (lines: number[], copiesPerLine = PIXELS_PER_BYTE) => new Map(lines.map(l => [l, copiesPerLine]));
+const drawn = (lines: number[], copiesPerLine = COPIES_PER_BYTE) => new Map(lines.map(l => [l, copiesPerLine]));
 
 /** Border pixels of a screen line */
 function borderPixels(line: number): number {
@@ -63,7 +63,12 @@ function borderPixels(line: number): number {
 const borderDrawnOn = (lines: number[]) => new Map(lines.map(l => [l, borderPixels(l)]));
 
 describe('Screen: line-by-line commit', () => {
-  (globalThis as any).state = {};
+  // The GFX tables the display is drawn from: a stand-in of the right shape, only the copies are
+  // counted here
+  const zeros = () => Array<number>(256).fill(0);
+  (globalThis as any).state = {
+    gfx: { attrYs: zeros(), valueXs: [zeros(), zeros(), zeros(), zeros()], attrKinds: zeros(), attrKindsFlash: zeros() },
+  };
   initState();
   const paletteX = memoryX - 32;
   (globalThis as any).world.setArrow(paletteX + 15, memoryY, 1, 0, false); // Palette exists
@@ -112,7 +117,7 @@ describe('Screen: line-by-line commit', () => {
   it('refreshScreen draws every display line once', () => {
     refreshScreen();
     const all = [...Array(DISPLAY_LINE_COUNT).keys()];
-    expect(linesDrawn()).toEqual(drawn(all, BYTES_PER_LINE * PIXELS_PER_BYTE));
+    expect(linesDrawn()).toEqual(drawn(all, BYTES_PER_LINE * COPIES_PER_BYTE));
     frame();
     expect(linesDrawn().size).toBe(0);
   });

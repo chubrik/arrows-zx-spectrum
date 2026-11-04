@@ -13,7 +13,6 @@ const MEM_X = 1000;
 const MEM_Y = 2000;
 const PALETTE_X = MEM_X - 32;
 const PALETTE_Y = MEM_Y;
-const CACHE_Y = MEM_Y + 512 + 64;
 const FLASH = 0x80;
 const BRIGHT = 0x40;
 
@@ -81,6 +80,7 @@ function runGfx(): { cells: Cells; gfx: GfxTables; copies: number } {
 
 describe('GFX block (dist)', () => {
   const { cells, gfx, copies } = runGfx();
+  const cacheY = Math.min(...gfx.attrYs); // The top row of the cache
 
   it('builds the cache: 64 rows, solid rows as wide as the screen with the border', () => {
     let maxX = -Infinity;
@@ -88,13 +88,13 @@ describe('GFX block (dist)', () => {
 
     for (const k of cells.keys()) {
       const [x, y] = k.split(',').map(Number);
-      if (y < CACHE_Y) continue;
+      if (y < cacheY) continue;
       maxX = Math.max(maxX, x);
       maxY = Math.max(maxY, y);
     }
 
     expect(maxX - MEM_X).toBe(575);
-    expect(maxY - CACHE_Y).toBe(127);
+    expect(maxY - cacheY).toBe(127);
     expect(copies).toBe(257);
   });
 

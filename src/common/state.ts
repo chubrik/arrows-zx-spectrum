@@ -131,6 +131,9 @@ export function fetchState() {
   }
 }
 
+// The GFX tables are read from state in one access: every read parses the JSON
+export function fetchGfx(): GfxTables | undefined { return _state.gfx; }
+
 export type State = {
   memX: number;
   memY: number;

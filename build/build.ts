@@ -31,15 +31,15 @@ if (!cpuOnly && !gfxOnly) {
   console.log();
 }
 
-if (!gfxOnly) {
-  console.log('CPU:');
-  await buildCpu();
-  console.log();
-}
-
 if (!cpuOnly) {
   console.log('GFX:');
   await buildGfx();
+  console.log();
+}
+
+if (!gfxOnly) {
+  console.log('CPU:');
+  await buildCpu();
   console.log();
 }
 

@@ -26,26 +26,29 @@ onActive(e => {
   // _state.pal = world_getSignal(x, y - 1) ? -1 : 1;
 });
 
-let memoryX: number;
-let memoryY: number;
+let inited: boolean;
+let cacheX: number;
+let cacheY: number;
 let paletteX: number;
 const paletteYs: number[] = [];
 let paletteIndex: number;
-let inited: boolean;
 
 function initPalettes() {
-  memoryX = _state.memX;
-  memoryY = _state.memY;
+  const memoryX = _state.memX;
+  const memoryY = _state.memY;
+  cacheX = memoryX;
+  cacheY = memoryY + 1024;
   paletteX = memoryX - 32;
-  let index = 0;
-  let y = memoryY;
 
-  while (world_getArrow(paletteX + 15, y)) { // Palette exists
-    if (world_getArrow(paletteX + 18, y + 1)) // Selector exists
-      paletteIndex = index;
+  let palIndex = 0;
+  let palY = memoryY;
 
-    paletteYs[index++] = y;
-    y += 8;
+  while (world_getArrow(paletteX + 15, palY)) { // Palette exists
+    if (world_getArrow(paletteX + 18, palY + 1)) // Selector exists
+      paletteIndex = palIndex;
+
+    paletteYs[palIndex++] = palY;
+    palY += 8;
   }
 
   calcDeBruijn();
@@ -87,8 +90,8 @@ const keyRows = new Int32Array(ATTR_COUNT);  // Pair key → the row the pair li
 const keyKinds = new Int32Array(ATTR_COUNT); // Pair key → the kind of the X table for it
 
 function listRows() {
-  for (let c = COLORS - 1; c >= 0; c--)
-    addRow(0, c, c);
+  for (let color = COLORS - 1; color >= 0; color--)
+    addRow(0, color, color);
 
   for (let bright = 0; bright <= BRIGHT; bright += BRIGHT)
     for (let ink = COLORS - 1; ink > 0; ink--)
@@ -98,8 +101,8 @@ function listRows() {
   // The solid bright colors have no rows of their own and come from the pair rows: an ink color
   // from the window of byte 0xFF, and bright black, which is never ink, from the window of byte
   // 0x00 of a row where it is the paper.
-  for (let c = 1; c < COLORS; c++)
-    setKey(pairKey(BRIGHT, c, c), keyRows[pairKey(BRIGHT, c, c - 1)], SOLID_INK);
+  for (let color = 1; color < COLORS; color++)
+    setKey(pairKey(BRIGHT, color, color), keyRows[pairKey(BRIGHT, color, color - 1)], SOLID_INK);
 
   setKey(pairKey(BRIGHT, 0, 0), keyRows[pairKey(BRIGHT, 1, 0)], SOLID_PAPER);
 }
@@ -124,22 +127,17 @@ function setKey(key: number, row: number, kind: number) {
 
 //#region Cache on the map
 
-let cacheX: number;
-let cacheY: number;
-
 function rowY(row: number) { return cacheY + row * PIXEL; }
 
-// Copies the pixel of color c (0..7 with the BRIGHT bit) from the current palette to (x, y)
-function copyColor(paletteY: number, c: number, x: number, y: number) {
-  const srcX = paletteX + ((c & 7) << 1);
-  const srcY = c & BRIGHT ? paletteY + PIXEL : paletteY; // Bright colors: second palette row
+// Copies the pixel of color (0..7 with the BRIGHT bit) from the current palette to (x, y)
+function copyColor(paletteY: number, color: number, x: number, y: number) {
+  const srcX = paletteX + ((color & 7) << 1);
+  const srcY = color & BRIGHT ? paletteY + PIXEL : paletteY; // Bright colors: second palette row
   world_copyRegionWithSignals(srcX, srcY, srcX + PIXEL - 1, srcY + PIXEL - 1, x, y);
 }
 
 function buildCache() {
   const paletteY = paletteYs[paletteIndex];
-  cacheX = memoryX;
-  cacheY = memoryY + 512 + 64;
   const rowCount = rowInks.length;
   const solidBottom = rowY(SOLID_ROW_COUNT); // The first row after the solid ones
   const cacheBottom = rowY(rowCount);
@@ -157,9 +155,11 @@ function buildCache() {
   // the pair rows up to the length of the sequence
   const solidWidth = DISPLAY_WIDTH + 2 * BORDER_WIDTH;
   const pairWidth = bruijnBits.length * PIXEL;
+
   world_copyRegionWithSignals(
     cacheX, cacheY, cacheX + solidWidth - DISPLAY_WIDTH - 1, solidBottom - 1,
     cacheX + DISPLAY_WIDTH, cacheY);
+
   world_copyRegionWithSignals(
     cacheX, solidBottom, cacheX + pairWidth - DISPLAY_WIDTH - 1, cacheBottom - 1,
     cacheX + DISPLAY_WIDTH, solidBottom);

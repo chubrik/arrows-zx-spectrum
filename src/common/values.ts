@@ -12,7 +12,7 @@ export function initValues() {
 
   cacheX0 = memoryX - 32;
   cacheX1 = cacheX0 + 8;
-  cacheY = memoryY + 256;
+  cacheY = memoryY + 1024;
 }
 
 export function getValuesCacheX(x: number, y: number): number {

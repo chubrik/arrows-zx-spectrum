@@ -12,11 +12,11 @@ const FRAMES = 50;
 
 // The mock keeps the bytes committed by the CPU (see values.ts: commitValue copies a row of the
 // values cache into the byte position) and reads them back for fetchValue. Coordinates follow
-// getPosition() = (1024, 1024): cpuX = 1040, cpuY = 1024 → cacheX0 = 784, cacheY = 1312.
+// getPosition() = (1024, 1024): cpuX = 1040, cpuY = 1024 → cacheX0 = 784, cacheY = 2080.
 const PRELUDE = `
   var __active = [], __always = [], __tick = 0;
   var __stats = { getArrow: 0, memoryWrites: 0, screenWrites: 0 };
-  var __CX0 = 784, __CX1 = 792, __CY = 1312;
+  var __CX0 = 784, __CX1 = 792, __CY = 2080;
   // Two palettes stand on the map (paletteX = memoryX - 32) eight rows apart,
   // with the selector on the first one
   var __PX = 784, __PY = 1056, __PY_END = __PY + 16, __selectorY = __PY + 1;
