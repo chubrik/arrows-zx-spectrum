@@ -144,8 +144,8 @@ async function buildData(
       '  const pos = getPosition();\n' +
       '  world.setSignal(pos.x, pos.y + 1, 5);\n' +
       '  world.setSignal(pos.x, pos.y + 2, 5);\n' +
-      `  state.cpu = [${cpu.values}];\n` +
-      `  state.prt = ${cpu.border};\n`);
+      `  globalState.cpu = [${cpu.values}];\n` +
+      `  globalState.prt = ${cpu.border};\n`);
 
   const assembled = step('assemble', assemble);
   const collapsed = step('collapse', await terserCollapse(assembled));

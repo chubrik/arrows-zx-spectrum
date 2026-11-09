@@ -41,9 +41,9 @@ const marginColors: number[] = []; // display line => color its border margins a
 // from each end
 const CORNER_SKIPS = [10, 7, 5, 4, 3, 2, 2, 1, 1, 1];
 
-// The GFX block (gfx.ts) builds the GFX cache on the map and hands its tables over through state.
-// A display byte is drawn with one copy of its window from the cache: the attribute sets the row,
-// the byte value sets the X through the X table chosen for that attribute.
+// The GFX block (gfx.ts) builds the GFX cache on the map and hands its tables over through
+// globalState. A display byte is drawn with one copy of its window from the cache: the attribute
+// sets the row, the byte value sets the X through the X table chosen for that attribute.
 let attrYs: number[];                   // attr => y of the cache row
 const xsByAttrDefault: number[][] = []; // attr => value => x of the byte's window
 const xsByAttrFlash: number[][] = [];   // the same for the flash phase: ink and paper swapped
@@ -98,8 +98,8 @@ function initDisplayPixels() {
     dirtyPixelIndexByLine[line] = minPixelIndex + (line & 0xC0) + ((line & 7) << 3) + ((line >> 3) & 7);
 }
 
-// The GFX tables are there by the first start of the screen: the GFX block puts them into state on
-// the third tick after the map loads, and no game can be pasted before that.
+// The GFX tables are there by the first start of the screen: the GFX block puts them into
+// globalState on the third tick after the map loads, and no game can be pasted before that.
 function initGfx() {
   const gfx = fetchGfx()!;
   attrYs = gfx.attrYs;

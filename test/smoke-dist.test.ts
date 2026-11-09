@@ -31,24 +31,24 @@ const PRELUDE = `
   function getTick() { return __tick; }
   function log() { }
   function showText() { }
-  // In the game state is a proxy over JSON, so a value that does not survive the round trip
+  // In the game globalState is a proxy over JSON, so a value that does not survive the round trip
   // (a typed array, a mutation in place) must not survive it here either
-  var __stateRaw = {};
-  var state = new Proxy({}, {
+  var __globalStateRaw = {};
+  var globalState = new Proxy({}, {
     get(_target, key) {
       if (typeof key !== 'string') return undefined;
-      const raw = __stateRaw[key];
+      const raw = __globalStateRaw[key];
       if (raw === undefined) return undefined;
       try { return JSON.parse(raw); } catch (e) { return undefined; }
     },
     set(_target, key, value) {
       if (typeof key === 'string') {
-        try { __stateRaw[key] = JSON.stringify(value); } catch (e) { __stateRaw[key] = undefined; }
+        try { __globalStateRaw[key] = JSON.stringify(value); } catch (e) { __globalStateRaw[key] = undefined; }
       }
       return true;
     },
     deleteProperty(_target, key) {
-      if (typeof key === 'string') __stateRaw[key] = undefined;
+      if (typeof key === 'string') __globalStateRaw[key] = undefined;
       return true;
     },
   });
@@ -127,25 +127,26 @@ describe('Smoke test (dist)', () => {
     try {
       evalOrThrow(vm, PRELUDE, 'prelude.js');
       evalOrThrow(vm, `__load(${JSON.stringify(cpu)})`, 'cpu.js');
-      // The GFX block finds the palettes, builds the GFX cache and puts its tables into state.
-      // It skips the first activation, the palettes light up a tick later, so it is activated twice
+      // The GFX block finds the palettes, builds the GFX cache and puts its tables into
+      // globalState. It skips the first activation, the palettes light up a tick later, so it is
+      // activated twice
       evalOrThrow(vm, `__load(${JSON.stringify(gfx)}); __activate(); __ticks(1); __activate();`, 'gfx.js');
-      expect(evalOrThrow(vm, `state.gfx.attrYs.length`, 'gfx-tables.js')).toBe(256);
+      expect(evalOrThrow(vm, `globalState.gfx.attrYs.length`, 'gfx-tables.js')).toBe(256);
       // Screen enabled before anything is loaded: refreshScreen must cope with untouched memory
-      evalOrThrow(vm, `state.do = 1; state.scr = 1; __ticks(1);`, 'scr.js');
+      evalOrThrow(vm, `globalState.do = 1; globalState.scr = 1; __ticks(1);`, 'scr.js');
       evalOrThrow(vm, `__load(${JSON.stringify(rom)}); __activate(); __ticks(1);`, 'rom.js');
       // The port byte is kept on the map like a CPU register, at (cpuX + 8, cpuY - 17)
-      evalOrThrow(vm, `state.do = 1; state.prt = 5; __ticks(1);`, 'prt.js');
+      evalOrThrow(vm, `globalState.do = 1; globalState.prt = 5; __ticks(1);`, 'prt.js');
       expect(evalOrThrow(vm, `__byte(1048, 1007)`, 'port.js')).toBe(5);
 
       // A palette switch is a repeated activation of the GFX block, the first one loaded with
       // onActive: the selector moves to the second palette, eight rows down plus the row of its own
       // offset, the cache is rebuilt and the pal flag asks the CPU block to redraw the screen
-      expect(evalOrThrow(vm, `__activate(0); state.pal`, 'pal.js')).toBe(1);
+      expect(evalOrThrow(vm, `__activate(0); globalState.pal`, 'pal.js')).toBe(1);
       expect(evalOrThrow(vm, `__selectorY - __PY`, 'selector.js')).toBe(9);
-      expect(evalOrThrow(vm, `__ticks(1); state.pal`, 'pal-done.js')).toBe(0);
+      expect(evalOrThrow(vm, `__ticks(1); globalState.pal`, 'pal-done.js')).toBe(0);
 
-      evalOrThrow(vm, `state.do = 1; state.run = 1; state.max = 1; __ticks(1 + ${FRAMES});`, 'run.js');
+      evalOrThrow(vm, `globalState.do = 1; globalState.run = 1; globalState.max = 1; __ticks(1 + ${FRAMES});`, 'run.js');
 
       const statsHandle = vm.getProp(vm.global, '__stats');
       const stats = vm.dump(statsHandle) as {

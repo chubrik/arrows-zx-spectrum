@@ -1,11 +1,11 @@
 import { DISPLAY_WIDTH, PIXEL, SCREEN_WIDTH } from './common/constants';
-import type { GfxTables, State } from './common/state';
+import type { GfxTables, GlobalState } from './common/state';
 import {
   world_copyRegion, world_copyRegionWithSignals, world_getArrow, world_getSignal, world_setSignal
 } from './common/world-refs';
 
 const { x, y } = getPosition()!;
-const _state = state as State;
+const _globalState = globalState as GlobalState;
 let prevTick = 0;
 
 // The first two ticks have to be left to the palettes on the map to initialize. So here the block
@@ -31,8 +31,8 @@ let cacheY: number;
 
 function init() {
   inited = true;
-  const memoryX = _state.memX;
-  const memoryY = _state.memY;
+  const memoryX = _globalState.memX;
+  const memoryY = _globalState.memY;
   cacheX = memoryX;
   cacheY = memoryY + 1024;
 
@@ -46,7 +46,7 @@ function init() {
   rebuildCache();
 
   // The GFX tables are handed to the CPU block only when everything is ready to work
-  _state.gfx = gfx;
+  _globalState.gfx = gfx;
 }
 
 const BYTE_BITS = 8;
@@ -91,8 +91,8 @@ function switchPalette(inc: number) {
   world_copyRegion(selectorX - 2, selectorY, selectorX - 1, selectorY + 1, selectorX, selectorY);
 
   rebuildCache();
-  _state.do = 1;
-  _state.pal = 1;
+  _globalState.do = 1;
+  _globalState.pal = 1;
 }
 
 //#endregion

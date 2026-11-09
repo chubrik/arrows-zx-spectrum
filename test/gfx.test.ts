@@ -6,8 +6,8 @@ import type { GfxTables } from '../src/common/state';
 
 // The built GFX block on a mock map: two palettes of 16 colors, a cell holds the color number and
 // a region copy carries it over. Checks that the window of every byte of every attribute, found
-// through the tables in state, consists of exactly the pixels the attribute sets, in both flash
-// phases, and that a palette switch rebuilds the cache from the second palette.
+// through the tables in globalState, consists of exactly the pixels the attribute sets, in both
+// flash phases, and that a palette switch rebuilds the cache from the second palette.
 
 const MEM_X = 1000;
 const MEM_Y = 2000;
@@ -77,9 +77,9 @@ function runGfx() {
     },
   };
 
-  // In the game state is a proxy over JSON
+  // In the game globalState is a proxy over JSON
   const store: Record<string, string> = { memX: JSON.stringify(MEM_X), memY: JSON.stringify(MEM_Y) };
-  const state = new Proxy({} as Record<string, unknown>, {
+  const globalState = new Proxy({} as Record<string, unknown>, {
     get: (_, p) => typeof p === 'string' && p in store ? JSON.parse(store[p]) : undefined,
     set: (_, p, v) => { if (typeof p === 'string') store[p] = JSON.stringify(v); return true; },
   });
@@ -88,15 +88,15 @@ function runGfx() {
   const onActive = (cb: typeof activate) => { activate = cb; };
   const getPosition = () => ({ x: 0, y: 0 });
 
-  new Function('world', 'state', 'onActive', 'getPosition', code)(world, state, onActive, getPosition);
+  new Function('world', 'globalState', 'onActive', 'getPosition', code)(world, globalState, onActive, getPosition);
   activate!({ tick: 1 }); // Skipped: the palettes light up a tick later
   activate!({ tick: 3 });
 
   return {
     cells,
     activate: (tick: number) => activate!({ tick }),
-    gfx: () => state.gfx as GfxTables,
-    flags: () => ({ do: state.do, pal: state.pal }),
+    gfx: () => globalState.gfx as GfxTables,
+    flags: () => ({ do: globalState.do, pal: globalState.pal }),
     copies: () => copies,
     selectorY: () => selectorY,
   };
@@ -156,7 +156,7 @@ describe('GFX block (dist)', () => {
     expect(block.copies()).toBe(257);
   });
 
-  it('puts the tables into state', () => {
+  it('puts the tables into globalState', () => {
     expect(gfx.attrYs).toHaveLength(256);
     expect(gfx.valueXs.map(xs => xs.length)).toEqual([256, 256, 256, 256]);
     expect(gfx.attrKinds).toHaveLength(256);

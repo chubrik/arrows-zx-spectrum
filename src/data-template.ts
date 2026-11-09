@@ -1,4 +1,4 @@
-import { State } from './common/state';
+import { GlobalState } from './common/state';
 import { unicodeToBytes } from './util/encode';
 
 const { x, y } = getPosition()!;
@@ -12,7 +12,7 @@ onActive(e => {
   prevTick = e.tick;
   if (!affect) return;
 
-  let placeholder: number;                     // Replaced during build (optional)
-  (state as State).do = 1;
-  state.NAME = (cache ??= unicodeToBytes('')); // NAME and '' replaced during build
+  let placeholder: number;                           // Replaced during build (optional)
+  (globalState as GlobalState).do = 1;
+  globalState.NAME = (cache ??= unicodeToBytes('')); // NAME and '' replaced during build
 });

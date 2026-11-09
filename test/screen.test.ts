@@ -72,7 +72,7 @@ describe('Screen: line-by-line commit', () => {
   // The GFX tables the display is drawn from: a stand-in of the right shape, only the copies are
   // counted here
   const zeros = () => Array<number>(256).fill(0);
-  (globalThis as any).state = {
+  (globalThis as any).globalState = {
     gfx: { attrYs: zeros(), valueXs: [zeros(), zeros(), zeros(), zeros()], attrKinds: zeros(), attrKindsFlash: zeros() },
   };
   initState();
