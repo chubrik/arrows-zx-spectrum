@@ -5,11 +5,8 @@
 
 An emulator of the ZX Spectrum — the legendary home computer of the 1980s. It runs in real time
 inside [“Logic Arrows”](https://store.steampowered.com/app/4210250/Logic_Arrows/) — a programmable
-cellular automaton. The emulator plays real Spectrum games right on the map: the screen, the memory,
-the keyboard, and even the sound — everything is made of arrows. The project targets the new version
-of Logic Arrows, whose demo is already out on Steam. Add Logic Arrows to your
-[wishlist](https://store.steampowered.com/app/4210250/Logic_Arrows/) so you don’t miss the full
-release.
+cellular automaton released on Steam in November 2026. The emulator plays real Spectrum games right
+on the map: the screen, the memory, the keyboard, and even the sound — everything is made of arrows.
 
 - [Games](#games)
 - [How it works](#how-it-works)
