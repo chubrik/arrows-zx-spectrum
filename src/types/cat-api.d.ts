@@ -1,4 +1,4 @@
-// Position is declared in command-block-api.d.ts
+// Position is declared in script-api.d.ts
 
 /** The cat assistant */
 declare const cat: {

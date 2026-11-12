@@ -1,10 +1,10 @@
 import { readFileSync } from 'fs';
 import { getQuickJS, type QuickJSContext } from 'quickjs-emscripten';
 import { describe, expect, it } from 'vitest';
-import { decodeClipboard, findCommandBlocks } from '../build/clipboard';
+import { decodeClipboard, findScriptBlocks } from '../build/clipboard';
 import { SMOKE_CPU_PATH, SMOKE_GFX_PATH, SMOKE_ROM_PATH } from '../build/utils';
 
-// Smoke test of the packed command blocks in QuickJS — the engine of the Steam version of the game.
+// Smoke test of the packed script blocks in QuickJS — the engine of the Steam version of the game.
 // Loads the CPU, GFX and ROM initializer blocks (built by build/build-test.ts) into a VM with a
 // minimal world mock, boots the ROM for a number of frames and checks the runtime memory profile.
 
@@ -81,7 +81,7 @@ const PRELUDE = `
     getSignal() { return 0; },
     removeArrow() { },
     setArrow() { },
-    setCommandBlockCode() { },
+    setScriptBlockCode() { },
     setSignal() { },
   };
 
@@ -109,9 +109,9 @@ function evalOrThrow(vm: QuickJSContext, code: string, name: string): unknown {
   return value;
 }
 
-/** The code of the single command block of a clipboard string, the way the game would paste it. */
+/** The code of the single script block of a clipboard string, the way the game would paste it. */
 function blockCode(path: string): string {
-  return findCommandBlocks(decodeClipboard(readFileSync(path, 'utf8')))[0].code!;
+  return findScriptBlocks(decodeClipboard(readFileSync(path, 'utf8')))[0].code!;
 }
 
 describe('Smoke test (dist)', () => {

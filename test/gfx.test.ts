@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { describe, expect, it } from 'vitest';
-import { decodeClipboard, findCommandBlocks } from '../build/clipboard';
+import { decodeClipboard, findScriptBlocks } from '../build/clipboard';
 import { SMOKE_GFX_PATH } from '../build/utils';
 import type { GfxTables } from '../src/common/state';
 
@@ -25,7 +25,7 @@ const get = (cells: Cells, x: number, y: number) => cells.get(key(x, y)) ?? -1;
 
 /** Loads the block onto the mock map and activates it; returns the map and access to the block */
 function runGfx() {
-  const code = findCommandBlocks(decodeClipboard(readFileSync(SMOKE_GFX_PATH, 'utf8')))[0].code!;
+  const code = findScriptBlocks(decodeClipboard(readFileSync(SMOKE_GFX_PATH, 'utf8')))[0].code!;
   const cells: Cells = new Map();
 
   for (let palette = 0; palette < 2; palette++)

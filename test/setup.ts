@@ -1,6 +1,6 @@
 import { beforeEach } from 'vitest';
 
-// Minimal mock of the command block API (see src/types/command-block-api.d.ts)
+// Minimal mock of the script block API (see src/types/script-api.d.ts)
 
 const storage = new Map<string, number>();
 
@@ -20,7 +20,7 @@ const storage = new Map<string, number>();
   setArrow(x: number, y: number, arrowType: number, _rotation: number, _flipped: boolean) {
     storage.set(`${x},${y}`, arrowType);
   },
-  setCommandBlockCode() { },
+  setScriptBlockCode() { },
   setSignal() { },
 };
 

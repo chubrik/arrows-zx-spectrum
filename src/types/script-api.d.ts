@@ -1,5 +1,5 @@
 /**
- * Fires on every tick, even if the command block is not activated.
+ * Fires on every tick, even if the script block is not activated.
  * Only one callback is kept: a second call replaces the previous one.
  */
 declare function always(callback: (event: BlockEvent) => void): void;
@@ -20,7 +20,7 @@ declare const game: {
 };
 
 /**
- * Command block coordinates. A placed block always has them, even before the first tick;
+ * Script block coordinates. A placed block always has them, even before the first tick;
  * null is only a fallback of the runtime.
  */
 declare function getPosition(): Position | null;
@@ -29,7 +29,7 @@ declare function getPosition(): Position | null;
 declare function getTick(): number | null;
 
 /**
- * Shared state between command blocks; it lives in memory only and is gone after a level reload.
+ * Shared state between script blocks; it lives in memory only and is gone after a level reload.
  * It is a proxy over JSON: reading a property parses the stored string, writing serializes
  * the value. Therefore:
  * - a typed array arrives as a plain object, a Date as a string, NaN as null, and a function
@@ -44,26 +44,13 @@ declare const globalState: Record<string, any>;
 declare function loadText(key?: string): string;
 
 /**
- * State of this command block alone; other blocks do not see it, and it lives in memory only,
- * so it is gone after a level reload.
- * It is a proxy over JSON: reading a property parses the stored string, writing serializes
- * the value. Therefore:
- * - a typed array arrives as a plain object, a Date as a string, NaN as null, and a function
- *   or a BigInt as undefined;
- * - changing a value in place does nothing, only an assignment stores it;
- * - every read parses the string again: reading an array of 16K numbers takes about 1 ms and
- *   writing it about 5 ms, so keep the value in a variable instead of reading it twice.
- */
-declare const localState: Record<string, any>;
-
-/**
  * Print log; the values are serialized with JSON.stringify and joined with spaces.
  * A value that cannot be serialized is printed as "[unserializable]".
  */
 declare function log(...values: any[]): void;
 
 /**
- * Fires when the command block is activated.
+ * Fires when the script block is activated.
  * Only one callback is kept: a second call replaces the previous one.
  */
 declare function onActive(callback: (event: BlockEvent) => void): void;
@@ -82,6 +69,19 @@ declare function onPlayerToolAction(callback: (event: ToolActionEvent) => void):
 
 /** Display text on screen; onNext fires when the player presses the next button */
 declare function showText(text?: string, onNext?: () => void): void;
+
+/**
+ * State of this script block alone; other blocks do not see it, and it lives in memory only,
+ * so it is gone after a level reload.
+ * It is a proxy over JSON: reading a property parses the stored string, writing serializes
+ * the value. Therefore:
+ * - a typed array arrives as a plain object, a Date as a string, NaN as null, and a function
+ *   or a BigInt as undefined;
+ * - changing a value in place does nothing, only an assignment stores it;
+ * - every read parses the string again: reading an array of 16K numbers takes about 1 ms and
+ *   writing it about 5 ms, so keep the value in a variable instead of reading it twice.
+ */
+declare const state: Record<string, any>;
 
 declare const world: {
   /** Clear all signals */
@@ -111,7 +111,7 @@ declare const world: {
   getChunks(): Position[];
 
   /**
-   * Command block coordinates. A placed block always has them, even before the first tick;
+   * Script block coordinates. A placed block always has them, even before the first tick;
    * null is only a fallback of the runtime.
    */
   getPosition(): Position | null;
@@ -133,8 +133,11 @@ declare const world: {
     x: number, y: number, arrowType: number, rotation?: number, flip?: boolean, extra?: number)
     : void;
 
-  /** Set the code of a command block */
+  /** @deprecated Use setScriptBlockCode */
   setCommandBlockCode(x: number, y: number, code: string): void;
+
+  /** Set the code of a script block */
+  setScriptBlockCode(x: number, y: number, code: string): void;
 
   /** Set a signal: 0 none, 1 red, 2 blue, 3 yellow, 4 green, 5 orange, 6 purple */
   setSignal(x: number, y: number, signal: number): void;

@@ -21,7 +21,7 @@ function logBlocks(input: string, srcBytes: number, blocks: string[], output: st
     `${output} ${clipboard.length} bytes`);
 }
 
-/** Builds the CPU command block → `<outPath>`, a string that pastes it. Returns the packed code. */
+/** Builds the CPU script block → `<outPath>`, a string that pastes it. Returns the packed code. */
 export async function buildCpu(
   stepsDir = `${DIST_DIR}/temp/_cpu`, outPath = `${DIST_DIR}/_cpu.txt`
 ): Promise<string> {
@@ -57,7 +57,7 @@ export async function buildCpu(
   return packed;
 }
 
-/** Builds the GFX command block → `<outPath>`, a string that pastes it. Returns the block code. */
+/** Builds the GFX script block → `<outPath>`, a string that pastes it. Returns the block code. */
 export async function buildGfx(
   stepsDir = `${DIST_DIR}/temp/_gfx`, outPath = `${DIST_DIR}/_gfx.txt`
 ): Promise<string> {
@@ -75,7 +75,7 @@ export async function buildGfx(
   return minified;
 }
 
-/** Builds the ROM initializer command block → `<outPath>`. Returns the block code. */
+/** Builds the ROM initializer script block → `<outPath>`. Returns the block code. */
 export async function buildRom(
   stepsDir = `${DIST_DIR}/temp/_initializer`, outPath = `${DIST_DIR}/_initializer.txt`
 ): Promise<string> {
@@ -88,7 +88,7 @@ export async function buildRom(
   return block;
 }
 
-/** Builds the three RAM command blocks of a `.z80` snapshot into one string → `dist/<name>.txt`. */
+/** Builds the three RAM script blocks of a `.z80` snapshot into one string → `dist/<name>.txt`. */
 export async function buildSnapshot(z80Path: string, nameWidth = 0) {
   const fileName = basename(z80Path, '.z80');
   const snap = loadSnapshot(z80Path);
@@ -123,7 +123,7 @@ export async function buildSnapshot(z80Path: string, nameWidth = 0) {
   logBlocks(`${z80Path}:${pad}`, statSync(z80Path).size, blocks, `${outPath}:${pad}`, clipboard);
 }
 
-/** Builds a data command block; the steps go to `<stepsDir>/`. */
+/** Builds a data script block; the steps go to `<stepsDir>/`. */
 async function buildData(
   stepsDir: string, fileName: string, stateName: string, data: Buffer,
   part?: string, cpu?: { values: number[], border: number }

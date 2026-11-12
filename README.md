@@ -54,7 +54,7 @@ on the map: the screen, the memory, the keyboard, and even the sound — everyth
 
 ## <a name="how-it-works"></a>How it works
 
-The emulator is written in TypeScript and compiled into code for in-game command blocks. Running a
+The emulator is written in TypeScript and compiled into code for in-game script blocks. Running a
 game takes just six blocks: the CPU, the GFX block, the ROM initializer, and three blocks with a RAM
 snapshot — plus a color palette laid out on the map.
 
@@ -75,10 +75,10 @@ snapshot — plus a color palette laid out on the map.
 - **Keyboard.** The 8×5 half-row matrix of the Spectrum keyboard is read directly from signals
   on the map.
 - **Sound.** The beeper is translated into the game’s music arrows.
-- **Packing.** The build pipeline squeezes the whole CPU into a single command block of about
+- **Packing.** The build pipeline squeezes the whole CPU into a single script block of about
   6 600 characters (24 KB): esbuild → custom function inliner → three Terser passes → arrow-function
   conversion → a self-extracting packed string.
-- **Games.** Games are loaded from `.z80` snapshots. Each snapshot is packed into three command
+- **Games.** Games are loaded from `.z80` snapshots. Each snapshot is packed into three script
   blocks — 16K of RAM each — plus the CPU registers and the border color.
 <br><br>
 

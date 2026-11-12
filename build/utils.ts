@@ -32,7 +32,7 @@ export function createStepFn(stepsDir: string, fileName: string, part?: string):
   };
 }
 
-/** Command block minification pipeline: esbuild → inline → terser × 3 → arrows → remangle →
+/** Script block minification pipeline: esbuild → inline → terser × 3 → arrows → remangle →
  *  simplify. The GFX block is built this way, the CPU block also goes through the substitutions. */
 export async function minifyPipeline(srcPath: string, opts?: { test?: boolean; stepsDir?: string }) {
   const fileName = basename(srcPath, '.ts');
