@@ -110,6 +110,8 @@ FUSE, проверяя их SHA256. Игры собираются из снап�
 - [Стрелочки в браузере](https://logic-arrows.io/) – браузерная версия игры
 - [Онлайн-компилятор](https://github.com/chubrik/arrows-compiler/blob/main/ru/README.md) –
   для внутриигровых компьютеров
+- [Logic Arrows API](https://github.com/chubrik/logic-arrows-api) – справочник по API скриптовых
+  блоков, он же npm-пакет
 - [FUSE](https://fuse-emulator.sourceforge.net/) – эмулятор ZX Spectrum, тестами которого
   проверяется процессор
 - [Дискорд-сервер](https://discord.gg/yR8aaJWWH5) и [Телеграм-канал](https://t.me/logic_arrows) –

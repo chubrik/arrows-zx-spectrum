@@ -108,6 +108,8 @@ rebuild the CPU or the GFX block alone, skipping the type check.
   of the game where the emulator runs
 - [Logic Arrows in browser](https://logic-arrows.io/) – browser version of the game
 - [Online compiler](https://github.com/chubrik/arrows-compiler) – for the in-game computers
+- [Logic Arrows API](https://github.com/chubrik/logic-arrows-api) – script block API reference,
+  also an npm package
 - [FUSE](https://fuse-emulator.sourceforge.net/) – ZX Spectrum emulator whose test suite verifies
   the CPU
 - [Discord server](https://discord.gg/zw2sRUGu5y) and [Telegram channel](https://t.me/logic_arrows)

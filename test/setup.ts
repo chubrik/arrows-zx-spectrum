@@ -1,6 +1,6 @@
 import { beforeEach } from 'vitest';
 
-// Minimal mock of the script block API (see src/types/script-api.d.ts)
+// Minimal mock of the script block API (see the logic-arrows-api package)
 
 const storage = new Map<string, number>();
 
