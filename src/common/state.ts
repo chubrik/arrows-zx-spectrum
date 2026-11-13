@@ -13,7 +13,7 @@ export let cpuStarted = false;
 let _globalState: GlobalState;
 
 export function initState() {
-  const pos = getPosition()!;
+  const pos = getPosition();
   cpuX = (pos.x & ~15) + 16;
   cpuY = pos.y & ~15;
   _globalState = globalState as GlobalState;

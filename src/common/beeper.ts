@@ -1,9 +1,7 @@
+import { ArrowType, Instrument, Octave, Signal } from 'logic-arrows-api';
 import { tStates } from '../cpu/utils';
 import { beeperEnabled, cpuX, cpuY } from './state';
 import { world_getArrow, world_setArrow, world_setSignal } from './world-refs';
-
-const ARROW_TYPE = 29;
-const ARROW_SIGNAL = 6;
 
 // The highest octave the music arrows can play. Anything above it is treated as noise.
 const OCTAVE_MAX = 7;
@@ -55,8 +53,8 @@ function initBeeper() {
 
 export function fetchBeeper() {
   initBeeper();
-  earInstrument = (world_getArrow(noteX, earNoteY)?.extra ?? 0) & 0x1F00; // 0 = piano
-  micInstrument = (world_getArrow(noteX, micNoteY)?.extra ?? 0) & 0x1F00; // 0 = piano
+  earInstrument = (world_getArrow(noteX, earNoteY)?.extra ?? Instrument.PIANO) & Instrument.MASK;
+  micInstrument = (world_getArrow(noteX, micNoteY)?.extra ?? Instrument.PIANO) & Instrument.MASK;
 }
 
 let earValue = 0; // 0 | 16
@@ -97,14 +95,14 @@ export function commitBeeper() {
     if (earNote < 0) {
       const x = noiseX + phase;
       for (let y = earNoteY; y >= earNoteYLast; y--)
-        world_setSignal(x, y, ARROW_SIGNAL);
+        world_setSignal(x, y, Signal.PURPLE);
     }
     else {
       const x = noteX + phase;
       const extra = earInstrument | earNote;
       for (let y = earNoteY; y >= earNoteYLast; y--) {
-        world_setArrow(x, y, ARROW_TYPE, 0, false, extra);
-        world_setSignal(x, y, ARROW_SIGNAL);
+        world_setArrow(x, y, ArrowType.MUSIC, 0, false, extra);
+        world_setSignal(x, y, Signal.PURPLE);
       }
     }
   }
@@ -116,13 +114,13 @@ export function commitBeeper() {
 
     if (micNote < 0) {
       const x = noiseX + phase;
-      world_setSignal(x, micNoteY, ARROW_SIGNAL);
+      world_setSignal(x, micNoteY, Signal.PURPLE);
     }
     else {
       const x = noteX + phase;
       const extra = micInstrument | micNote;
-      world_setArrow(x, micNoteY, ARROW_TYPE, 0, false, extra);
-      world_setSignal(x, micNoteY, ARROW_SIGNAL);
+      world_setArrow(x, micNoteY, ArrowType.MUSIC, 0, false, extra);
+      world_setSignal(x, micNoteY, Signal.PURPLE);
     }
   }
 }
@@ -151,5 +149,5 @@ function getNote(count: number, span: number): number {
   while (span < steps * octaveZeroNoteBounds[note])
     note++;
 
-  return (octave << 4) | note;
+  return (octave << Octave.SHIFT) | note;
 }

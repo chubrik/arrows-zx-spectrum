@@ -19,7 +19,7 @@
     "@types/node": "^26.6.6",
     "acorn": "^8.19.0",
     "esbuild": "^0.28.2",
-    "logic-arrows-api": "^0.1.0",
+    "logic-arrows-api": "^0.3.0",
     "quickjs-emscripten": "^0.32.0",
     "terser": "^5.51.2",
     "typescript": "^7.0.2",

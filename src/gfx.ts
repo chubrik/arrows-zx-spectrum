@@ -1,19 +1,20 @@
+import { Signal } from 'logic-arrows-api';
 import { DISPLAY_WIDTH, PIXEL, SCREEN_WIDTH } from './common/constants';
 import type { GfxTables, GlobalState } from './common/state';
 import {
   world_copyRegion, world_copyRegionWithSignals, world_getArrow, world_getSignal, world_setSignal
 } from './common/world-refs';
 
-const { x, y } = getPosition()!;
+const { x, y } = getPosition();
 const _globalState = globalState as GlobalState;
 let prevTick = 0;
 
 // The first two ticks have to be left to the palettes on the map to initialize. So here the block
 // arranges a delayed activation for itself.
-world_setSignal(x + 2, y, 5);
+world_setSignal(x + 2, y, Signal.ORANGE);
 
 onActive(e => {
-  world_setSignal(x, y, 0);
+  world_setSignal(x, y, Signal.NONE);
 
   const affect = prevTick < e.tick - 1;
   prevTick = e.tick;
