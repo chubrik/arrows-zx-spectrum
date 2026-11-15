@@ -80,7 +80,7 @@ function getBuildConfig(opts?: { test?: boolean }): BuildOptions {
   };
 }
 
-/** Collapse code (single pass — multi-pass collapse_vars has a terser bug). */
+/** Collapse code in a single pass (see optsCollapse). */
 export async function terserCollapse(code: string): Promise<string> {
   return (await minify(code, optsCollapse)).code!;
 }
@@ -119,6 +119,15 @@ const compressOpts = {
   switches: true,
   pure_getters: true,
   hoist_funs: true,
+  // hoist_vars does more than join the declarations. esbuild turns every top-level `const` into
+  // `var`, hoist_vars moves all of them below the functions, and terser does not inline a variable
+  // into a function declared above its initializer. So a numeric constant read by a function that
+  // is not inlined itself stays a name (xFF, BIT7, Octave.SHIFT), and only the code below the
+  // declarations gets the literal. That is right for the frequent constants, whose mangled name is
+  // shorter than the value, and costs a few chars on the rare ones. Without hoist_vars in the
+  // collapse step terser inlines them all, judging by the unmangled names: 24276 → 24497 chars
+  // before the pack. Inlining all of them makes the pack 129 chars longer, inlining only the
+  // rare ones 48 chars shorter; names and literals run equally fast in the game.
   hoist_vars: true,
   join_vars: true,
   sequences: true,
@@ -128,7 +137,9 @@ const compressOpts = {
 const formatOpts = { ecma: 2020 as const, semicolons: true };
 const mangleOpts = { toplevel: true, eval: true };
 
-// Collapse variables — single pass (multi-pass collapse_vars has a terser bug), no mangle
+// Collapse variables — single pass, no mangle. The single pass dates from a bug that multi-pass
+// collapse_vars had in an earlier terser; what it broke was not recorded. On terser 5.51.2 three
+// passes get through the tests and make the pack 1 char shorter, which is not worth the risk.
 const optsCollapse: MinifyOptions = {
   module: true,
   toplevel: true,
@@ -793,8 +804,11 @@ function hasTopLevel(code: string, target: string): boolean {
 
 /** === → ==, !== → != */
 export function simplifyCode(code: string, opts?: { constToLet?: boolean }): string {
-  // Don't replace "const/var" to "let" in main code.
-  // It adds a TDZ check on every top-level binding read, slowing runtime by ~15%.
+  // constToLet is for the pack and the data blocks. In the main code it is off only because it
+  // gains next to nothing: 8 pack chars, and only with 'let ' instead of 'const ' in substCode.
+  // Speed is not the reason. The replacement touches local bindings alone (the top-level ones are
+  // all `var`), `const` and `let` have the same TDZ, and in the game (QuickJS, strict mode) a
+  // top-level `var`, `const` or `let` reads as fast as a literal. Measured 2026-11-15.
 
   let simplified = code
     .replaceAll('!==', '!=')
