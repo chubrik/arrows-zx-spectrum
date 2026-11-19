@@ -3,7 +3,7 @@ import { tStates } from '../cpu/utils';
 import { beeperEnabled, cpuX, cpuY } from './state';
 import { world_getArrow, world_setArrow, world_setSignal } from './world-refs';
 
-// The highest octave the music arrows can play. Anything above it is treated as noise.
+// The highest octave the Music blocks can play. Anything above it is treated as noise.
 const OCTAVE_MAX = 7;
 
 // Octave 0 (the sub-contra octave). For every note this is the shortest half period that still
@@ -141,7 +141,7 @@ function getNote(count: number, span: number): number {
     octave++;
   }
 
-  // Above the available range the sound is played by the noise arrows
+  // Above the available range the sound is played by the noise blocks
   if (octave > OCTAVE_MAX)
     return -1;
 

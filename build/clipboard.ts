@@ -12,14 +12,14 @@ import { check } from '../src/util/check.ts';
  * Payload: u16 chunk count, then for every chunk u16 x, u16 y (in chunks of CHUNK_SIZE cells, the
  * sign in the high bit) and u8 type count - 1, then for every type u8 type, u8 arrow count - 1 and,
  * for every arrow, u8 position (x | y << 4), u8 flags (rotation | flipped << 2 | hasData << 3 |
- * state << 4) and, with hasData, u16 data. For a script block the data is the code length in UTF-8
+ * state << 4) and, with hasData, u16 data. For a Script block the data is the code length in UTF-8
  * bytes, and the code follows.
  *
  * Arrows are grouped by type and ordered by x, then y.
  */
 
 const CHUNK_SIZE = 16;
-const CODE_STATE = 1; // State of a script block with code
+const CODE_STATE = 1; // State of a Script block with code
 const FORMAT_VERSION = 5;
 
 // Flags of an arrow
@@ -29,17 +29,17 @@ const HAS_DATA = 0x08;
 const STATE_SHIFT = 4;
 
 // The templates below are clipboard strings copied from the game; replace one by copying a new
-// building over it. The codes are put into the script blocks it contains.
+// building over it. The codes are put into the Script blocks it contains.
 
-/** A whole machine: three script blocks for the memory packs. */
+/** A whole machine: three Script blocks for the memory packs. */
 const PROGRAM_TEMPLATE =
   'BQABeJwVw7cSAQEUhtFv/8uMVtau2MqhkyllWrmWHwDvvbtn5jgEHFflCHT9M3+mE5WrivWYs+dGTFlVrc+CA3dMceVUsw' +
   'FLjjz4ElJCedVtyIoTT36ElVRBDRux5syLPykV1bQxGy68Sauklk3YcuVD26bs8AAMUhD9';
 
-/** A single script block, for the CPU, the GFX block and the ROM initializer. */
+/** A single Script block, for the CPU, the GFX block and the ROM initializer. */
 export const BLOCK_TEMPLATE = 'BQAAAQAAAAAAACEAAAgAAA==';
 
-/** A script block keeps its code instead of data. */
+/** A Script block keeps its code instead of data. */
 type ClipboardArrow = {
   x: number, y: number, rotation: number, flipped: boolean, state: number, data?: number, code?: string,
 };
@@ -138,7 +138,7 @@ function encodeClipboard(map: ClipboardMap): string {
   return Buffer.concat([u16(FORMAT_VERSION), Buffer.from([1]), compressed]).toString('base64');
 }
 
-/** Every script block of the map, in the order they are read across chunks: by y, then x. */
+/** Every Script block of the map, in the order they are read across chunks: by y, then x. */
 export function findScriptBlocks(map: ClipboardMap): ClipboardArrow[] {
   return map.chunks
     .flatMap(chunk => chunk.types
@@ -152,13 +152,13 @@ export function findScriptBlocks(map: ClipboardMap): ClipboardArrow[] {
     .map(({ arrow }) => arrow);
 }
 
-/** Puts the codes into the script blocks of the template, in the order the blocks are read. */
+/** Puts the codes into the Script blocks of the template, in the order the blocks are read. */
 export function buildClipboard(codes: string[], template = PROGRAM_TEMPLATE): string {
   const map = decodeClipboard(template);
   const blocks = findScriptBlocks(map);
 
   check(blocks.length === codes.length,
-    `The clipboard template has ${blocks.length} script blocks, but ${codes.length} are needed`);
+    `The clipboard template has ${blocks.length} Script blocks, but ${codes.length} are needed`);
 
   blocks.forEach((block, i) => { block.code = codes[i]; });
   return encodeClipboard(map);

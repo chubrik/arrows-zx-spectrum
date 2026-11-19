@@ -1,7 +1,7 @@
 # <a href="ru/README.md"><img src="https://raw.githubusercontent.com/chubrik/LogicArrows/refs/heads/main/img/arrowcat-red.svg" width="30"></a> ZX Spectrum in Logic Arrows
 <sub>[![LogicArrows](https://img.shields.io/badge/logic--arrows-steam-blue?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZlcnNpb249IjEiIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cGF0aCBmaWxsPSIjNTAwIiBkPSJtOTkgMWMtMC44Ny0wLjg3LTIuMi0xLjMtMy42LTAuODJsLTc3IDI1Yy00LjkgMS43LTYuMyA3LjgtMi43IDExbDE1IDE1LTI5IDI5Yy0yLjcgMi43LTIuNyA3LjEgMCA5LjhsNyA3YzIuNyAyLjcgNy4xIDIuNyA5LjggMGwyOS0yOSAxNSAxNWMzLjcgMy43IDkuOCAyLjIgMTEtMi43bDI1LTc3YzAuNDktMS4zIDAuMDQ1LTIuNy0wLjgyLTMuNnoiIHN0cm9rZS13aWR0aD0iMS43Ii8+PC9zdmc+)](https://store.steampowered.com/app/4210250/Logic_Arrows/)</sub>
 &nbsp;&nbsp;&nbsp;
-🌐 English | [Русский](ru/README.md)
+🌐 **English** | [Русский](ru/README.md)
 
 An emulator of the ZX Spectrum — the legendary home computer of the 1980s. It runs in real time
 inside [“Logic Arrows”](https://store.steampowered.com/app/4210250/Logic_Arrows/) — a programmable
@@ -54,19 +54,18 @@ on the map: the screen, the memory, the keyboard, and even the sound — everyth
 
 ## <a name="how-it-works"></a>How it works
 
-The emulator is written in TypeScript and compiled into code for in-game script blocks. Running a
+The emulator is written in TypeScript and compiled into code for in-game Script blocks. Running a
 game takes just six blocks: the CPU, the GFX block, the ROM initializer, and three blocks with a RAM
 snapshot — plus a color palette laid out on the map.
 
 - **CPU.** The complete Z80 instruction set, including undocumented instructions and flags.
-  Correctness is verified by the test suite of the
-  [FUSE](https://fuse-emulator.sourceforge.net/) emulator: all 1356 tests pass — both on the
-  TypeScript source and on the final packed build. Timing is cycle-accurate: 69888 T-states per
-  frame, 50 frames per second.
+  Correctness is verified by the test suite of the [FUSE](https://fuse-emulator.sourceforge.net/)
+  emulator: all 1356 tests pass — both on the TypeScript source and on the final packed build.
+  Timing is cycle-accurate: 69888 T-states per frame, 50 frames per second.
 - **Speed.** The emulator runs in real time. Two extra modes are available: single-step and
   unlimited speed.
-- **Memory.** 16K of ROM and 48K of RAM. The whole memory lies on the map at once, down to the
-  last bit, and changes right before your eyes: you can watch the stack at work, the buffers being
+- **Memory.** 16K of ROM and 48K of RAM. The whole memory lies on the map at once, down to the last
+  bit, and changes right before your eyes: you can watch the stack at work, the buffers being
   updated, and the sprites being prepared before they appear on the screen.
 - **Screen.** 256×192 pixels, border and FLASH attributes. The screen is committed to the map line
   by line, border included, following the beam just like on a real TV. Every byte is drawn with a
@@ -74,9 +73,9 @@ snapshot — plus a color palette laid out on the map.
   several palettes can stand on the map and be switched on the fly.
 - **Keyboard.** The 8×5 half-row matrix of the Spectrum keyboard is read directly from signals
   on the map.
-- **Sound.** The beeper is translated into the game’s music arrows.
-- **Packing.** The build pipeline squeezes the whole CPU into a single script block of about
-  6 600 characters (24 KB): esbuild → custom function inliner → three Terser passes → arrow-function
+- **Sound.** The beeper is translated into the game’s Music blocks.
+- **Packing.** The build pipeline squeezes the whole CPU into a single Script block of about 6 600
+  characters (24 KB): esbuild → custom function inliner → three Terser passes → arrow-function
   conversion → a self-extracting packed string.
 - **Games.** Games are loaded from `.z80` snapshots. Each snapshot is packed into three script
   blocks — 16K of RAM each — plus the CPU registers and the border color.
@@ -108,8 +107,8 @@ rebuild the CPU or the GFX block alone, skipping the type check.
   of the game where the emulator runs
 - [Logic Arrows in browser](https://logic-arrows.io/) – browser version of the game
 - [Online compiler](https://github.com/chubrik/arrows-compiler) – for the in-game computers
-- [Logic Arrows API](https://github.com/chubrik/logic-arrows-api) – script block API reference,
-  also an npm package
+- [Logic Arrows API](https://github.com/chubrik/logic-arrows-api) – script API reference, also
+  an npm package
 - [FUSE](https://fuse-emulator.sourceforge.net/) – ZX Spectrum emulator whose test suite verifies
   the CPU
 - [Discord server](https://discord.gg/zw2sRUGu5y) and [Telegram channel](https://t.me/logic_arrows)
