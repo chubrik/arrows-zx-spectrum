@@ -29,6 +29,7 @@ globalThis.getPosition = () => ({ x: 0, y: 0 });
 globalThis.getTick = () => 0;
 globalThis.log = () => { };
 globalThis.onActive = () => { };
+globalThis.onStart = () => { };
 globalThis.showText = () => { };
 
 beforeEach(() => {

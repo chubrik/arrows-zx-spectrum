@@ -6,7 +6,7 @@ import { commitMemory } from './common/memory';
 import { commitPort } from './common/port';
 import {
   borderCommitTStates, commitBorderLine, commitDisplayLine, commitScreen, displayCommitTStates,
-  incFrameCount
+  focusScreen, incFrameCount
 } from './common/screen';
 import { cpuStarted, fetchState, initState, screenEnabled, speedLimited, stepMode } from './common/state';
 import { executeMain } from './cpu/execute-main';
@@ -16,6 +16,7 @@ import { interrupt } from './cpu/interrupt';
 import { eiTStates, setEiTStates, setTStates, tStates } from './cpu/utils';
 
 initState();
+onStart(focusScreen);
 
 always(() => {
   fetchState();

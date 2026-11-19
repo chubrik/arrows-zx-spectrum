@@ -25,6 +25,8 @@ export const DISPLAY_WIDTH = 256 * PIXEL;
 export const DISPLAY_HEIGHT = DISPLAY_LINE_COUNT * PIXEL;
 export const BORDER_WIDTH = 16 * PIXEL; // The border shown at each side of the display
 export const SCREEN_WIDTH = DISPLAY_WIDTH + BORDER_WIDTH * 2;
+export const DISPLAY_OFFSET_X = 80;   // The top left corner of the display, counted from the CPU
+export const DISPLAY_OFFSET_Y = -400; //   block
 
 export const MS_PER_FRAME = 20; // 50 fps
 

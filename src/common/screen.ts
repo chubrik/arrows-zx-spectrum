@@ -1,7 +1,8 @@
 import {
   ATTRIBUTES_AFTER_ADDR, ATTRIBUTES_MIN_ADDR, BIT4, BIT7, BORDER_LINE_COUNT, BORDER_WIDTH,
-  DISPLAY_HEIGHT, DISPLAY_LINE_COUNT, DISPLAY_MIN_ADDR, DISPLAY_WIDTH, PIXEL, SCREEN_WIDTH,
-  TOP_BORDER_LINE_COUNT, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE, TSTATES_PER_LINE
+  DISPLAY_HEIGHT, DISPLAY_LINE_COUNT, DISPLAY_MIN_ADDR, DISPLAY_OFFSET_X, DISPLAY_OFFSET_Y,
+  DISPLAY_WIDTH, PIXEL, SCREEN_WIDTH, TOP_BORDER_LINE_COUNT, TSTATES_AT_DISPLAY_FIRST_LINE_MIDDLE,
+  TSTATES_PER_LINE
 } from './constants.ts';
 import { commitMemoryValue, initMemory, mem, memoryDirtyBitmap } from './memory.ts';
 import { cpuX, cpuY, fetchGfx, screenEnabled } from './state.ts';
@@ -60,8 +61,8 @@ export function initScreen() {
   if (inited) return;
   inited = true;
 
-  displayX = cpuX + 80;
-  displayY = cpuY - 400;
+  displayX = cpuX + DISPLAY_OFFSET_X;
+  displayY = cpuY + DISPLAY_OFFSET_Y;
 
   initDisplayLines();
   initDisplayPixels();
@@ -147,6 +148,15 @@ function initGfxBorder() {
     borderYs[line] = displayY + offset * PIXEL;
     borderColors[line] = -1;
   }
+}
+
+const CAMERA_MIN_SCALE = 2;
+
+export function focusScreen() {
+  game.moveCamera(
+    cpuX + DISPLAY_OFFSET_X + (DISPLAY_WIDTH >> 1) - 50,
+    cpuY + DISPLAY_OFFSET_Y + (DISPLAY_HEIGHT >> 1));
+  game.zoomCamera(CAMERA_MIN_SCALE);
 }
 
 //#endregion

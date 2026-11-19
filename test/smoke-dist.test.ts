@@ -15,7 +15,8 @@ const FRAMES = 50;
 // getPosition() = (1024, 1024): cpuX = 1040, cpuY = 1024 → cacheX0 = 784, cacheY = 2080;
 // the display area starts at displayX = 1120, displayY = 624 and is 512 × 384 cells.
 const PRELUDE = `
-  var __active = [], __always = [], __tick = 0;
+  var __active = [], __always = [], __onStart = [], __tick = 0;
+  var __camera = {};
   var __stats = { getArrow: 0, memoryWrites: 0, screenWrites: 0, displayWrites: 0 };
   var __CX0 = 784, __CX1 = 792, __CY = 2080;
   var __DX = 1120, __DY = 624;
@@ -26,11 +27,16 @@ const PRELUDE = `
   var __Y0 = 1000, __bytes = new Uint8Array(256 * 600); // x in [0, 2048) by 8 cells, y in [1000, 1600)
 
   function onActive(cb) { __active.push(cb); }
+  function onStart(cb) { __onStart.push(cb); }
   function always(cb) { __always.push(cb); }
   function getPosition() { return { x: 1024, y: 1024 }; }
   function getTick() { return __tick; }
   function log() { }
   function showText() { }
+  var game = {
+    moveCamera(x, y) { __camera.x = x; __camera.y = y; },
+    zoomCamera(scale) { __camera.scale = scale; },
+  };
   // In the game globalState is a proxy over JSON, so a value that does not survive the round trip
   // (a typed array, a mutation in place) must not survive it here either
   var __globalStateRaw = {};
@@ -87,6 +93,8 @@ const PRELUDE = `
 
   function __byte(x, y) { return __bytes[(x >> 3) + ((y - __Y0) << 8)]; }
   function __load(code) { new Function(code)(); }
+  // The map load fires onStart once, at tick 0, before the first always()
+  function __start() { for (const cb of __onStart) cb(__event('start')); }
   // The data block deduplicates its activations by the tick, so every callback needs an event
   function __event(type) { return { type: type, tick: __tick, x: 1024, y: 1024 }; }
   // An activation belongs to a tick of its own, the way a player keypress does. By default it goes
@@ -126,7 +134,11 @@ describe('Smoke test (dist)', () => {
 
     try {
       evalOrThrow(vm, PRELUDE, 'prelude.js');
-      evalOrThrow(vm, `__load(${JSON.stringify(cpu)})`, 'cpu.js');
+      evalOrThrow(vm, `__load(${JSON.stringify(cpu)}); __start();`, 'cpu.js');
+      // On the map load the camera is brought to the screen, at the farthest scale: a little to the
+      // left of its center, so that the rest of the machine stays in view
+      expect(evalOrThrow(vm, `[__camera.x, __camera.y, __camera.scale]`, 'camera.js'))
+        .toEqual([1326, 816, 2]);
       // The GFX block finds the palettes, builds the GFX cache and puts its tables into
       // globalState. It skips the first activation, the palettes light up a tick later, so it is
       // activated twice

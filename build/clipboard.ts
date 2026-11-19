@@ -1,3 +1,4 @@
+import { ArrowType } from 'logic-arrows-api';
 import { deflateSync, inflateSync } from 'zlib';
 import { check } from '../src/util/check.ts';
 
@@ -18,8 +19,7 @@ import { check } from '../src/util/check.ts';
  */
 
 const CHUNK_SIZE = 16;
-const SCRIPT_BLOCK = 33; // Arrow type of a script block
-const CODE_STATE = 1;    // State of a script block with code
+const CODE_STATE = 1; // State of a script block with code
 const FORMAT_VERSION = 5;
 
 // Flags of an arrow
@@ -85,7 +85,7 @@ export function decodeClipboard(text: string): ClipboardMap {
         if (flags & HAS_DATA) {
           const data = u16();
 
-          if (type === SCRIPT_BLOCK) {
+          if (type === ArrowType.SCRIPT_BLOCK) {
             arrow.code = payload.subarray(pos, pos + data).toString('utf8');
             pos += data;
           } else {
@@ -121,7 +121,7 @@ function encodeClipboard(map: ClipboardMap): string {
 
       for (const arrow of arrows) {
         // The game writes the code length even for an empty block
-        const code = type === SCRIPT_BLOCK ? Buffer.from(arrow.code ?? '', 'utf8') : undefined;
+        const code = type === ArrowType.SCRIPT_BLOCK ? Buffer.from(arrow.code ?? '', 'utf8') : undefined;
         const data = code ? code.length : arrow.data;
         const state = code ? (code.length ? arrow.state | CODE_STATE : arrow.state & ~CODE_STATE) : arrow.state;
         const flags = arrow.rotation | (arrow.flipped ? FLIPPED : 0) | (data !== undefined ? HAS_DATA : 0) |
@@ -142,7 +142,7 @@ function encodeClipboard(map: ClipboardMap): string {
 export function findScriptBlocks(map: ClipboardMap): ClipboardArrow[] {
   return map.chunks
     .flatMap(chunk => chunk.types
-      .filter(({ type }) => type === SCRIPT_BLOCK)
+      .filter(({ type }) => type === ArrowType.SCRIPT_BLOCK)
       .flatMap(({ arrows }) => arrows.map(arrow => ({
         arrow,
         x: chunk.x * CHUNK_SIZE + arrow.x,
